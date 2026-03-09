@@ -1,21 +1,87 @@
-MIT License
+iAnoNeFactory Source-Available License v1.0
+Copyright (c) 2025 Denis Czuliński (iAnoNeFactory)
+Future commercial entity: iFactory5.0
 
-Copyright (c) 2026 iAnoNe
+Contact: denis.czulinski@gmail.com
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+DEFINITIONS
+
+"Software" means the source code, binaries, documentation, and all associated
+files in this repository.
+
+"Owner" means Denis Czuliński, operating under the nick iAnoNeFactory and the
+future commercial entity iFactory5.0.
+
+"You" means any individual or legal entity exercising permissions granted by
+this License.
+
+---
+
+PERMISSIONS
+
+Subject to the conditions below, You are granted a non-exclusive,
+non-transferable, worldwide license to:
+
+  1. VIEW and READ the source code for personal, educational, or evaluation
+     purposes.
+
+  2. USE the Software for non-commercial purposes, provided that proper
+     attribution is given to the Owner.
+
+  3. FORK the repository on GitHub solely for the purpose of submitting
+     pull requests to the original repository.
+
+---
+
+RESTRICTIONS
+
+The following are strictly prohibited without prior written consent from the
+Owner (denis.czulinski@gmail.com):
+
+  1. MODIFICATION of the source code for any purpose other than submitting
+     a pull request to the Owner.
+
+  2. REDISTRIBUTION of the Software, in whole or in part, in original or
+     modified form.
+
+  3. COMMERCIAL USE of the Software or any derivative work.
+
+  4. SUBLICENSING or granting third parties any rights beyond those explicitly
+     stated in this License.
+
+  5. REVERSE ENGINEERING of any closed-source or obfuscated components
+     designated as "core" or "proprietary" by the Owner.
+
+---
+
+FUTURE COMPONENTS
+
+The Owner reserves the right to release future versions of this Software, or
+designated components thereof (including but not limited to core modules),
+under a separate proprietary or commercial license without notice. Such changes
+shall not retroactively affect previously released versions under this License.
+
+---
+
+ATTRIBUTION
+
+Any permitted use of the Software must include the following notice:
+
+  "Powered by iAnoNeFactory / iFactory5.0 — https://github.com/iAnoNeFactory"
+
+---
+
+DISCLAIMER
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL THE
+OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE
+USE OF THE SOFTWARE.
+
+---
+
+For permissions beyond the scope of this License, contact:
+denis.czulinski@gmail.com
