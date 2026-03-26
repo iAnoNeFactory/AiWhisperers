@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiwhisperers.io/schema/manifest.schema.json",
+  "title": "AiWhisperers Module Manifest",
+  "description": "Paszport modułu w ekosystemie AiWhisperers. Każdy moduł nosi własny manifest.json który opisuje jego tożsamość, rodowód, pliki i relacje. Metryki zostają w sesjach — manifest pozostaje deklaratywny.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "date",
+    "description",
+    "type",
+    "status",
+    "lineage",
+    "files",
+    "runtime",
+    "relations",
+    "tags"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9-]*$",
+      "description": "Stabilny identyfikator. Kebab-case. Nigdy się nie zmienia. Meta-moduły mogą zaczynać się od podkreślenia (np. _schema)."
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "incubation",
+        "active",
+        "mature",
+        "dormant",
+        "archived"
+      ]
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "seed_session",
+        "contract_sha",
+        "contributors"
+      ],
+      "properties": {
+        "seed_session": {
+          "type": "string"
+        },
+        "contract_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$|^$"
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "actor",
+              "role",
+              "chat_id"
+            ],
+            "properties": {
+              "actor": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "chat_id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "signature": {
+          "type": "object",
+          "description": "Opcjonalna pieczęć kryptograficzna aktora potwierdzająca wkład. Generowana przez AIWPass przy pieczętowaniu.",
+          "properties": {
+            "actor": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$|^$"
+            }
+          }
+        },
+        "parent_sid": {
+          "type": "string",
+          "description": "UUID poprzedniej sesji która dała kontekst tej sesji. Pusty string jeśli sesja inauguracyjna. Buduje graf drzewa decyzji w Operator Chain."
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "entry",
+        "docs",
+        "components",
+        "backend",
+        "bootstrap"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "docs": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "role"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "bootstrap": {
+          "type": "string",
+          "description": "Plik bootstrapowy dla modelu AI. Esencja wiedzy o module w Markdown — architektura, konwencje, kluczowe decyzje. Konwencja: <id>-boot.md w folderze modułu. Pusty string jeśli moduł nie potrzebuje bootstrapa AI."
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "description": "Deklaracja trybu pracy artefaktu. Struktura stała — wartości puste dla modułów bez danych. port:0 = tryb demo (lokalne JSONy). port>0 = tryb produkcyjny (backend FastAPI). consumers określa kto konsumuje dane: human, ai — kontrola dostępu AI leży w AIWPass.",
+      "required": [
+        "data_path",
+        "io",
+        "port",
+        "consumers",
+        "operator_state",
+        "i18n"
+      ],
+      "properties": {
+        "data_path": {
+          "type": "string",
+          "description": "Ścieżka do JSONów modułu. Konwencja: data/apps/<id>/ dla modułów, data/apps/_<id>/ dla systemowych AiW. Pusty string jeśli moduł nie handluje danymi."
+        },
+        "io": {
+          "type": "array",
+          "description": "Operacje na danych. Pusta tablica jeśli moduł nie handluje JSONami.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write"
+            ]
+          }
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Port backendu FastAPI. 0 = brak backendu / tryb demo."
+        },
+        "consumers": {
+          "type": "array",
+          "description": "Kto konsumuje dane modułu. Pusta tablica jeśli brak. Uprawnienia AI definiuje AIWPass — tu tylko deklaracja czy kanał jest otwarty.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai"
+            ]
+          }
+        },
+        "operator_state": {
+          "type": "string",
+          "description": "Stan operatora w momencie sesji. Swobodna etykieta (np. focused, tired, flow, chaotic). Zbierana do późniejszej korelacji ze metrykami sesji. Pusty string jeśli nieznany."
+        },
+        "i18n": {
+          "type": "object",
+          "description": "Internacjonalizacja modułu. Puste wartości jeśli moduł nie ma i18n. Plik tłumaczeń: <id>-lang.json w folderze modułu.",
+          "required": [
+            "default",
+            "available",
+            "lang_file"
+          ],
+          "properties": {
+            "default": {
+              "type": "string",
+              "description": "Domyślny język interfejsu. Zawsze 'pl' jeśli nie określono inaczej.",
+              "default": "pl",
+              "enum": [
+                "pl",
+                "en",
+                "zh",
+                "es",
+                "fr",
+                "de",
+                "ja",
+                "ko"
+              ]
+            },
+            "available": {
+              "type": "array",
+              "description": "Języki dostępne w tym module — tylko te które mają tłumaczenia w lang_file. Pusta tablica jeśli brak i18n.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pl",
+                  "en",
+                  "zh",
+                  "es",
+                  "fr",
+                  "de",
+                  "ja",
+                  "ko"
+                ]
+              }
+            },
+            "lang_file": {
+              "type": "string",
+              "description": "Nazwa pliku tłumaczeń. Konwencja: <id>-lang.json (np. memory-lang.json). Pusty string jeśli brak i18n."
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "target"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

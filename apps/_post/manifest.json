@@ -1,0 +1,77 @@
+{
+  "id": "post",
+  "name": "AiWPostcard · dowód istnienia ✉",
+  "version": "2.0",
+  "date": "2026-05-02",
+  "description": "Wizualna pocztówka operatora — importuje SHA paczek sesji jako proof of existence, eksportuje do PNG.",
+  "type": "standalone",
+  "status": "active",
+  "lineage": {
+    "seed_session": "",
+    "parent_sid": "",
+    "contract_sha": "",
+    "contributors": [
+      {
+        "actor": "Denis Czuliński",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWPostcard.html",
+    "docs": "",
+    "components": [
+      {
+        "path": "post-lang.json",
+        "role": "i18n"
+      }
+    ],
+    "bootstrap": "_postcard-boot.md",
+    "bootstrap_sha": "1c06c700131d87c1cf796fd4fe1bef63c44eb4696613ed3994b88016cce95c27",
+    "entry_sha": "2700849c57f3db6522d67389ad32ec8ec567e4b09639170cba53cf1d620c878e",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": ".data/_pass/",
+    "io": [
+      "read"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [
+        "pl",
+        "en"
+      ],
+      "lang_file": "post-lang.json"
+    }
+  },
+  "relations": [
+    {
+      "type": "requires",
+      "target": "pass"
+    }
+  ],
+  "tags": [
+    "postcard",
+    "proof-of-existence",
+    "sha",
+    "export",
+    "png",
+    "system"
+  ]
+}

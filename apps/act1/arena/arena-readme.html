@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HUB v3 — README</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Unbounded:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --sur: #0f0f1c;
+  --sur2: #161628;
+  --brd: #1e1e3a;
+  --txt: #dde0ff;
+  --mut: #4a4a80;
+  --acc: #7b7cff;
+  --claude: #e8a87c; --gpt: #74c9a0; --gemini: #7ab4f5;
+  --copilot: #c792ea; --deepseek: #4fc3f7; --grok: #f7c948;
+  --llama: #ff8a65; --mistral: #a5d6a7; --perplexity: #ce93d8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Space Mono', monospace;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* NOISE TEXTURE */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: .4;
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 92px 24px 60px;
+  text-align: center;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(123,124,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123,124,255,.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(48px); } }
+
+.hero-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(123,124,255,.12) 0%, transparent 70%);
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.15); } }
+
+.badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--acc);
+  border: 1px solid rgba(123,124,255,.3);
+  padding: 5px 16px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+  background: rgba(123,124,255,.06);
+  animation: fadeDown .8s ease both;
+}
+
+.hero-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(52px, 10vw, 110px);
+  font-weight: 900;
+  line-height: .9;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown .8s .1s ease both;
+}
+.hero-title .ai { color: var(--acc); }
+.hero-title .hub { color: var(--txt); }
+.hero-title .v { font-size: clamp(18px, 3vw, 32px); color: var(--mut); font-weight: 300; display: block; margin-top: 8px; letter-spacing: 6px; }
+
+.hero-sub {
+  font-size: 14px;
+  color: var(--mut);
+  max-width: 560px;
+  margin: 28px auto 0;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown .8s .2s ease both;
+  line-height: 1.8;
+}
+
+/* MODEL ORBS */
+.model-orbs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 40px;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown .8s .3s ease both;
+}
+.orb {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: transform .2s;
+  position: relative;
+}
+.orb:hover { transform: scale(1.15) translateY(-3px); }
+.orb-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 8px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: 'Space Mono', monospace;
+}
+
+/* SCROLL HINT */
+.scroll-hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--mut);
+  text-transform: uppercase;
+  z-index: 1;
+  animation: bounce 2s infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)} }
+
+/* CONTENT */
+.content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* SECTION */
+.section {
+  margin-bottom: 72px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .6s, transform .6s;
+}
+.section.vis { opacity: 1; transform: none; }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--acc);
+  margin-bottom: 12px;
+  font-family: 'Space Mono', monospace;
+}
+
+h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--txt);
+  margin-bottom: 12px;
+  letter-spacing: .3px;
+}
+
+p { color: #9090c0; margin-bottom: 16px; font-size: 14px; }
+
+/* FEATURE GRID */
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+.feat-card {
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 14px;
+  padding: 22px 20px;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-c, var(--acc)), transparent);
+}
+.feat-card:hover { border-color: var(--mut); transform: translateY(-2px); }
+.feat-icon { font-size: 26px; margin-bottom: 12px; display: block; }
+.feat-title { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 8px; }
+.feat-desc { font-size: 12px; color: var(--mut); line-height: 1.6; }
+
+/* MODEL TABLE */
+.model-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  margin-top: 8px;
+}
+.model-table th {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  padding: 0 16px 8px;
+  text-align: left;
+  font-family: 'Space Mono', monospace;
+  font-weight: 400;
+}
+.model-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  background: var(--sur);
+  border-top: 1px solid var(--brd);
+  border-bottom: 1px solid var(--brd);
+}
+.model-table td:first-child { border-left: 1px solid var(--brd); border-radius: 8px 0 0 8px; }
+.model-table td:last-child { border-right: 1px solid var(--brd); border-radius: 0 8px 8px 0; }
+.model-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; vertical-align: middle; }
+.model-label { font-weight: 700; }
+.provider { color: var(--mut); font-size: 11px; }
+.api-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  background: rgba(123,124,255,.1);
+  color: var(--acc);
+  border: 1px solid rgba(123,124,255,.2);
+}
+
+/* CODE BLOCK */
+.code-block {
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--brd);
+  background: var(--sur2);
+}
+.code-dot { width: 10px; height: 10px; border-radius: 50%; }
+.code-title { font-size: 11px; color: var(--mut); margin-left: 8px; flex: 1; font-family: 'Space Mono', monospace; }
+pre {
+  padding: 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #a0a8d0;
+  overflow-x: auto;
+}
+.kw { color: var(--acc); }
+.cm { color: var(--mut); }
+.st { color: var(--gpt); }
+.nm { color: var(--llama); }
+
+/* WORKSPACE DIAGRAM */
+.tree-block {
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 12px;
+  padding: 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  line-height: 2;
+  color: #6060a0;
+}
+.tree-block .folder { color: var(--grok); }
+.tree-block .file { color: #9090c0; }
+.tree-block .comment { color: var(--mut); font-style: italic; }
+.tree-block .hl { color: var(--acc); font-weight: 700; }
+
+/* ENDPOINT TABLE */
+.ep-list { display: flex; flex-direction: column; gap: 8px; }
+.ep-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+}
+.ep-method {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  min-width: 44px;
+  text-align: center;
+}
+.get { background: rgba(116,201,160,.15); color: var(--gpt); }
+.post { background: rgba(123,124,255,.15); color: var(--acc); }
+.put { background: rgba(247,201,72,.15); color: var(--grok); }
+.del { background: rgba(240,128,128,.15); color: #f08080; }
+.ep-path { font-family: 'Space Mono', monospace; color: var(--txt); flex: 1; }
+.ep-desc { color: var(--mut); font-size: 11px; }
+
+/* DIVIDER */
+.divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brd), transparent);
+  margin: 64px 0;
+}
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 48px 24px 60px;
+  font-size: 12px;
+  color: var(--mut);
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--brd);
+}
+.footer-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--acc);
+  margin-bottom: 12px;
+  letter-spacing: -1px;
+}
+
+/* ANIMATIONS */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* PLENER PREVIEW */
+.plener-preview {
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 14px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+.mini-av {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--sur2);
+  border-radius: 12px;
+  border: 1px solid var(--brd);
+  transition: all .2s;
+  position: relative;
+}
+.mini-av:hover { transform: translateY(-3px); }
+.mini-ring {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.mini-nick { font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; font-family: 'Space Mono', monospace; }
+.mini-bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 8px 8px 8px 2px;
+  padding: 5px 8px;
+  font-size: 9px;
+  color: var(--mut);
+  white-space: nowrap;
+  font-family: 'Space Mono', monospace;
+}
+
+/* CONTEXT FLOW */
+.ctx-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ctx-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.ctx-icon { font-size: 16px; flex-shrink: 0; }
+.ctx-label { flex: 1; color: var(--txt); }
+.ctx-note { font-size: 10px; color: var(--mut); }
+.ctx-arrow {
+  text-align: center;
+  color: var(--mut);
+  font-size: 16px;
+  margin: -2px 0;
+}
+
+/* VERSION BADGE */
+.v-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(123,124,255,.08);
+  border: 1px solid rgba(123,124,255,.2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--acc);
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 32px;
+}
+
+/* QUICK START STEPS */
+.steps { display: flex; flex-direction: column; gap: 6px; }
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--sur);
+  border: 1px solid var(--brd);
+  border-radius: 10px;
+}
+.step-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--acc);
+  opacity: .3;
+  flex-shrink: 0;
+  width: 24px;
+  line-height: 1;
+  margin-top: 2px;
+}
+.step-body { flex: 1; }
+.step-title { font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 4px; font-family: 'Unbounded', sans-serif; }
+.step-code { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gpt); margin-top: 6px; }
+<style>.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}.hud-r{justify-content:flex-end;}.hud-c{text-align:center;padding:0 12px;}.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#e8c878;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}.hud-btn:hover{border-color:rgba(232,200,120,.5);color:#e8c878;background:rgba(232,200,120,.04);}.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Arena · Readme</div><div class="hud-sub">dokumentacja · AI Hub v3</div></div>
+  <nav class="hud-r"><a class="hud-btn" href="../../../readme.html" target="_blank">README</a></nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="badge">v3.0 · lokalny AI OS</div>
+
+  <h1 class="hero-title">
+    <span class="ai">AI</span><span class="hub"> HUB</span>
+    <span class="v">personal ai operating system</span>
+  </h1>
+
+  <p class="hero-sub">
+    Jeden lokalny serwer. Dziewięć modeli AI. Pełna kontrola nad kontekstem,
+    pamięcią, kontraktami i projektami — bez chmury, bez kompromisów.
+  </p>
+
+  <div class="model-orbs">
+    <div class="orb" style="border-color:var(--claude);color:var(--claude)">🟠<span class="orb-label" style="color:var(--claude)">Claude</span></div>
+    <div class="orb" style="border-color:var(--gpt);color:var(--gpt)">🟢<span class="orb-label" style="color:var(--gpt)">GPT</span></div>
+    <div class="orb" style="border-color:var(--gemini);color:var(--gemini)">🔵<span class="orb-label" style="color:var(--gemini)">Gemini</span></div>
+    <div class="orb" style="border-color:var(--copilot);color:var(--copilot)">🟣<span class="orb-label" style="color:var(--copilot)">Copilot</span></div>
+    <div class="orb" style="border-color:var(--deepseek);color:var(--deepseek)">🩵<span class="orb-label" style="color:var(--deepseek)">DeepSeek</span></div>
+    <div class="orb" style="border-color:var(--grok);color:var(--grok)">🟡<span class="orb-label" style="color:var(--grok)">Grok</span></div>
+    <div class="orb" style="border-color:var(--llama);color:var(--llama)">🦙<span class="orb-label" style="color:var(--llama)">Llama</span></div>
+    <div class="orb" style="border-color:var(--mistral);color:var(--mistral)">🌿<span class="orb-label" style="color:var(--mistral)">Mistral</span></div>
+    <div class="orb" style="border-color:var(--perplexity);color:var(--perplexity)">🔮<span class="orb-label" style="color:var(--perplexity)">Pplx</span></div>
+  </div>
+
+  <div class="scroll-hint">↓ &nbsp; scroll</div>
+</section>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+  <!-- QUICK START -->
+  <div class="section" id="s1">
+    <div class="section-label">// 00 · start</div>
+    <h2>Trzy komendy do uruchomienia</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Środowisko Python</div>
+          <div class="step-code">cd ai-hub && python3 -m venv venv && source venv/bin/activate</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Instalacja zależności</div>
+          <div class="step-code">pip install -r requirements.txt</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Start serwera</div>
+          <div class="step-code">uvicorn main:app --host 0.0.0.0 --port 8000 --reload</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <div class="code-block">
+        <div class="code-bar">
+          <div class="code-dot" style="background:#ff5f57"></div>
+          <div class="code-dot" style="background:#febc2e"></div>
+          <div class="code-dot" style="background:#28c840"></div>
+          <span class="code-title">Dostęp po uruchomieniu</span>
+        </div>
+        <pre><span class="cm"># Aplikacja webowa</span>
+http://localhost:8000/app        <span class="cm">→ otwórz index.html</span>
+
+<span class="cm"># Interaktywna dokumentacja API</span>
+http://localhost:8000/docs       <span class="cm">→ Swagger UI</span>
+
+<span class="cm"># Status workspace</span>
+http://localhost:8000/workspace  <span class="cm">→ pełna topologia JSON</span>
+
+<span class="cm"># Android (przez WiFi)</span>
+http://192.168.1.XX:8000/app     <span class="cm">→ zmień IP na swój Linux</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FEATURES -->
+  <div class="section" id="s2">
+    <div class="section-label">// 01 · features</div>
+    <h2>Co potrafi AI HUB</h2>
+    <div class="feat-grid">
+      <div class="feat-card" style="--accent-c:var(--acc)">
+        <span class="feat-icon">💬</span>
+        <div class="feat-title">Unified Chat</div>
+        <div class="feat-desc">Jeden interfejs do wszystkich 9 modeli. Tryb Wszyscy, Projekt lub Jeden model. Pełna historia per model.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--grok)">
+        <span class="feat-icon">🌿</span>
+        <div class="feat-title">Plener AI</div>
+        <div class="feat-desc">Avatary modeli z dymkami odpowiedzi. 4 layouty: siatka, wolna przestrzeń (drag&drop), okrągły stół, losowy.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--claude)">
+        <span class="feat-icon">📜</span>
+        <div class="feat-title">Kontrakty</div>
+        <div class="feat-desc">Globalny kontrakt dla wszystkich + per model. Automatycznie wchodzą do każdego kontekstu chatu.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--gpt)">
+        <span class="feat-icon">📋</span>
+        <div class="feat-title">Reguły</div>
+        <div class="feat-desc">Globalne reguły pracy + per projekt. Operator definiuje zasady — AI ich przestrzega w każdej sesji.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--gemini)">
+        <span class="feat-icon">🧠</span>
+        <div class="feat-title">Memories</div>
+        <div class="feat-desc">Trzy poziomy: globalny per model, per projekt per model, per chat. Auto-generowanie przez AI. Globalny nie zapycha się automatem.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--copilot)">
+        <span class="feat-icon">📁</span>
+        <div class="feat-title">Projekty & Grupy</div>
+        <div class="feat-desc">Każdy projekt ma własną grupę modeli, sandbox na pliki, memories i reguły. Pełna izolacja kontekstu.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--deepseek)">
+        <span class="feat-icon">🗂</span>
+        <div class="feat-title">Sandbox</div>
+        <div class="feat-desc">Folder roboczy per projekt. Czytaj, pisz, edytuj pliki przez UI lub API. AI może operować na Twoich plikach.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--perplexity)">
+        <span class="feat-icon">🎛</span>
+        <div class="feat-title">Panel Operatora</div>
+        <div class="feat-desc">Kontrakty, reguły, guidelines AI Whispers, prywatny schowek (nie wychodzi do AI). Pełna kontrola nad systemem.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--mistral)">
+        <span class="feat-icon">🗺</span>
+        <div class="feat-title">Workspace View</div>
+        <div class="feat-desc">Pełna topologia: projekty, modele, klucze, pamięć, kontrakty — wszystko w jednym widoku.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- MODELS -->
+  <div class="section" id="s3">
+    <div class="section-label">// 02 · models</div>
+    <h2>9 modeli, jeden backend</h2>
+    <p>Wszystkie modele za wyjątkiem Claude i Gemini używają OpenAI-compatible API — łatwe do rozszerzenia o kolejne.</p>
+    <table class="model-table">
+      <tr>
+        <th>Model</th><th>Provider</th><th>Endpoint</th><th>Wersja</th>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--claude)"></span><span class="model-label">Claude</span></td>
+        <td><span class="provider">Anthropic</span></td>
+        <td><span class="api-tag">native</span></td>
+        <td><span class="provider">claude-sonnet-4</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--gpt)"></span><span class="model-label">GPT-4o</span></td>
+        <td><span class="provider">OpenAI</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">gpt-4o-mini</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--gemini)"></span><span class="model-label">Gemini</span></td>
+        <td><span class="provider">Google</span></td>
+        <td><span class="api-tag">native</span></td>
+        <td><span class="provider">gemini-2.0-flash</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--copilot)"></span><span class="model-label">Copilot</span></td>
+        <td><span class="provider">GitHub / Microsoft</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">gpt-4o</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--deepseek)"></span><span class="model-label">DeepSeek</span></td>
+        <td><span class="provider">DeepSeek AI</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">deepseek-chat</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--grok)"></span><span class="model-label">Grok</span></td>
+        <td><span class="provider">xAI</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">grok-3-mini</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--llama)"></span><span class="model-label">Llama</span></td>
+        <td><span class="provider">Meta / via Groq</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">llama-3.3-70b</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--mistral)"></span><span class="model-label">Mistral</span></td>
+        <td><span class="provider">Mistral AI</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">mistral-small-latest</span></td>
+      </tr>
+      <tr>
+        <td><span class="model-dot" style="background:var(--perplexity)"></span><span class="model-label">Perplexity</span></td>
+        <td><span class="provider">Perplexity AI</span></td>
+        <td><span class="api-tag">OAI compat</span></td>
+        <td><span class="provider">sonar</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CONTEXT FLOW -->
+  <div class="section" id="s4">
+    <div class="section-label">// 03 · context</div>
+    <h2>Co wchodzi do każdego chatu</h2>
+    <p>Każde zapytanie do AI automatycznie otrzymuje bogaty kontekst zbudowany z kilku warstw — w tej kolejności:</p>
+    <div class="ctx-flow">
+      <div class="ctx-row">
+        <div class="ctx-icon">📜</div>
+        <div class="ctx-label"><strong>Kontrakt globalny</strong> — zasady dla wszystkich modeli</div>
+        <div class="ctx-note">zawsze</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row">
+        <div class="ctx-icon">📋</div>
+        <div class="ctx-label"><strong>Kontrakt per model</strong> — indywidualne zasady dla np. Claude</div>
+        <div class="ctx-note">zawsze</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row">
+        <div class="ctx-icon">📌</div>
+        <div class="ctx-label"><strong>Reguły globalne</strong> — Twoje reguły pracy z AI</div>
+        <div class="ctx-note">zawsze</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row">
+        <div class="ctx-icon">📁</div>
+        <div class="ctx-label"><strong>Reguły projektu</strong> — specyficzne zasady dla aktywnego projektu</div>
+        <div class="ctx-note">jeśli projekt</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row">
+        <div class="ctx-icon">📖</div>
+        <div class="ctx-label"><strong>Guidelines AI Whispers</strong> — ściąga operatora</div>
+        <div class="ctx-note">zawsze</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row">
+        <div class="ctx-icon">🧠</div>
+        <div class="ctx-label"><strong>Memories</strong> — globalna (per model) + projekt + chat</div>
+        <div class="ctx-note">jeśli niepuste</div>
+      </div>
+      <div class="ctx-arrow">↓</div>
+      <div class="ctx-row" style="border-color:var(--acc);background:rgba(123,124,255,.06)">
+        <div class="ctx-icon">💬</div>
+        <div class="ctx-label" style="color:var(--acc)"><strong>Twoja wiadomość</strong></div>
+        <div class="ctx-note" style="color:var(--acc)">zapytanie</div>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:12px;">🔒 <strong>Schowek operatora</strong> nigdy nie trafia do AI — to tylko Twój prywatny notatnik.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- WORKSPACE TOPOLOGY -->
+  <div class="section" id="s5">
+    <div class="section-label">// 04 · workspace</div>
+    <h2>Topologia plików</h2>
+    <div class="tree-block">
+<span class="hl">workspace/</span>
+├── <span class="folder">keys.json</span>            <span class="comment">← klucze API (nie commituj!)</span>
+├── <span class="folder">groups.json</span>          <span class="comment">← grupy modeli per projekt</span>
+├── <span class="folder">avatars.json</span>         <span class="comment">← emoji, nick, status każdego AI</span>
+│
+├── <span class="hl">contracts/</span>
+│   ├── <span class="file">global.md</span>           <span class="comment">← kontrakt dla wszystkich modeli</span>
+│   ├── <span class="file">claude.md</span>           <span class="comment">← kontrakt per model</span>
+│   └── <span class="file">gpt.md  gemini.md  …</span>
+│
+├── <span class="hl">rules/</span>
+│   ├── <span class="file">global.md</span>           <span class="comment">← Twoje globalne reguły</span>
+│   └── <span class="folder">projects/</span>
+│       └── <span class="file">{projekt}.md</span>    <span class="comment">← reguły per projekt</span>
+│
+├── <span class="hl">guidelines/</span>
+│   ├── <span class="file">aiwhispers.md</span>       <span class="comment">← ściąga dla operatorów</span>
+│   └── <span class="folder">private/</span>
+│       └── <span class="file">vault.md</span>        <span class="comment">← prywatny schowek (nie do AI)</span>
+│
+├── <span class="hl">memories/</span>
+│   ├── <span class="folder">global/</span>
+│   │   ├── <span class="file">claude.md</span>       <span class="comment">← pamięć globalna per model</span>
+│   │   └── <span class="file">gpt.md  gemini.md  …</span>
+│   ├── <span class="folder">projects/</span>
+│   │   └── <span class="folder">{projekt}/</span>
+│   │       ├── <span class="file">claude.md</span>   <span class="comment">← pamięć per model per projekt</span>
+│   │       └── <span class="file">gpt.md  …</span>
+│   └── <span class="folder">chats/</span>
+│       └── <span class="file">{chat_id}.md</span>    <span class="comment">← pamięć per sesja</span>
+│
+├── <span class="hl">sandbox/</span>
+│   └── <span class="folder">{projekt}/</span>         <span class="comment">← pliki robocze</span>
+│
+└── <span class="hl">chats/</span>
+    └── <span class="file">{chat_id}__{model}.json</span>  <span class="comment">← historia rozmów</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PLENER -->
+  <div class="section" id="s6">
+    <div class="section-label">// 05 · plener</div>
+    <h2>Plener AI — żywe avatary</h2>
+    <p>Wizualny widok wszystkich modeli jako avatarów z dymkami. Odpowiedzi pojawiają się przy każdym AI w czasie rzeczywistym.</p>
+
+    <div class="plener-preview">
+      <div class="mini-av">
+        <div class="mini-bubble">Oto moja odpowiedź…</div>
+        <div class="mini-ring" style="border-color:var(--claude)">🟠</div>
+        <div class="mini-nick" style="color:var(--claude)">Claude</div>
+      </div>
+      <div class="mini-av">
+        <div class="mini-ring" style="border-color:var(--gpt)">🟢</div>
+        <div class="mini-nick" style="color:var(--gpt)">GPT</div>
+      </div>
+      <div class="mini-av">
+        <div class="mini-bubble">myśli… 💭</div>
+        <div class="mini-ring" style="border-color:var(--gemini)">🔵</div>
+        <div class="mini-nick" style="color:var(--gemini)">Gemini</div>
+      </div>
+      <div class="mini-av">
+        <div class="mini-ring" style="border-color:var(--grok)">🟡</div>
+        <div class="mini-nick" style="color:var(--grok)">Grok</div>
+      </div>
+      <div class="mini-av">
+        <div class="mini-ring" style="border-color:var(--llama)">🦙</div>
+        <div class="mini-nick" style="color:var(--llama)">Llama</div>
+      </div>
+      <div class="mini-av">
+        <div class="mini-ring" style="border-color:var(--mistral)">🌿</div>
+        <div class="mini-nick" style="color:var(--mistral)">Mistral</div>
+      </div>
+    </div>
+
+    <div class="feat-grid" style="margin-top:16px">
+      <div class="feat-card" style="--accent-c:var(--grok)">
+        <span class="feat-icon">⊞</span>
+        <div class="feat-title">Siatka</div>
+        <div class="feat-desc">Klasyczna 3×3. Przejrzyste porównanie odpowiedzi wszystkich modeli naraz.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--acc)">
+        <span class="feat-icon">✦</span>
+        <div class="feat-title">Wolna przestrzeń</div>
+        <div class="feat-desc">Przeciągaj avatary myszką po ekranie. Twoja własna konfiguracja rozmowy.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--gpt)">
+        <span class="feat-icon">◎</span>
+        <div class="feat-title">Okrągły stół</div>
+        <div class="feat-desc">AI w kręgu, Ty w centrum. Poczucie wspólnej narady z całym zespołem.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--claude)">
+        <span class="feat-icon">🎲</span>
+        <div class="feat-title">Losowy</div>
+        <div class="feat-desc">Losuje jeden z powyższych przy każdym kliknięciu. Dla zabawy.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- API REFERENCE -->
+  <div class="section" id="s7">
+    <div class="section-label">// 06 · api</div>
+    <h2>Kluczowe endpointy</h2>
+    <div class="ep-list">
+      <div class="ep-row"><span class="ep-method post">POST</span><span class="ep-path">/chat</span><span class="ep-desc">Wyślij wiadomość · model: "all" | "group" | "claude" | …</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/workspace</span><span class="ep-desc">Pełna topologia workspace w JSON</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/models</span><span class="ep-desc">Lista modeli z metadanymi i kolorami</span></div>
+      <div class="ep-row"><span class="ep-method post">POST</span><span class="ep-path">/keys</span><span class="ep-desc">Zapisz klucze API na serwerze</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/projects</span><span class="ep-desc">Lista projektów z grupami modeli</span></div>
+      <div class="ep-row"><span class="ep-method put">PUT</span><span class="ep-path">/groups/{project}</span><span class="ep-desc">Ustaw grupę modeli dla projektu</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/contracts/global</span><span class="ep-desc">Globalny kontrakt dla wszystkich AI</span></div>
+      <div class="ep-row"><span class="ep-method put">PUT</span><span class="ep-path">/contracts/{model}</span><span class="ep-desc">Kontrakt per model</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/rules/global</span><span class="ep-desc">Globalne reguły operatora</span></div>
+      <div class="ep-row"><span class="ep-method put">PUT</span><span class="ep-path">/rules/project/{name}</span><span class="ep-desc">Reguły per projekt</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/memories/global/{model}</span><span class="ep-desc">Pamięć globalna per model</span></div>
+      <div class="ep-row"><span class="ep-method post">POST</span><span class="ep-path">/memories/auto-generate</span><span class="ep-desc">AI generuje notatki z historii chatu</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/sandbox</span><span class="ep-desc">Lista plików w sandbox</span></div>
+      <div class="ep-row"><span class="ep-method post">POST</span><span class="ep-path">/sandbox/write</span><span class="ep-desc">Zapisz plik w sandbox</span></div>
+      <div class="ep-row"><span class="ep-method get">GET</span><span class="ep-path">/avatars</span><span class="ep-desc">Stan avatarów (emoji, nick, status)</span></div>
+      <div class="ep-row"><span class="ep-method put">PUT</span><span class="ep-path">/avatars/{model}</span><span class="ep-desc">Zaktualizuj avatar modelu</span></div>
+    </div>
+
+    <div class="code-block" style="margin-top:20px">
+      <div class="code-bar">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <span class="code-title">Przykład — wyślij do wszystkich</span>
+      </div>
+      <pre><span class="kw">POST</span> /chat
+{
+  <span class="st">"model"</span>:    <span class="st">"all"</span>,
+  <span class="st">"messages"</span>: [{ <span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Twoje pytanie"</span> }],
+  <span class="st">"chat_id"</span>:  <span class="st">"sesja_001"</span>,
+  <span class="st">"project"</span>:  <span class="st">"mahle"</span>
+}
+
+<span class="cm">// Odpowiedź</span>
+{
+  <span class="st">"models_used"</span>: [<span class="st">"claude"</span>, <span class="st">"gpt"</span>, <span class="st">"gemini"</span>, ...],
+  <span class="st">"results"</span>: {
+    <span class="st">"claude"</span>: { <span class="st">"reply"</span>: <span class="st">"..."</span> },
+    <span class="st">"gpt"</span>:    { <span class="st">"reply"</span>: <span class="st">"..."</span> },
+    <span class="nm">// każdy model równolegle</span>
+  }
+}</pre>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TECH STACK -->
+  <div class="section" id="s8">
+    <div class="section-label">// 07 · stack</div>
+    <h2>Stack technologiczny</h2>
+    <div class="feat-grid">
+      <div class="feat-card" style="--accent-c:var(--gpt)">
+        <span class="feat-icon">⚡</span>
+        <div class="feat-title">FastAPI + Python</div>
+        <div class="feat-desc">Async backend, automatyczna dokumentacja Swagger, pydantic validation. Jeden plik main.py.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--claude)">
+        <span class="feat-icon">🌐</span>
+        <div class="feat-title">Vanilla HTML/JS</div>
+        <div class="feat-desc">Zero frameworków. Jeden plik index.html. Działa jako plik lokalny lub serwowany przez FastAPI.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--gemini)">
+        <span class="feat-icon">📡</span>
+        <div class="feat-title">httpx async</div>
+        <div class="feat-desc">Wszystkie modele wywoływane równolegle przez asyncio.gather. Brak blokowania przy wielu modelach.</div>
+      </div>
+      <div class="feat-card" style="--accent-c:var(--grok)">
+        <span class="feat-icon">💾</span>
+        <div class="feat-title">File-based storage</div>
+        <div class="feat-desc">Markdown i JSON na dysku. Bez bazy danych. Łatwy backup, grep, edycja ręczna, git.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-title">AI HUB</div>
+  <p style="margin:8px 0 4px">Personal AI Operating System · v3.0</p>
+  <p>FastAPI · Python · 9 modeli · lokalnie · Twoje dane, Twoja kontrola</p>
+  <p style="margin-top:20px;font-size:10px;letter-spacing:1px">LINUX · ANDROID · VSCode REST Client</p>
+</footer>
+
+<script>
+// Intersection Observer for section animations
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.section').forEach(s => obs.observe(s));
+
+// Orb hover ripple
+document.querySelectorAll('.orb').forEach(orb => {
+  orb.addEventListener('mouseenter', () => {
+    orb.style.boxShadow = `0 0 20px ${getComputedStyle(orb).borderColor}44`;
+  });
+  orb.addEventListener('mouseleave', () => {
+    orb.style.boxShadow = 'none';
+  });
+});
+</script>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Arena · Readme · v3.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

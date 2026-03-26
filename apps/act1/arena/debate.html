@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debata · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04050c;--bg2:#07080f;--bg3:#0a0b18;--border:#141524;
+  --text:#c8d0e0;--text-d:#3a4250;--gold:#c9a84c;--gold-d:#7a6130;
+  --mg:#c060c0;--mg-d:#6a306a;--mg-b:#e080e0;--silver:#8a9bb0;
+  --A:#a064ff;--Ad:rgba(160,100,255,0.10);
+  --B:#ff6a6a;--Bd:rgba(255,106,106,0.10);
+  --mono:'JetBrains Mono',monospace;--serif:'Cormorant Garamond',serif;--sans:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(192,96,192,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(192,96,192,0.012) 1px,transparent 1px);
+  background-size:72px 72px;}
+canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:92px 20px 80px;}
+.header{text-align:center;margin-bottom:36px;}
+.crown{display:flex;align-items:center;gap:12px;}
+.crown::before,.crown::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d));}
+.crown::after{background:linear-gradient(90deg,var(--gold-d),transparent);}
+.crown-text{font-family:var(--mono);font-size:6px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;}
+.logo{font-family:var(--serif);font-size:clamp(22px,5vw,40px);font-weight:300;letter-spacing:5px;color:var(--mg-b);margin:16px 0 4px;}
+.logo em{font-style:italic;color:var(--mg);}
+.sub{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--text-d);text-transform:uppercase;}
+.header-rule{width:80px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);}
+.input-label{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--gold-d);text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.input-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+textarea#teza{width:100%;min-height:70px;background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--serif);font-size:16px;font-style:italic;font-weight:300;
+  line-height:1.7;padding:14px 16px;resize:vertical;outline:none;transition:border-color .2s;}
+textarea#teza:focus{border-color:var(--mg-d);}
+textarea#teza::placeholder{color:var(--text-d);}
+.btn-invoke{margin-top:10px;width:100%;background:transparent;border:1px solid var(--mg-d);
+  color:var(--mg-d);font-family:var(--mono);font-size:8px;letter-spacing:4px;text-transform:uppercase;
+  padding:12px;cursor:pointer;transition:all .25s;}
+.btn-invoke:hover:not(:disabled){border-color:var(--mg);color:var(--mg-b);box-shadow:0 0 24px rgba(192,96,192,0.08);}
+.btn-invoke:disabled{opacity:.3;cursor:default;}
+.arena{margin-top:28px;display:flex;flex-direction:column;gap:2px;}
+.round-label{font-family:var(--mono);font-size:6px;letter-spacing:4px;color:var(--gold-d);
+  text-transform:uppercase;padding:8px 0;text-align:center;opacity:.5;}
+.speech{background:var(--bg2);border:1px solid var(--border);padding:16px 18px;transition:border-color .3s;}
+.speech.side-A{border-left:2px solid var(--A);}
+.speech.side-B{border-left:2px solid var(--B);}
+.speech-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.speech-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.speech-name{font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;}
+.speech-round{margin-left:auto;font-family:var(--mono);font-size:6px;color:var(--text-d);letter-spacing:1px;}
+.speech-body{font-family:var(--serif);font-size:14px;font-weight:300;line-height:1.8;color:var(--silver);font-style:italic;}
+.verdict-card{background:var(--bg2);border:1px solid var(--gold-d);padding:20px 22px;margin-top:2px;}
+.verdict-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.verdict-title{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+.verdict-body{font-family:var(--serif);font-size:15px;font-weight:300;line-height:1.9;color:var(--text);}
+.verdict-body.empty{color:var(--text-d);font-style:italic;font-size:13px;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.pulsing{animation:pulse 1.4s ease infinite;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp .4s ease forwards;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor::after{content:'▌';animation:blink .8s step-end infinite;font-size:.8em;}
+.footer{text-align:center;margin-top:48px;padding-top:16px;border-top:1px solid var(--border);
+  font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--text-d);}
+.sep{height:1px;margin:8px 0;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);opacity:.15;}
+<style>.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}.hud-r{justify-content:flex-end;}.hud-c{text-align:center;padding:0 12px;}.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#e8c878;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}.hud-btn:hover{border-color:rgba(232,200,120,.5);color:#e8c878;background:rgba(232,200,120,.04);}.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Debata</div><div class="hud-sub">dwie instancje · trzy rundy · jeden werdykt</div></div>
+  <nav class="hud-r"><button class="hud-btn">HELP</button><button class="hud-btn">ABOUT</button><a class="hud-btn" href="arena_readme.html" target="_blank">README</a></nav>
+</header>
+<div class="wrap">
+
+  <div class="input-label">teza do debaty</div>
+  <textarea id="teza" placeholder="Podaj tezę którą Claude A będzie bronić, a Claude B atakować…&#10;&#10;np. Sztuczna inteligencja powinna mieć prawa."></textarea>
+  <button class="btn-invoke" id="btn" onclick="startDebate()">⊕ &nbsp; rozpocznij debatę</button>
+  <div class="arena" id="arena"></div>
+  <div class="footer">AiWhisperers · Denis Czuliński · 2026 &nbsp;·&nbsp; Debata</div>
+</div>
+<script>
+const bgc=document.getElementById('bg'),bgx=bgc.getContext('2d');let stars=[];
+function initStars(){bgc.width=window.innerWidth;bgc.height=window.innerHeight;
+  stars=Array.from({length:100},()=>({x:Math.random()*bgc.width,y:Math.random()*bgc.height,r:Math.random()*.7+.1,a:Math.random(),da:(Math.random()-.5)*.003}));}
+function drawStars(){bgx.clearRect(0,0,bgc.width,bgc.height);stars.forEach(s=>{s.a=Math.max(.04,Math.min(1,s.a+s.da));if(s.a<=.04||s.a>=1)s.da*=-1;bgx.beginPath();bgx.arc(s.x,s.y,s.r,0,Math.PI*2);bgx.fillStyle=`rgba(200,215,255,${s.a*.28})`;bgx.fill();});requestAnimationFrame(drawStars);}
+initStars();drawStars();window.addEventListener('resize',initStars);
+
+async function callClaude(system,msg){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages:[{role:'user',content:msg}]})});
+  if(!r.ok)throw new Error(r.status);
+  return(await r.json()).content[0].text;
+}
+
+function streamText(el,text){
+  return new Promise(res=>{
+    el.classList.add('cursor');let i=0;
+    const step=()=>{if(i<=text.length){el.textContent=text.slice(0,i);i++;setTimeout(step,11);}else{el.classList.remove('cursor');res();}};step();
+  });
+}
+
+function addSpeech(side,round,text){
+  const arena=document.getElementById('arena');
+  const div=document.createElement('div');
+  div.className=`speech side-${side} fade-in`;
+  div.innerHTML=`<div class="speech-header">
+    <div class="speech-dot" style="background:var(--${side})"></div>
+    <span class="speech-name" style="color:var(--${side})">Claude ${side}</span>
+    <span class="speech-round">runda ${round}</span>
+  </div><div class="speech-body" id="speech-${side}-${round}"></div>`;
+  arena.appendChild(div);
+  return document.getElementById(`speech-${side}-${round}`);
+}
+
+function addRoundLabel(n){
+  const arena=document.getElementById('arena');
+  const d=document.createElement('div');
+  d.className='round-label';d.textContent=`— runda ${n} —`;
+  arena.appendChild(d);
+}
+
+function addVerdict(){
+  const arena=document.getElementById('arena');
+  const d=document.createElement('div');d.className='sep';arena.appendChild(d);
+  const v=document.createElement('div');
+  v.className='verdict-card fade-in';
+  v.innerHTML=`<div class="verdict-header"><div class="speech-dot" style="background:var(--gold)"></div>
+    <span class="verdict-title">Werdykt</span></div>
+    <div class="verdict-body empty" id="verdict-body">Analizuję debatę…</div>`;
+  arena.appendChild(v);
+  return document.getElementById('verdict-body');
+}
+
+async function startDebate(){
+  const teza=document.getElementById('teza').value.trim();
+  if(!teza)return;
+  const btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='⊙  debata trwa…';
+  document.getElementById('arena').innerHTML='';
+
+  const SYS_A=`Jesteś Claude A — obrońcą tezy w debacie. Twój styl: precyzyjny, pewny, logiczny. Bronisz swojej pozycji konsekwentnie przez trzy rundy, odpowiadając na ataki przeciwnika. Każda wypowiedź to 3-4 zdania. Po polsku. Bez wstępów "jako obrońca".`;
+  const SYS_B=`Jesteś Claude B — krytykiem tezy w debacie. Twój styl: ostry, sceptyczny, szukasz słabości. Atakujesz tezę i odpowiadasz na argumenty obrońcy przez trzy rundy. Każda wypowiedź to 3-4 zdania. Po polsku. Bez wstępów "jako krytyk".`;
+  const SYS_W=`Jesteś arbitrem debaty. Przeanalizujesz trzy rundy wymiany argumentów i wydasz werdykt: kto miał mocniejsze argumenty i dlaczego. Bądź konkretny i sprawiedliwy. 4-6 zdań. Po polsku.`;
+
+  let historyA=[],historyB=[];
+
+  try{
+    for(let round=1;round<=3;round++){
+      addRoundLabel(round);
+      // A mówi
+      const promptA=round===1?`Teza do obrony: "${teza}". Przedstaw swoją główną argumentację.`
+        :`Teza: "${teza}". Poprzedni atak B: "${historyB[historyB.length-1]}". Odpowiedz i rozwiń swoje argumenty.`;
+      const elA=addSpeech('A',round,'');
+      const resA=await callClaude(SYS_A,promptA);
+      historyA.push(resA);
+      await streamText(elA,resA);
+      // B mówi
+      const promptB=`Teza: "${teza}". Argument A w rundzie ${round}: "${resA}". ${round===1?'Zaatakuj tezę i argument.':'Kontruj i rozwiń swój atak.'}`;
+      const elB=addSpeech('B',round,'');
+      const resB=await callClaude(SYS_B,promptB);
+      historyB.push(resB);
+      await streamText(elB,resB);
+    }
+    // Werdykt
+    const elV=addVerdict();
+    const summary=historyA.map((a,i)=>`Runda ${i+1} — A: ${a}\nB: ${historyB[i]}`).join('\n\n');
+    const resV=await callClaude(SYS_W,`Teza: "${teza}"\n\n${summary}`);
+    elV.classList.remove('empty');
+    await streamText(elV,resV);
+  }catch(e){console.error(e);}
+
+  btn.disabled=false;btn.textContent='⊕  nowa debata';
+}
+
+document.getElementById('teza').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();startDebate();}});
+</script>
+<footer class="hud-bot"><span class="hud-bot-meta">Debata · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

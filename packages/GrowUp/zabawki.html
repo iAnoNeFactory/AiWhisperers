@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Czas sprzątać! 🌙</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap');
+
+  :root {
+    --sky-top: #0d0621;
+    --sky-mid: #2b1055;
+    --sky-horizon-purple: #7b2d8b;
+    --sky-horizon-red: #c0392b;
+    --sky-horizon-orange: #e67e22;
+    --sky-glow: #f39c12;
+    --card-bg: rgba(255,240,215,0.10);
+    --card-border: rgba(255,210,160,0.18);
+    --card-hover: rgba(255,240,215,0.18);
+    --text-warm: #fff5e6;
+    --text-soft: #f0d9b5;
+    --accent-gold: #f1c40f;
+    --accent-ember: #e8a87c;
+    --btn-from: #e8a87c;
+    --btn-to: #c0622a;
+    --font-display: 'Baloo 2', cursive;
+    --font-body: 'Nunito', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: var(--font-body);
+    min-height: 100vh;
+    background: linear-gradient(180deg,
+      var(--sky-top) 0%, var(--sky-mid) 25%,
+      var(--sky-horizon-purple) 50%, var(--sky-horizon-red) 68%,
+      var(--sky-horizon-orange) 82%, var(--sky-glow) 100%
+    );
+    color: var(--text-warm);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .stars { position:fixed;top:0;left:0;width:100%;height:60%;pointer-events:none;z-index:0; }
+  .star { position:absolute;background:white;border-radius:50%;animation:twinkle var(--dur,3s) ease-in-out infinite;animation-delay:var(--delay,0s);opacity:0; }
+  @keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.8);}50%{opacity:var(--max-op,.9);transform:scale(1.2);} }
+  .horizon-glow { position:fixed;bottom:0;left:0;width:100%;height:35%;background:radial-gradient(ellipse at 50% 100%,rgba(243,156,18,.25) 0%,transparent 70%);pointer-events:none;z-index:0; }
+
+  #app { position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center; }
+  .screen { display:none;width:100%;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:clamp(1rem,4vw,3rem);animation:fadeIn .5s ease; }
+  .screen.active { display:flex; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;} }
+
+  h2 { font-family:var(--font-display);font-size:clamp(1.4rem,4vw,2.8rem);font-weight:700;color:var(--text-warm);text-align:center;margin-bottom:.4em; }
+  p  { font-size:clamp(1rem,2.5vw,1.4rem);color:var(--text-soft);text-align:center;line-height:1.7;max-width:640px; }
+
+  /* ── BUTTONS ── */
+  .btn { display:inline-flex;align-items:center;justify-content:center;gap:.5em;font-family:var(--font-display);font-size:clamp(1.1rem,3vw,1.6rem);font-weight:700;padding:clamp(.7em,2vw,1em) clamp(1.4em,4vw,2.4em);border-radius:100px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--btn-from),var(--btn-to));color:white;text-shadow:0 1px 4px rgba(0,0,0,.3);box-shadow:0 4px 24px rgba(192,98,42,.4),0 1px 0 rgba(255,255,255,.15) inset;transition:transform .15s,box-shadow .15s;min-width:clamp(120px,30vw,240px);min-height:clamp(52px,8vw,72px);outline:none; }
+  .btn:hover,.btn:focus { transform:scale(1.05);box-shadow:0 6px 32px rgba(192,98,42,.6),0 1px 0 rgba(255,255,255,.15) inset; }
+  .btn:active { transform:scale(.97); }
+  .btn:focus-visible { outline:3px solid var(--accent-gold);outline-offset:4px; }
+  .btn-ghost { background:transparent;border:2px solid rgba(255,240,215,.3);color:var(--text-soft);box-shadow:none;font-size:clamp(.9rem,2vw,1.2rem);padding:.5em 1.4em;min-width:0;min-height:44px; }
+  .btn-ghost:hover,.btn-ghost:focus { background:rgba(255,240,215,.1);border-color:rgba(255,240,215,.6);transform:none; }
+  .btn-sm { font-size:clamp(.75rem,1.6vw,.95rem);padding:.4em .9em;min-width:0;min-height:40px; }
+
+  /* ══════════ INTRO SLIDES ══════════ */
+  #screen-intro { gap:0;padding:0;justify-content:stretch; }
+  .slides-wrap { width:100%;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(1.5rem,5vw,4rem) clamp(1rem,4vw,3rem);gap:1.4rem; }
+
+  .slide { display:none;flex-direction:column;align-items:center;gap:1.2rem;animation:slideIn .45s ease;width:100%;max-width:680px; }
+  .slide.active { display:flex; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(28px);}to{opacity:1;transform:none;} }
+
+  .slide-emoji { font-size:clamp(3.5rem,11vw,6.5rem);animation:float 4s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(243,156,18,.45)); }
+  @keyframes float { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
+
+  .slide-card { background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:clamp(1.2rem,4vw,2.2rem);width:100%;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+  .slide-title { font-family:var(--font-display);font-size:clamp(1.3rem,3.5vw,2rem);font-weight:800;color:var(--text-warm);text-align:center;margin-bottom:.6rem; }
+  .slide-body { font-size:clamp(.95rem,2.4vw,1.3rem);color:var(--text-soft);text-align:center;line-height:1.85; }
+  .slide-body .hl  { color:var(--accent-gold);font-weight:700; }
+  .slide-body .ask { color:var(--accent-ember);font-style:italic;font-weight:700; }
+
+  .toy-parade { display:flex;gap:clamp(.5rem,2vw,1rem);flex-wrap:wrap;justify-content:center;font-size:clamp(1.8rem,5vw,3rem); }
+  .toy-icon { animation:bounce 2s ease-in-out infinite;animation-delay:var(--d,0s);display:inline-block; }
+  @keyframes bounce { 0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-8px) rotate(5deg);} }
+
+  .slides-footer { display:flex;flex-direction:column;align-items:center;gap:.8rem;width:100%; }
+  .slides-nav { display:flex;align-items:center;gap:1rem; }
+  .dot { width:clamp(10px,2.5vw,14px);height:clamp(10px,2.5vw,14px);border-radius:50%;background:rgba(255,255,255,.25);border:none;cursor:pointer;transition:background .2s,transform .2s;outline:none;padding:0; }
+  .dot.active { background:var(--accent-gold);transform:scale(1.25); }
+  .dot:focus-visible { outline:3px solid var(--accent-gold); }
+  .nav-arrow { background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text-warm);border-radius:50%;width:clamp(44px,8vw,60px);height:clamp(44px,8vw,60px);font-size:clamp(1.1rem,3vw,1.6rem);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .15s;outline:none; }
+  .nav-arrow:hover,.nav-arrow:focus { background:rgba(255,255,255,.2);transform:scale(1.08); }
+  .nav-arrow:focus-visible { outline:3px solid var(--accent-gold); }
+  .nav-arrow:disabled { opacity:.25;cursor:default;transform:none; }
+
+  /* ══════════ MAP ══════════ */
+  #screen-map { gap:1.6rem;padding-top:2.5rem;padding-bottom:2.5rem; }
+  .progress-bar-wrap { width:100%;max-width:700px;background:rgba(255,255,255,.08);border-radius:100px;height:10px;overflow:hidden; }
+  .progress-bar-fill { height:100%;background:linear-gradient(90deg,var(--accent-ember),var(--accent-gold));border-radius:100px;transition:width .6s ease;width:0%; }
+  .games-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(140px,28vw,200px),1fr));gap:clamp(.8rem,2vw,1.4rem);width:100%;max-width:900px; }
+  .game-card { background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;padding:clamp(1rem,3vw,1.6rem);display:flex;flex-direction:column;align-items:center;gap:.6rem;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);min-height:clamp(120px,18vw,180px);outline:none;position:relative; }
+  .game-card:hover,.game-card:focus { background:var(--card-hover);transform:translateY(-4px) scale(1.03);box-shadow:0 8px 32px rgba(0,0,0,.25);border-color:rgba(255,210,160,.4); }
+  .game-card:focus-visible { outline:3px solid var(--accent-gold); }
+  .game-card.done { opacity:.6;pointer-events:none; }
+  .game-card.done::after { content:'✓';position:absolute;top:8px;right:12px;font-size:1.4rem;color:var(--accent-gold);font-weight:900; }
+  .game-emoji { font-size:clamp(2.2rem,6vw,3.2rem); }
+  .game-title { font-family:var(--font-display);font-size:clamp(.85rem,2vw,1.1rem);font-weight:700;color:var(--text-warm);text-align:center;line-height:1.2; }
+  .game-num { font-size:.75rem;color:rgba(255,245,230,.4);font-weight:600; }
+
+  /* ══════════ GAME SCREEN ══════════ */
+  #screen-game { gap:1.5rem;justify-content:flex-start;padding-top:clamp(1.5rem,4vh,3rem); }
+  .game-header { display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;gap:1rem; }
+  .game-area { width:100%;max-width:900px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:clamp(1.2rem,4vw,2.4rem);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);min-height:clamp(280px,45vh,480px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem; }
+
+  /* ── shared game widgets ── */
+  .small-text { font-size:clamp(.8rem,2vw,1rem);color:var(--text-soft);text-align:center; }
+  .color-items { display:flex;flex-wrap:wrap;gap:clamp(.6rem,2vw,1rem);justify-content:center;margin-bottom:.6rem; }
+  .block-item { width:clamp(52px,10vw,72px);height:clamp(52px,10vw,72px);border-radius:12px;cursor:pointer;border:3px solid transparent;transition:transform .15s,border-color .15s;font-size:clamp(1.4rem,4vw,2rem);display:flex;align-items:center;justify-content:center;outline:none; }
+  .block-item:hover,.block-item:focus { transform:scale(1.1); }
+  .block-item.selected { border-color:var(--accent-gold);transform:scale(1.12);box-shadow:0 0 0 3px rgba(241,196,15,.4); }
+  .block-item:focus-visible { outline:3px solid var(--accent-gold); }
+  .color-buckets { display:flex;gap:clamp(.6rem,2vw,1rem);flex-wrap:wrap;justify-content:center; }
+  .bucket { width:clamp(64px,13vw,90px);height:clamp(64px,13vw,90px);border-radius:16px;border:3px dashed rgba(255,255,255,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;font-size:clamp(1.6rem,4vw,2.2rem);gap:.2rem;outline:none; }
+  .bucket:hover,.bucket:focus { border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.1);transform:scale(1.05); }
+  .bucket:focus-visible { outline:3px solid var(--accent-gold); }
+  .bucket-label { font-size:clamp(.6rem,1.5vw,.8rem);color:var(--text-soft);font-weight:700; }
+  .bucket-count { font-size:clamp(.75rem,2vw,1rem);color:var(--accent-gold);font-weight:800; }
+  .memory-grid { display:grid;gap:clamp(.5rem,1.5vw,.9rem);justify-content:center; }
+  .mem-card { width:clamp(60px,12vw,90px);height:clamp(60px,12vw,90px);border-radius:14px;background:rgba(255,240,215,.1);border:2px solid rgba(255,210,160,.2);cursor:pointer;font-size:clamp(1.6rem,4vw,2.4rem);display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;outline:none; }
+  .mem-card:hover,.mem-card:focus { background:rgba(255,240,215,.18);transform:scale(1.06); }
+  .mem-card:focus-visible { outline:3px solid var(--accent-gold); }
+  .mem-card .face { display:none; }
+  .mem-card .back { display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.8em; }
+  .mem-card.flipped .face { display:flex;align-items:center;justify-content:center;width:100%;height:100%; }
+  .mem-card.flipped .back { display:none; }
+  .mem-card.matched { background:rgba(241,196,15,.15);border-color:rgba(241,196,15,.5);pointer-events:none; }
+  .garage-wrap { display:flex;flex-direction:column;align-items:center;gap:1.4rem;width:100%; }
+  .cars-row,.garages-row { display:flex;flex-wrap:wrap;gap:clamp(.6rem,2vw,1rem);justify-content:center; }
+  .car-item { background:rgba(255,240,215,.12);border:2px solid rgba(255,210,160,.25);border-radius:14px;padding:.5rem 1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.3rem;font-size:clamp(1.6rem,5vw,2.4rem);min-width:clamp(64px,12vw,90px);transition:transform .15s,border-color .15s;outline:none; }
+  .car-item:hover,.car-item:focus { transform:scale(1.1);border-color:var(--accent-gold); }
+  .car-item.selected { border-color:var(--accent-gold);background:rgba(241,196,15,.12);transform:scale(1.08); }
+  .car-item:focus-visible { outline:3px solid var(--accent-gold); }
+  .car-size-label { font-size:clamp(.6rem,1.5vw,.8rem);color:var(--text-soft);font-weight:700; }
+  .garage { background:rgba(255,240,215,.06);border:2px dashed rgba(255,210,160,.3);border-radius:16px;width:clamp(70px,14vw,100px);height:clamp(80px,14vw,110px);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:.3rem;transition:border-color .2s,background .2s;font-size:clamp(.7rem,2vw,.9rem);color:var(--text-soft);font-weight:700;outline:none; }
+  .garage:hover,.garage:focus { border-color:rgba(255,210,160,.7);background:rgba(255,240,215,.1); }
+  .garage:focus-visible { outline:3px solid var(--accent-gold); }
+  .garage.filled { border-style:solid;border-color:rgba(241,196,15,.5);background:rgba(241,196,15,.1);pointer-events:none; }
+  .garage .garage-emoji { font-size:clamp(1.8rem,5vw,2.6rem); }
+  .habitats { display:flex;flex-wrap:wrap;gap:clamp(.6rem,2vw,1rem);justify-content:center;width:100%; }
+  .habitat-zone { background:rgba(255,240,215,.07);border:2px dashed rgba(255,210,160,.25);border-radius:16px;padding:clamp(.8rem,2vw,1.2rem);flex:1 1 clamp(100px,20vw,160px);min-height:clamp(90px,16vw,130px);display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:border-color .2s,background .2s;outline:none;max-width:180px; }
+  .habitat-zone:hover,.habitat-zone:focus { border-color:rgba(255,210,160,.6);background:rgba(255,240,215,.13); }
+  .habitat-zone:focus-visible { outline:3px solid var(--accent-gold); }
+  .habitat-icon { font-size:clamp(1.6rem,4vw,2.2rem); }
+  .habitat-name { font-size:clamp(.7rem,1.8vw,.9rem);font-weight:700;color:var(--text-soft); }
+  .habitat-animals { display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;font-size:clamp(1.2rem,3vw,1.7rem); }
+  .animals-pool { display:flex;flex-wrap:wrap;gap:clamp(.5rem,2vw,.8rem);justify-content:center; }
+  .animal-chip { background:rgba(255,240,215,.12);border:2px solid rgba(255,210,160,.25);border-radius:50px;padding:.4rem .9rem;cursor:pointer;font-size:clamp(1.3rem,4vw,1.9rem);transition:transform .15s,border-color .15s;display:flex;align-items:center;gap:.3rem;outline:none; }
+  .animal-chip span.label { font-size:clamp(.65rem,1.5vw,.8rem);color:var(--text-soft);font-weight:700; }
+  .animal-chip:hover,.animal-chip:focus { transform:scale(1.1);border-color:var(--accent-gold); }
+  .animal-chip.selected { border-color:var(--accent-gold);background:rgba(241,196,15,.12); }
+  .animal-chip:focus-visible { outline:3px solid var(--accent-gold); }
+  .shelf-wrap { width:100%;display:flex;flex-direction:column;gap:1.2rem;align-items:center; }
+  .shelf { background:rgba(139,90,43,.3);border:2px solid rgba(160,110,60,.4);border-radius:12px;padding:.7rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;width:100%;max-width:600px;min-height:70px; }
+  .shelf-label { font-size:clamp(.75rem,1.8vw,.9rem);color:var(--accent-ember);font-weight:700;width:100%; }
+  .shelf-slot { width:clamp(52px,10vw,70px);height:clamp(52px,10vw,70px);border:2px dashed rgba(255,210,160,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1.4rem,4vw,2rem);cursor:pointer;transition:border-color .2s,background .2s;outline:none; }
+  .shelf-slot:hover,.shelf-slot:focus { border-color:var(--accent-gold);background:rgba(241,196,15,.08); }
+  .shelf-slot:focus-visible { outline:3px solid var(--accent-gold); }
+  .shelf-slot.filled { border-style:solid;border-color:rgba(241,196,15,.4);pointer-events:none; }
+  .items-pool { display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center; }
+  .shelf-item { background:rgba(255,240,215,.12);border:2px solid rgba(255,210,160,.25);border-radius:12px;padding:.4rem .7rem;cursor:pointer;font-size:clamp(1.3rem,4vw,1.9rem);transition:transform .15s,border-color .15s;display:flex;flex-direction:column;align-items:center;gap:.2rem;outline:none; }
+  .shelf-item:hover,.shelf-item:focus { transform:scale(1.1);border-color:var(--accent-gold); }
+  .shelf-item.selected { border-color:var(--accent-gold);background:rgba(241,196,15,.12); }
+  .shelf-item:focus-visible { outline:3px solid var(--accent-gold); }
+  .shelf-item-label { font-size:clamp(.55rem,1.2vw,.7rem);color:var(--text-soft);font-weight:700; }
+  .count-stage { display:flex;flex-direction:column;align-items:center;gap:1.2rem;width:100%; }
+  .count-pile { display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;max-width:380px;background:rgba(255,240,215,.06);border-radius:16px;padding:1rem;min-height:100px; }
+  .count-item { font-size:clamp(1.6rem,5vw,2.4rem); }
+  .answer-btns { display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center; }
+  .answer-btn { width:clamp(56px,12vw,80px);height:clamp(56px,12vw,80px);border-radius:50%;border:2px solid rgba(255,210,160,.3);background:rgba(255,240,215,.1);color:var(--text-warm);font-family:var(--font-display);font-size:clamp(1.2rem,3vw,1.8rem);font-weight:800;cursor:pointer;transition:transform .15s,background .2s,border-color .2s;outline:none; }
+  .answer-btn:hover,.answer-btn:focus { transform:scale(1.1);background:rgba(255,240,215,.2);border-color:rgba(255,210,160,.6); }
+  .answer-btn:focus-visible { outline:3px solid var(--accent-gold); }
+  .answer-btn.correct { background:rgba(241,196,15,.25);border-color:var(--accent-gold); }
+  .answer-btn.wrong { background:rgba(192,57,43,.25);border-color:rgba(192,57,43,.6); }
+  .goodnight-wrap { width:100%;display:flex;flex-direction:column;gap:1rem;align-items:center; }
+  .goodnight-zones { display:flex;flex-wrap:wrap;gap:clamp(.8rem,2vw,1.2rem);justify-content:center;width:100%; }
+  .gn-zone { background:rgba(255,240,215,.07);border:2px dashed rgba(255,210,160,.3);border-radius:16px;padding:clamp(.8rem,2vw,1.2rem);flex:1 1 clamp(120px,22vw,180px);max-width:200px;min-height:clamp(90px,16vw,130px);display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:border-color .2s,background .2s;outline:none; }
+  .gn-zone:hover,.gn-zone:focus { border-color:rgba(255,210,160,.6);background:rgba(255,240,215,.12); }
+  .gn-zone:focus-visible { outline:3px solid var(--accent-gold); }
+  .gn-zone-icon { font-size:clamp(1.8rem,5vw,2.6rem); }
+  .gn-zone-name { font-size:clamp(.7rem,1.8vw,.9rem);font-weight:700;color:var(--text-soft); }
+  .gn-zone-items { display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;font-size:clamp(1.1rem,3vw,1.5rem); }
+  .gn-pool { display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center; }
+  .gn-item { background:rgba(255,240,215,.12);border:2px solid rgba(255,210,160,.25);border-radius:50px;padding:.5rem 1rem;cursor:pointer;font-size:clamp(1.2rem,3.5vw,1.7rem);transition:transform .15s,border-color .15s;display:flex;align-items:center;gap:.4rem;outline:none; }
+  .gn-item span.label { font-size:clamp(.65rem,1.5vw,.8rem);color:var(--text-soft);font-weight:700; }
+  .gn-item:hover,.gn-item:focus { transform:scale(1.1);border-color:var(--accent-gold); }
+  .gn-item.selected { border-color:var(--accent-gold);background:rgba(241,196,15,.12); }
+  .gn-item:focus-visible { outline:3px solid var(--accent-gold); }
+
+  .feedback-msg { font-family:var(--font-display);font-size:clamp(1.1rem,3vw,1.6rem);font-weight:700;padding:.6rem 1.4rem;border-radius:100px;animation:popIn .3s ease;text-align:center; }
+  .feedback-msg.ok  { background:rgba(241,196,15,.2);color:var(--accent-gold);border:1.5px solid rgba(241,196,15,.4); }
+  .feedback-msg.err { background:rgba(192,57,43,.2);color:#e74c3c;border:1.5px solid rgba(192,57,43,.4); }
+  @keyframes popIn { from{transform:scale(.8);opacity:0;}to{transform:scale(1);opacity:1;} }
+
+  #screen-win { gap:2rem; }
+  .stars-rain { font-size:clamp(2rem,6vw,3.5rem);animation:starFall 1s ease-out both;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center; }
+  @keyframes starFall { from{transform:translateY(-30px);opacity:0;}to{transform:none;opacity:1;} }
+  .win-card { background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:clamp(1.4rem,4vw,2.8rem);max-width:600px;width:100%;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;gap:1rem; }
+
+  @media(min-width:1200px){.games-grid{grid-template-columns:repeat(4,1fr);max-width:1000px;}}
+  @media(min-width:1800px){html{font-size:20px;}}
+</style>
+</head>
+<body>
+<div class="stars" id="stars-container"></div>
+<div class="horizon-glow"></div>
+<div id="app">
+
+<!-- ═══════════ INTRO SLIDES ═══════════ -->
+<div id="screen-intro" class="screen active">
+  <div class="slides-wrap">
+
+    <div class="slide active" id="slide-0">
+      <div class="slide-emoji">🌅</div>
+      <div class="slide-card">
+        <div class="slide-title">Wieczór w pokoju</div>
+        <div class="slide-body">
+          Słońce powoli chowało się za horyzontem.<br>
+          Niebo zrobiło się <span class="hl">pomarańczowe i fioletowe</span>.<br><br>
+          Mama zajrzała do pokoju i powiedziała:<br>
+          <span class="hl">„Czas się myć i iść spać!"</span><br><br>
+          Ale w pokoju był… <span class="hl">totalny bałagan.</span> 😬
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+      <div class="slide-emoji">🧸</div>
+      <div class="slide-card">
+        <div class="slide-title">Zabawki mówią…</div>
+        <div class="slide-body">
+          Misio siedział na podłodze i mruczał:<br>
+          <span class="hl">„Chcę do swojej półki!"</span><br><br>
+          Autko wołało z kąta:<br>
+          <span class="hl">„Zaparkuj mnie w garażu!"</span><br><br>
+          Klocki leżały wszędzie i mówiły:<br>
+          <span class="hl">„Posortuj nas, prosimy!"</span><br><br>
+          <span class="ask">Czy Twoje zabawki też tak mówią wieczorem? 🤔</span>
+        </div>
+      </div>
+      <div class="toy-parade" id="toy-parade-1"></div>
+    </div>
+
+    <div class="slide" id="slide-2">
+      <div class="slide-emoji">🌟</div>
+      <div class="slide-card">
+        <div class="slide-title">Dlaczego warto sprzątać?</div>
+        <div class="slide-body">
+          Kiedy zabawki leżą na podłodze,<br>
+          łatwo na nie <span class="hl">nadepnąć w nocy</span>. Auu! 😬<br><br>
+          Kiedy wszystko jest na swoim miejscu,<br>
+          <span class="hl">łatwiej je potem znaleźć</span> do zabawy! 🎉<br><br>
+          Posprzątany pokój to jak <span class="hl">supermoc</span> —<br>
+          jutro znowu wszystko będzie gotowe!<br><br>
+          <span class="ask">Czy wiesz, gdzie mieszka Twój ulubiony miś? 🧸</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+      <div class="slide-emoji">💪</div>
+      <div class="slide-card">
+        <div class="slide-title">Ty też możesz pomóc!</div>
+        <div class="slide-body">
+          Sprzątanie to <span class="hl">nie kara</span> — to misja! 🚀<br><br>
+          Najlepsi pomocnicy wiedzą,<br>
+          że każda zabawka ma <span class="hl">swój domek</span>.<br><br>
+          Klocki lubią być razem z klockami.<br>
+          Misie chcą być blisko innych misiów.<br>
+          Autka chcą stać w garażu.<br><br>
+          <span class="ask">Czy jesteś gotowy/gotowa na misję? 😄</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+      <div class="slide-emoji">🎮</div>
+      <div class="slide-card">
+        <div class="slide-title">Co nas czeka?</div>
+        <div class="slide-body">
+          Dziś masz <span class="hl">7 zadań</span> do wykonania!<br><br>
+          Posortuj klocki 🧱 · Znajdź pary misiów 🐻<br>
+          Zaparkuj autka 🚗 · Odnieś zwierzątka 🐘<br>
+          Poukładaj półkę 📚 · Policz zabawki 🔢<br>
+          i na końcu… <span class="hl">powiedz dobranoc!</span> 🌙<br><br>
+          Za każde zadanie zdobywasz <span class="hl">gwiazdkę ⭐</span>!
+        </div>
+      </div>
+      <button class="btn" onclick="showMap()">Zaczynamy misję! 🚀</button>
+    </div>
+
+    <div class="slides-footer">
+      <div class="slides-nav">
+        <button class="nav-arrow" id="btn-prev" onclick="changeSlide(-1)" aria-label="Poprzedni">‹</button>
+        <div style="display:flex;gap:.5rem;" id="dots-wrap"></div>
+        <button class="nav-arrow" id="btn-next-slide" onclick="changeSlide(1)" aria-label="Następny">›</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="showMap()">Pomiń intro →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ MAP ═══════════ -->
+<div id="screen-map" class="screen">
+  <h2>Wybierz zadanie</h2>
+  <p class="small-text">Ukończ wszystkie 7 wyzwań! 🌟</p>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  <div class="games-grid" id="games-grid"></div>
+  <p class="small-text" id="map-done-msg" style="display:none;color:var(--accent-gold);font-weight:700;">Wszystkie ukończone! 🎉</p>
+  <button class="btn btn-ghost btn-sm" onclick="goToSlide(0);showScreen('intro');" style="margin-top:.5rem;">← Wróć do historyjki</button>
+</div>
+
+<!-- ═══════════ GAME ═══════════ -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <button class="btn btn-ghost btn-sm" onclick="showMap()">← Mapa</button>
+    <h2 id="game-title" style="flex:1;font-size:clamp(1rem,3vw,1.8rem);"></h2>
+    <button class="btn btn-ghost btn-sm" onclick="goToSlide(0);showScreen('intro');">🏠 Intro</button>
+  </div>
+  <div class="game-area" id="game-area"></div>
+  <div id="feedback" style="min-height:2.5rem;display:flex;align-items:center;justify-content:center;"></div>
+  <button class="btn" id="btn-next" style="display:none;" onclick="completeGame()">Świetnie! ✨</button>
+</div>
+
+<!-- ═══════════ WIN ═══════════ -->
+<div id="screen-win" class="screen">
+  <div class="stars-rain">⭐🌟✨⭐🌟✨⭐</div>
+  <div class="win-card">
+    <h2 style="font-size:clamp(2rem,6vw,4rem);margin:0;">Brawo! 🎉</h2>
+    <p>Wszystkie zabawki wróciły na swoje miejsca!<br>Teraz możemy spokojnie iść spać. 🌙</p>
+    <div style="font-size:clamp(2.5rem,8vw,5rem);animation:float 3s ease-in-out infinite;">😴</div>
+    <p class="small-text">Dobranoc! Do zobaczenia jutro. 🌅</p>
+  </div>
+  <button class="btn" onclick="resetAll()">Zagraj jeszcze raz</button>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════════════
+//  KONFIGURACJA EMOJI
+//  ← tutaj żona podmienia na ulubione emoji dzieci
+// ══════════════════════════════════════════════════════
+const EMOJI = {
+  // ── Klocki ──────────────────────────────────────────
+  blockRed:     '🧱',
+  blockYellow:  '🟨',
+  blockBlue:    '🟦',
+  bucketRed:    '🔴',
+  bucketYellow: '🟡',
+  bucketBlue:   '🔵',
+
+  // ── Misie (pary do memory) ───────────────────────────
+  bear1: '🐻',
+  bear2: '🐰',
+  bear3: '🦊',
+  bear4: '🐼',
+  bear5: '🐨',
+  bear6: '🐸',
+  cardBack: '🌙',   // rewers karty
+
+  // ── Samochody ────────────────────────────────────────
+  carSmall1: '🚗',
+  carSmall2: '🚕',
+  carMid1:   '🚙',
+  carMid2:   '🚐',
+  carBig1:   '🚌',
+  carBig2:   '🚎',
+  garageSmall: '🏠',
+  garageMid:   '🏢',
+  garageBig:   '🏗️',
+
+  // ── Zwierzątka i habitaty ────────────────────────────
+  forest1: '🦊',  forest2: '🐺',
+  water1:  '🐟',  water2:  '🦆',
+  farm1:   '🐄',  farm2:   '🐔',
+  habitatForest: '🌲',
+  habitatWater:  '🌊',
+  habitatFarm:   '🌾',
+
+  // ── Półka ────────────────────────────────────────────
+  shelfBear1:  '🧸',  shelfBear2:  '🐰',
+  shelfCar1:   '🚗',  shelfCar2:   '🚕',
+  shelfBlock1: '🧱',  shelfBlock2: '🟦',
+
+  // ── Liczenie ─────────────────────────────────────────
+  countEmoji1: '🧱',
+  countEmoji2: '🚗',
+  countEmoji3: '🐻',
+  countEmoji4: '🐘',
+
+  // ── Dobranoc ─────────────────────────────────────────
+  gnBear1: '🧸',   gnBear2:    '🐰',
+  gnCar1:  '🚗',   gnCar2:     '🚕',   gnCar3: '🚙',
+  gnBlock: '🧱',
+  gnAnimal1: '🐘', gnAnimal2:  '🦁',
+  gnZoneBed:     '🛏️',
+  gnZoneGarage:  '🏠',
+  gnZoneBox:     '📦',
+  gnZoneAnimals: '🌿',
+
+  // ── Parade w intro (slajd 2) ─────────────────────────
+  parade: ['🧸','🚗','🧱','🐘','🏥','🦁','🚂'],
+};
+
+// ══════════════════════════════════════════════════════
+//  DEFINICJE GIER
+// ══════════════════════════════════════════════════════
+const GAMES = [
+  {id:1, emoji:'🧱', title:'Posortuj klocki',     desc:'Wybierz klocek, potem koszyk tego samego koloru!'},
+  {id:2, emoji:'🐻', title:'Memory z misiami',     desc:'Znajdź wszystkie pary!'},
+  {id:3, emoji:'🚗', title:'Parkowanie',            desc:'Zaparkuj auto w odpowiednim garażu!'},
+  {id:4, emoji:'🐘', title:'Zwierzątka do domków', desc:'Gdzie mieszka każde zwierzątko?'},
+  {id:5, emoji:'📚', title:'Poukładaj półkę',       desc:'Każda rzecz ma swoje miejsce!'},
+  {id:6, emoji:'🔢', title:'Policz zabawki',        desc:'Ile zabawek widzisz w stosiku?'},
+  {id:7, emoji:'🌙', title:'Dobranoc!',             desc:'Ułóż wszystko do snu!'},
+];
+
+// ══════════════════════════════════════════════════════
+//  GWIAZDKI
+// ══════════════════════════════════════════════════════
+(function(){
+  const c=document.getElementById('stars-container');
+  for(let i=0;i<55;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.5+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${(Math.random()*3+2).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s;--max-op:${(Math.random()*.6+.3).toFixed(2)}`;
+    c.appendChild(s);
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+//  PARADE EMOJI (slajd 2)
+// ══════════════════════════════════════════════════════
+(function(){
+  const wrap=document.getElementById('toy-parade-1');
+  EMOJI.parade.forEach((e,i)=>{
+    const s=document.createElement('span');
+    s.className='toy-icon'; s.style.setProperty('--d',i*0.2+'s'); s.textContent=e;
+    wrap.appendChild(s);
+  });
+})();
+
+// ══════════════════════════════════════════════════════
+//  SLIDES
+// ══════════════════════════════════════════════════════
+let currentSlide=0;
+const TOTAL_SLIDES=5;
+
+function buildDots(){
+  const wrap=document.getElementById('dots-wrap'); wrap.innerHTML='';
+  for(let i=0;i<TOTAL_SLIDES;i++){
+    const d=document.createElement('button'); d.className='dot'+(i===0?' active':'');
+    d.setAttribute('aria-label','Slajd '+(i+1));
+    d.onclick=(idx=>()=>goToSlide(idx))(i);
+    wrap.appendChild(d);
+  }
+}
+function goToSlide(idx){
+  document.getElementById('slide-'+currentSlide).classList.remove('active');
+  currentSlide=idx;
+  document.getElementById('slide-'+currentSlide).classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===currentSlide));
+  document.getElementById('btn-prev').disabled=currentSlide===0;
+  document.getElementById('btn-next-slide').disabled=currentSlide===TOTAL_SLIDES-1;
+}
+function changeSlide(dir){ const n=currentSlide+dir; if(n>=0&&n<TOTAL_SLIDES) goToSlide(n); }
+
+buildDots();
+document.getElementById('btn-prev').disabled=true;
+
+// ══════════════════════════════════════════════════════
+//  ROUTING
+// ══════════════════════════════════════════════════════
+let completedGames=new Set(), currentGame=null;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+function showMap(){ renderMap(); showScreen('map'); }
+function resetAll(){ completedGames.clear(); currentGame=null; goToSlide(0); showScreen('intro'); }
+
+// ══════════════════════════════════════════════════════
+//  MAP
+// ══════════════════════════════════════════════════════
+function renderMap(){
+  const grid=document.getElementById('games-grid'); grid.innerHTML='';
+  GAMES.forEach(g=>{
+    const done=completedGames.has(g.id);
+    const card=document.createElement('div');
+    card.className='game-card'+(done?' done':''); card.tabIndex=done?-1:0;
+    card.innerHTML=`<div class="game-emoji">${g.emoji}</div><div class="game-title">${g.title}</div><div class="game-num">${done?'Ukończone ✓':'Zadanie '+g.id+'/7'}</div>`;
+    if(!done){
+      card.onclick=()=>startGame(g.id);
+      card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();startGame(g.id);}};
+    }
+    grid.appendChild(card);
+  });
+  document.getElementById('progress-fill').style.width=(completedGames.size/GAMES.length*100)+'%';
+  document.getElementById('map-done-msg').style.display=completedGames.size===GAMES.length?'block':'none';
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME ENGINE
+// ══════════════════════════════════════════════════════
+function startGame(id){
+  currentGame=id;
+  const g=GAMES.find(x=>x.id===id);
+  document.getElementById('game-title').textContent=g.emoji+' '+g.title;
+  document.getElementById('feedback').innerHTML='';
+  document.getElementById('btn-next').style.display='none';
+  showScreen('game');
+  const area=document.getElementById('game-area'); area.innerHTML='';
+  const inst=document.createElement('p'); inst.className='small-text'; inst.textContent=g.desc;
+  area.appendChild(inst);
+  [,buildGame1,buildGame2,buildGame3,buildGame4,buildGame5,buildGame6,buildGame7][id](area);
+}
+function feedback(msg,ok){ document.getElementById('feedback').innerHTML=`<div class="feedback-msg ${ok?'ok':'err'}">${msg}</div>`; }
+function completeGame(){ completedGames.add(currentGame); if(completedGames.size===GAMES.length) showScreen('win'); else showMap(); }
+
+// ══════════════════════════════════════════════════════
+//  GAME 1 — Sortowanie klocków
+// ══════════════════════════════════════════════════════
+function buildGame1(area){
+  const colors=[
+    {name:'Czerwone',bg:'#c0392b',emoji:EMOJI.blockRed,   bucket:EMOJI.bucketRed},
+    {name:'Żółte',   bg:'#f39c12',emoji:EMOJI.blockYellow,bucket:EMOJI.bucketYellow},
+    {name:'Niebieskie',bg:'#2980b9',emoji:EMOJI.blockBlue,bucket:EMOJI.bucketBlue},
+  ];
+  const pool=[]; colors.forEach(c=>{for(let i=0;i<3;i++) pool.push({...c});});
+  pool.sort(()=>Math.random()-.5);
+  let selected=null,bucketCounts={},total=0; colors.forEach(c=>bucketCounts[c.name]=0);
+
+  const wrap=document.createElement('div'); wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:1.2rem;width:100%';
+  const itemsDiv=document.createElement('div'); itemsDiv.className='color-items';
+  pool.forEach(item=>{
+    const el=document.createElement('div'); el.className='block-item'; el.tabIndex=0;
+    el.style.background=item.bg+'33'; el.style.borderColor=item.bg+'66'; el.innerHTML=item.emoji;
+    const sel=()=>{ document.querySelectorAll('.block-item.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selected={color:item.name,el}; };
+    el.onclick=sel; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel();}};
+    itemsDiv.appendChild(el);
+  });
+  const bucketsDiv=document.createElement('div'); bucketsDiv.className='color-buckets';
+  colors.forEach(c=>{
+    const b=document.createElement('div'); b.className='bucket'; b.tabIndex=0;
+    b.style.background=c.bg+'22'; b.style.borderColor=c.bg+'55';
+    const cnt=document.createElement('div'); cnt.className='bucket-count'; cnt.id='bc-'+c.name; cnt.textContent='0/3';
+    const lbl=document.createElement('div'); lbl.className='bucket-label'; lbl.textContent=c.name;
+    b.innerHTML=`<span style="font-size:1.8em">${c.bucket}</span>`; b.appendChild(lbl); b.appendChild(cnt);
+    const drop=()=>{
+      if(!selected) return feedback('Najpierw wybierz klocek! 🧱',false);
+      if(selected.color!==c.name){feedback('Nie ten kolor! 🤔',false);return;}
+      selected.el.style.opacity='.3'; selected.el.style.pointerEvents='none'; selected.el.classList.remove('selected');
+      bucketCounts[c.name]++; document.getElementById('bc-'+c.name).textContent=bucketCounts[c.name]+'/3';
+      total++; selected=null; feedback('Tak! 🎉',true);
+      if(total===9){setTimeout(()=>{feedback('Wszystkie klocki posortowane! 🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+    };
+    b.onclick=drop; b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();drop();}};
+    bucketsDiv.appendChild(b);
+  });
+  wrap.appendChild(itemsDiv); wrap.appendChild(bucketsDiv); area.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 2 — Memory
+// ══════════════════════════════════════════════════════
+function buildGame2(area){
+  const pairs=[EMOJI.bear1,EMOJI.bear2,EMOJI.bear3,EMOJI.bear4,EMOJI.bear5,EMOJI.bear6];
+  const cards=[...pairs,...pairs].sort(()=>Math.random()-.5);
+  let flipped=[],matched=0,locked=false;
+  const grid=document.createElement('div'); grid.className='memory-grid'; grid.style.gridTemplateColumns='repeat(4,1fr)';
+  cards.forEach(emoji=>{
+    const card=document.createElement('div'); card.className='mem-card'; card.tabIndex=0;
+    card.innerHTML=`<div class="back">${EMOJI.cardBack}</div><div class="face">${emoji}</div>`;
+    card.dataset.emoji=emoji;
+    const flip=()=>{
+      if(locked||card.classList.contains('flipped')||card.classList.contains('matched')) return;
+      card.classList.add('flipped'); flipped.push(card);
+      if(flipped.length===2){
+        locked=true;
+        if(flipped[0].dataset.emoji===flipped[1].dataset.emoji){
+          flipped[0].classList.add('matched'); flipped[1].classList.add('matched');
+          matched++; flipped=[]; locked=false; feedback('Para! 🎉',true);
+          if(matched===pairs.length){setTimeout(()=>{feedback('Wszystkie pary! 🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+        } else {
+          setTimeout(()=>{flipped.forEach(c=>c.classList.remove('flipped'));flipped=[];locked=false;feedback('Nie ta para 🤔',false);},900);
+        }
+      }
+    };
+    card.onclick=flip; card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip();}};
+    grid.appendChild(card);
+  });
+  area.appendChild(grid);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 3 — Parkowanie
+// ══════════════════════════════════════════════════════
+function buildGame3(area){
+  const cars=[
+    {emoji:EMOJI.carSmall1,size:'mały',key:'s'},{emoji:EMOJI.carSmall2,size:'mały',key:'s'},
+    {emoji:EMOJI.carMid1,size:'średni',key:'m'},{emoji:EMOJI.carMid2,size:'średni',key:'m'},
+    {emoji:EMOJI.carBig1,size:'duży',key:'l'}, {emoji:EMOJI.carBig2,size:'duży',key:'l'},
+  ];
+  const garages=[
+    {label:'Małe auta',key:'s',emoji:EMOJI.garageSmall,cap:2},
+    {label:'Średnie',  key:'m',emoji:EMOJI.garageMid,  cap:2},
+    {label:'Duże auta',key:'l',emoji:EMOJI.garageBig,  cap:2},
+  ];
+  cars.sort(()=>Math.random()-.5);
+  let selected=null,gf={s:0,m:0,l:0},total=0;
+  const wrap=document.createElement('div'); wrap.className='garage-wrap';
+  const cRow=document.createElement('div'); cRow.className='cars-row';
+  cars.forEach(car=>{
+    const el=document.createElement('div'); el.className='car-item'; el.tabIndex=0;
+    el.innerHTML=`${car.emoji}<span class="car-size-label">${car.size}</span>`;
+    const sel=()=>{ document.querySelectorAll('.car-item.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selected={key:car.key,el}; };
+    el.onclick=sel; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel();}};
+    cRow.appendChild(el);
+  });
+  const gRow=document.createElement('div'); gRow.className='garages-row';
+  garages.forEach(g=>{
+    const el=document.createElement('div'); el.className='garage'; el.tabIndex=0;
+    const cnt=document.createElement('span'); cnt.id='gc-'+g.key; cnt.textContent='0/'+g.cap;
+    el.innerHTML=`<span class="garage-emoji">${g.emoji}</span>${g.label}`; el.appendChild(cnt);
+    const park=()=>{
+      if(!selected) return feedback('Wybierz auto! 🚗',false);
+      if(selected.key!==g.key){feedback('Nie pasuje! 🤔',false);return;}
+      if(gf[g.key]>=g.cap){feedback('Garaż pełny! 🏁',false);return;}
+      selected.el.style.opacity='.3'; selected.el.style.pointerEvents='none'; selected.el.classList.remove('selected');
+      gf[g.key]++; document.getElementById('gc-'+g.key).textContent=gf[g.key]+'/'+g.cap;
+      total++; selected=null; feedback('Zaparkowane! ✓',true);
+      if(total===cars.length){setTimeout(()=>{feedback('Wszystkie auta na miejscu! 🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+    };
+    el.onclick=park; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();park();}};
+    gRow.appendChild(el);
+  });
+  wrap.appendChild(cRow); wrap.appendChild(gRow); area.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 4 — Zwierzątka
+// ══════════════════════════════════════════════════════
+function buildGame4(area){
+  const habitats=[
+    {name:'Las',  icon:EMOJI.habitatForest,key:'forest'},
+    {name:'Woda', icon:EMOJI.habitatWater, key:'water'},
+    {name:'Farma',icon:EMOJI.habitatFarm,  key:'farm'},
+  ];
+  const animals=[
+    {emoji:EMOJI.forest1,label:'Lis',  h:'forest'},{emoji:EMOJI.forest2,label:'Wilk',h:'forest'},
+    {emoji:EMOJI.water1, label:'Rybka',h:'water'}, {emoji:EMOJI.water2, label:'Kaczka',h:'water'},
+    {emoji:EMOJI.farm1,  label:'Krowa',h:'farm'},  {emoji:EMOJI.farm2,  label:'Kura', h:'farm'},
+  ];
+  animals.sort(()=>Math.random()-.5);
+  let selected=null,placed=0;
+  const wrap=document.createElement('div'); wrap.style.cssText='display:flex;flex-direction:column;gap:1.2rem;align-items:center;width:100%';
+  const zones=document.createElement('div'); zones.className='habitats';
+  habitats.forEach(h=>{
+    const el=document.createElement('div'); el.className='habitat-zone'; el.tabIndex=0;
+    el.innerHTML=`<span class="habitat-icon">${h.icon}</span><span class="habitat-name">${h.name}</span><div class="habitat-animals" id="ha-${h.key}"></div>`;
+    const drop=()=>{
+      if(!selected) return feedback('Wybierz zwierzątko! 🐾',false);
+      if(selected.h!==h.key){feedback('Tu nie mieszka! 🤔',false);return;}
+      document.getElementById('ha-'+h.key).innerHTML+=selected.emoji;
+      selected.el.style.opacity='.3'; selected.el.style.pointerEvents='none'; selected.el.classList.remove('selected');
+      selected=null; placed++; feedback('Znalazł domek! 🌿',true);
+      if(placed===animals.length){setTimeout(()=>{feedback('Wszystkie zwierzątka w domkach! 🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+    };
+    el.onclick=drop; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();drop();}};
+    zones.appendChild(el);
+  });
+  const pool=document.createElement('div'); pool.className='animals-pool';
+  animals.forEach(a=>{
+    const el=document.createElement('div'); el.className='animal-chip'; el.tabIndex=0;
+    el.innerHTML=`${a.emoji}<span class="label">${a.label}</span>`;
+    const sel=()=>{ document.querySelectorAll('.animal-chip.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selected={emoji:a.emoji,h:a.h,el}; };
+    el.onclick=sel; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel();}};
+    pool.appendChild(el);
+  });
+  wrap.appendChild(zones); wrap.appendChild(pool); area.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 5 — Półka
+// ══════════════════════════════════════════════════════
+function buildGame5(area){
+  const shelves=[
+    {label:'Półka z misiami 🧸',key:'bears'},
+    {label:'Półka z samochodami 🚗',key:'cars'},
+    {label:'Półka z klockami 🧱',key:'blocks'},
+  ];
+  const items=[
+    {emoji:EMOJI.shelfBear1, label:'Miś',    shelf:'bears'},
+    {emoji:EMOJI.shelfBear2, label:'Królik',  shelf:'bears'},
+    {emoji:EMOJI.shelfCar1,  label:'Auto',    shelf:'cars'},
+    {emoji:EMOJI.shelfCar2,  label:'Taksówka',shelf:'cars'},
+    {emoji:EMOJI.shelfBlock1,label:'Klocek',  shelf:'blocks'},
+    {emoji:EMOJI.shelfBlock2,label:'Klocek 2',shelf:'blocks'},
+  ];
+  items.sort(()=>Math.random()-.5);
+  let selected=null,placed=0;
+  const wrap=document.createElement('div'); wrap.className='shelf-wrap';
+  shelves.forEach(s=>{
+    const shelfEl=document.createElement('div'); shelfEl.className='shelf';
+    shelfEl.innerHTML=`<div class="shelf-label">${s.label}</div>`;
+    for(let i=0;i<2;i++){
+      const slot=document.createElement('div'); slot.className='shelf-slot'; slot.tabIndex=0;
+      const drop=()=>{
+        if(!selected) return feedback('Wybierz przedmiot!',false);
+        if(selected.shelf!==s.key){feedback('To nie tu! 🤔',false);return;}
+        if(slot.classList.contains('filled')) return;
+        slot.textContent=selected.emoji; slot.classList.add('filled');
+        selected.el.style.opacity='.3'; selected.el.style.pointerEvents='none'; selected.el.classList.remove('selected');
+        selected=null; placed++; feedback('Na miejscu! ✓',true);
+        if(placed===items.length){setTimeout(()=>{feedback('Półka posprzątana! 🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+      };
+      slot.onclick=drop; slot.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();drop();}};
+      shelfEl.appendChild(slot);
+    }
+    wrap.appendChild(shelfEl);
+  });
+  const pool=document.createElement('div'); pool.className='items-pool';
+  items.forEach(it=>{
+    const el=document.createElement('div'); el.className='shelf-item'; el.tabIndex=0;
+    el.innerHTML=`${it.emoji}<span class="shelf-item-label">${it.label}</span>`;
+    const sel=()=>{ document.querySelectorAll('.shelf-item.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selected={emoji:it.emoji,shelf:it.shelf,el}; };
+    el.onclick=sel; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel();}};
+    pool.appendChild(el);
+  });
+  wrap.appendChild(pool); area.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 6 — Liczenie
+// ══════════════════════════════════════════════════════
+function buildGame6(area){
+  const rounds=[
+    {emoji:EMOJI.countEmoji1,count:4},
+    {emoji:EMOJI.countEmoji2,count:7},
+    {emoji:EMOJI.countEmoji3,count:3},
+    {emoji:EMOJI.countEmoji4,count:5},
+  ];
+  let idx=0;
+  const wrap=document.createElement('div'); wrap.className='count-stage';
+  const pile=document.createElement('div'); pile.className='count-pile';
+  const q=document.createElement('p'); q.style.cssText='font-weight:700;color:var(--text-warm);font-size:clamp(1rem,2.5vw,1.3rem)';
+  const btns=document.createElement('div'); btns.className='answer-btns';
+  const render=()=>{
+    const r=rounds[idx]; pile.innerHTML='';
+    for(let i=0;i<r.count;i++){const s=document.createElement('span');s.className='count-item';s.textContent=r.emoji;pile.appendChild(s);}
+    q.textContent=`Ile widzisz ${r.emoji}?`; btns.innerHTML='';
+    const opts=new Set([r.count]);
+    while(opts.size<4) opts.add(Math.max(1,r.count+Math.floor(Math.random()*5)-2));
+    [...opts].sort(()=>Math.random()-.5).forEach(n=>{
+      const b=document.createElement('button'); b.className='answer-btn'; b.textContent=n; b.tabIndex=0;
+      b.onclick=()=>{
+        if(n===r.count){
+          b.classList.add('correct'); feedback('Dokładnie! '+r.count+' '+r.emoji,true);
+          setTimeout(()=>{ idx++; if(idx>=rounds.length){document.getElementById('btn-next').style.display='flex';feedback('Liczone perfekcyjnie! 🌟',true);} else{btns.querySelectorAll('.answer-btn').forEach(x=>x.classList.remove('correct','wrong'));render();} },700);
+        } else { b.classList.add('wrong'); feedback('Policz jeszcze raz! 🔢',false); setTimeout(()=>b.classList.remove('wrong'),700); }
+      };
+      btns.appendChild(b);
+    });
+  };
+  render();
+  wrap.appendChild(pile); wrap.appendChild(q); wrap.appendChild(btns); area.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 7 — Dobranoc
+// ══════════════════════════════════════════════════════
+function buildGame7(area){
+  const zones=[
+    {name:'Łóżeczko misiów', icon:EMOJI.gnZoneBed,     key:'bed',     accepts:['bears']},
+    {name:'Garaż aut',        icon:EMOJI.gnZoneGarage,  key:'garage',  accepts:['cars']},
+    {name:'Skrzynka klocków', icon:EMOJI.gnZoneBox,     key:'box',     accepts:['blocks']},
+    {name:'Domek zwierząt',   icon:EMOJI.gnZoneAnimals, key:'animals', accepts:['animals']},
+  ];
+  const items=[
+    {emoji:EMOJI.gnBear1,  label:'Miś',     group:'bears'},
+    {emoji:EMOJI.gnBear2,  label:'Królik',  group:'bears'},
+    {emoji:EMOJI.gnCar1,   label:'Auto',    group:'cars'},
+    {emoji:EMOJI.gnCar2,   label:'Taksówka',group:'cars'},
+    {emoji:EMOJI.gnCar3,   label:'SUV',     group:'cars'},
+    {emoji:EMOJI.gnBlock,  label:'Klocek',  group:'blocks'},
+    {emoji:EMOJI.gnAnimal1,label:'Słonik',  group:'animals'},
+    {emoji:EMOJI.gnAnimal2,label:'Lew',     group:'animals'},
+  ];
+  items.sort(()=>Math.random()-.5);
+  let selected=null,placed=0;
+  const wrap=document.createElement('div'); wrap.className='goodnight-wrap';
+  const zonesDiv=document.createElement('div'); zonesDiv.className='goodnight-zones';
+  zones.forEach(z=>{
+    const el=document.createElement('div'); el.className='gn-zone'; el.tabIndex=0;
+    el.innerHTML=`<span class="gn-zone-icon">${z.icon}</span><span class="gn-zone-name">${z.name}</span><div class="gn-zone-items" id="gni-${z.key}"></div>`;
+    const drop=()=>{
+      if(!selected) return feedback('Wybierz zabawkę! 🌙',false);
+      if(!z.accepts.includes(selected.group)){feedback('Tu nie! 🤔',false);return;}
+      document.getElementById('gni-'+z.key).innerHTML+=selected.emoji;
+      selected.el.style.opacity='.3'; selected.el.style.pointerEvents='none'; selected.el.classList.remove('selected');
+      selected=null; placed++; feedback('Dobranoc! 🌙',true);
+      if(placed===items.length){setTimeout(()=>{feedback('Wszystko poukładane! 😴🌟',true);document.getElementById('btn-next').style.display='flex';},400);}
+    };
+    el.onclick=drop; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();drop();}};
+    zonesDiv.appendChild(el);
+  });
+  const pool=document.createElement('div'); pool.className='gn-pool';
+  items.forEach(it=>{
+    const el=document.createElement('div'); el.className='gn-item'; el.tabIndex=0;
+    el.innerHTML=`${it.emoji}<span class="label">${it.label}</span>`;
+    const sel=()=>{ document.querySelectorAll('.gn-item.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selected={emoji:it.emoji,group:it.group,el}; };
+    el.onclick=sel; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel();}};
+    pool.appendChild(el);
+  });
+  wrap.appendChild(zonesDiv); wrap.appendChild(pool); area.appendChild(wrap);
+}
+</script>
+</body>
+</html>

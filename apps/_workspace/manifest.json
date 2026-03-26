@@ -1,0 +1,63 @@
+{
+  "id": "_workspace",
+  "name": "AiWSpace · Workspace Operatora 🗂️",
+  "version": "1.0",
+  "date": "2026-05-02",
+  "description": "Hub projektów własnych operatora — przegląd packages/, zarządzanie artefaktami spoza ekosystemu AiWhisperers.",
+  "type": "standalone",
+  "status": "active",
+  "lineage": {
+    "seed_session": "",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWSpace.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "00967dc4bdf017daab02df034551a393b221a41e5bc002fcc831c85b3702c4b7",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [
+      "read"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [],
+  "tags": [
+    "workspace",
+    "packages",
+    "operator",
+    "hub",
+    "system"
+  ]
+}

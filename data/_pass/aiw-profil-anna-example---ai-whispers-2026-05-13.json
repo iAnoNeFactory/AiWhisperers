@@ -1,0 +1,33 @@
+{
+  "_version": "aiw_profile_export_v2",
+  "_exported": "2026-05-13T10:43:22.511Z",
+  "_note": "AIWPass · AiWhisperers · profil operatora",
+  "profile": {
+    "operator": "Anna Example · AI Whispers",
+    "domain": "TRIAL",
+    "node": "github example · 2026",
+    "inception": "2026-05-13",
+    "country": "Poland",
+    "pubkey": "Y2q/nQnCOkaHn0+W9weFvzMdci50gHAUpLzs19lJypU=",
+    "profileSha": "86e2aaaba0cbc8c312ad4a38ca4854d06d25921b3b3816b13d97dec495945842",
+    "certifiedBy": "Denis Example · AI Whispers",
+    "parentPubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+    "certificationSig": "qN11NkXHVTfHBtgmQZe1NwUpcU+GAkpbpNL55/n0DO3B7unw3DF4FCDAD5caIqbMazukQHgK/0qFUGpW3CP2BQ==",
+    "certificationTs": "2026-05-13T10:42:06.560Z"
+  },
+  "contracts": [
+    {
+      "id": "c-mp3xem56",
+      "operator": "Anna Example · AI Whispers",
+      "model": "Claude",
+      "version": "claude-opus-4-7",
+      "date": "13 maja 2026",
+      "pubkey": "Y2q/nQnCOkaHn0+W9weFvzMdci50gHAUpLzs19lJypU=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:37:56.249Z",
+      "sha256": "1fcc600c81dae210b218c85fad497d36df0cd9c1b755755424cb2e4406632da6"
+    }
+  ],
+  "children": []
+}

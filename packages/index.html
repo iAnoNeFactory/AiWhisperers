@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projekty · iFactory5.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #07080f;
+  --bg2:    #0c0d1a;
+  --bg3:    #10111f;
+  --gold:   #c9a84c;
+  --gold-d: #7a6130;
+  --gold-b: #f0d080;
+  --text:   #c8d0e0;
+  --text-d: #485060;
+  --border: #1a1c2e;
+  --mono:   'JetBrains Mono', monospace;
+  --serif:  'Cormorant Garamond', serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+
+body::after {
+  content:''; position:fixed; z-index:0; pointer-events:none;
+  top: -20%; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(201,168,76,0.05) 0%, transparent 70%);
+}
+
+.wrap {
+  position: relative; z-index:1;
+  max-width: 720px;
+  width: 100%;
+  padding: 72px 32px 88px;
+}
+
+/* ── BACK ── */
+.back {
+  position: fixed;
+  top: 20px; left: 20px;
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 2px;
+  color: var(--gold-d); text-decoration: none;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: rgba(7,8,15,0.9);
+  padding: 5px 11px; border-radius: 2px;
+  transition: color .15s, border-color .15s;
+  z-index: 100;
+}
+.back:hover { color: var(--gold); border-color: var(--gold-d); }
+
+/* ── HEADER ── */
+.header { text-align:center; margin-bottom: 64px; }
+
+.crown-rule {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 0;
+}
+.crown-rule::before,
+.crown-rule::after {
+  content: ''; flex: 1; height: 1px;
+}
+.crown-rule::before { background: linear-gradient(90deg, transparent, var(--gold-d)); }
+.crown-rule::after  { background: linear-gradient(90deg, var(--gold-d), transparent); }
+.crown-year {
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 4px;
+  color: var(--gold-d); text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 5px;
+  color: var(--gold-d); text-transform: uppercase;
+  margin: 22px 0 8px;
+}
+
+.title {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 300; letter-spacing: 4px;
+  color: var(--gold-b);
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.title em { font-style: italic; color: var(--gold); }
+
+.subtitle {
+  font-size: 13px; color: var(--text-d);
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.header-rule {
+  width: 200px; height: 1px; margin: 24px auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold-d), transparent);
+}
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* ── CARD ── */
+.card {
+  display: block; text-decoration: none;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px 22px 20px;
+  transition: border-color .2s, background .2s, transform .15s;
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, transparent 55%, rgba(201,168,76,0.04));
+  pointer-events:none;
+}
+.card:hover {
+  border-color: var(--gold-d);
+  background: var(--bg3);
+  transform: translateY(-2px);
+}
+.card.wide { grid-column: span 2; }
+
+.card-icon { font-size: 22px; margin-bottom: 10px; display:block; }
+.card-tag {
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 3px;
+  color: var(--text-d); text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.card-name {
+  font-size: 18px; font-weight: 400;
+  color: var(--text); letter-spacing: 0.5px;
+  margin-bottom: 7px;
+}
+.card-desc {
+  font-size: 11px; color: var(--text-d);
+  line-height: 1.65; font-style: italic;
+}
+
+.badge {
+  position: absolute; top: 14px; right: 14px;
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 7px; border-radius: 2px;
+  border: 1px solid var(--gold-d);
+  color: var(--gold-d);
+}
+.badge.live  { color: #4a9a6a; border-color: #1a3a2a; }
+.badge.draft { color: var(--text-d); border-color: var(--border); }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 7px; letter-spacing: 2px;
+  color: var(--text-d);
+  margin-top: 48px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+@media(max-width:560px) {
+  .grid { grid-template-columns: 1fr; }
+  .card.wide { grid-column: span 1; }
+  .wrap { padding: 48px 20px 64px; }
+}
+</style>
+</head>
+<body>
+
+<a class="back" href="../index.html">← AiWhisperers</a>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="crown-rule"><span class="crown-year">iFactory5.0</span></div>
+    <div class="eyebrow">Projekty</div>
+    <div class="title">Aplikacje &<br><em>Narzędzia</em></div>
+    <p class="subtitle">Zbiór projektów osadzonych w ekosystemie Factory.</p>
+    <div class="header-rule"></div>
+  </div>
+
+  <div class="grid">
+
+    <a class="card" href="MyCakes/index.html">
+      <span class="badge live">live</span>
+      <span class="card-icon">🎂</span>
+      <div class="card-tag">Aplikacja</div>
+      <div class="card-name">MyCakes</div>
+      <div class="card-desc">Księga tortów. Projektowanie warstw, tynków i ozdób. FastAPI + SQLite + SPA.</div>
+    </a>
+
+    <a class="card" href="GardenOS/index.html">
+      <span class="badge live">live</span>
+      <span class="card-icon">🌿</span>
+      <div class="card-tag">Aplikacja</div>
+      <div class="card-name">GardenOS</div>
+      <div class="card-desc">Organizator hodowli roślin. Mapa upraw, harmonogramy podlewania, fazy wzrostu.</div>
+    </a>
+
+    <a class="card wide" >
+      <span class="badge draft">core</span>
+      <span class="card-icon">🏭</span>
+      <div class="card-tag">Framework</div>
+      <div class="card-name">Factory · Puzzle System</div>
+      <div class="card-desc">Nexus runtime — centralny rejestr i orkiestrator puzzli. PuzzleBase, RuntimeSingleton, lifecycle hooks, PuzzleProxy.</div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    Projekty · iFactory5.0 · v0.1.0
+  </div>
+
+</div>
+
+</body>
+</html>

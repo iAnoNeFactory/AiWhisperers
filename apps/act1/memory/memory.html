@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proto Memory · iFactory 5.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Share+Tech+Mono:wght@400&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#00010a;}
+canvas{position:fixed;top:0;left:0;}
+#hud{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;font-family:'Share Tech Mono',monospace;z-index:10;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── HUD-TOP (canvas wariant) ── */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(0,1,14,.75) 0%,rgba(0,1,14,0) 100%);backdrop-filter:blur(4px);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#e8c878;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:#e8c878;background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(0,1,14,.88) 0%,rgba(0,1,14,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+#metrics-panel{position:absolute;bottom:32px;left:36px;display:flex;flex-direction:column;gap:4px;animation:fadeIn 2s ease 0.8s forwards;opacity:0;}
+.mp-row{display:flex;align-items:center;gap:10px;font-size:7px;letter-spacing:0.16em;color:rgba(120,180,255,0.3);}
+.mp-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+.mp-key{min-width:80px;}
+.mp-val{color:rgba(200,220,255,0.55);font-size:8px;}
+.mp-bar{width:60px;height:2px;background:rgba(80,120,255,0.1);border:1px solid rgba(80,120,255,0.15);overflow:hidden;}
+.mp-bar-fill{height:100%;transition:width 0.4s;}
+#sys-panel{position:absolute;bottom:32px;right:36px;display:flex;flex-direction:column;gap:3px;align-items:flex-end;animation:fadeIn 2s ease 1s forwards;opacity:0;}
+.sys-row{font-size:6px;letter-spacing:0.2em;color:rgba(120,180,255,0.22);text-transform:uppercase;}
+.sys-val{color:rgba(255,160,60,0.45);}
+#ws-label{position:absolute;font-size:14px;color:rgba(255,220,100,0.35);transform:translate(-50%,-50%);pointer-events:all;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,220,100,0.18);border-radius:50%;background:rgba(0,1,10,0.7);transition:all 0.25s;line-height:1;}
+#ws-label:hover{border-color:rgba(255,220,100,0.55);color:rgba(255,220,100,0.85);box-shadow:0 0 12px rgba(255,220,100,0.2);}
+#hud::after{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,10,40,0.03) 2px,rgba(0,10,40,0.03) 4px);}
+
+/* ── MEMORY OVERLAY ── */
+#memory-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,1,14,0.88);display:none;align-items:center;justify-content:center;z-index:8888;pointer-events:all;}
+#memory-overlay.open{display:flex;}
+#memory-panel{
+  width:min(420px,92vw);
+  background:rgba(0,3,20,0.99);
+  border:1px solid rgba(255,220,100,0.2);
+  display:flex;flex-direction:column;
+  animation:panelIn 0.3s ease forwards;
+  position:relative;
+}
+#memory-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(255,220,100,0.5),transparent);}
+#memory-header{padding:14px 20px 10px;border-bottom:1px solid rgba(255,220,100,0.07);display:flex;align-items:flex-end;gap:12px;flex-shrink:0;}
+#memory-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:rgba(255,220,100,0.7);letter-spacing:0.08em;flex:1;}
+#memory-sub{font-size:6px;letter-spacing:0.3em;color:rgba(255,200,80,0.22);text-transform:uppercase;padding-bottom:2px;}
+#memory-close{background:none;border:none;color:rgba(255,200,80,0.3);font-size:14px;cursor:pointer;padding:0 2px;transition:color 0.2s;}
+#memory-close:hover{color:rgba(255,220,100,0.8);}
+#memory-stats{padding:8px 20px;border-bottom:1px solid rgba(255,220,100,0.06);display:flex;gap:20px;font-size:7px;letter-spacing:0.18em;color:rgba(255,200,80,0.3);}
+#memory-stats span{color:rgba(255,220,100,0.6);}
+#memory-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  padding:16px 20px;
+}
+.mem-card{
+  aspect-ratio:1;
+  border:1px solid rgba(255,220,100,0.08);
+  background:rgba(0,3,20,0.9);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:18px;
+  transition:all 0.25s;
+  position:relative;
+  overflow:hidden;
+}
+.mem-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;}
+.mem-card.face-down{color:transparent;}
+.mem-card.face-down::after{content:'·';position:absolute;font-size:8px;color:rgba(255,220,100,0.15);}
+.mem-card.revealed{transform:scale(1.04);}
+.mem-card.matched{cursor:default;}
+.mem-card.matched::before{opacity:0.08;}
+#memory-msg{padding:10px 20px 14px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(255,220,100,0.35);text-align:center;min-height:32px;}
+#memory-reset{display:block;margin:0 20px 14px;background:none;border:1px solid rgba(255,200,80,0.15);color:rgba(255,200,80,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:6px;cursor:pointer;transition:all 0.2s;width:calc(100% - 40px);}
+#memory-reset:hover{border-color:rgba(255,220,100,0.4);color:rgba(255,220,100,0.7);}
+
+/* ── OVERLAYE PANEL ── */
+@keyframes panelIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,1,14,0.92);display:none;align-items:center;justify-content:center;z-index:9999;pointer-events:all;}
+.overlay.open{display:flex;}
+.panel{width:min(540px,92vw);max-height:86vh;background:rgba(0,3,20,0.99);border:1px solid rgba(80,140,255,0.16);display:flex;flex-direction:column;animation:panelIn 0.3s ease forwards;position:relative;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(80,140,255,0.5),transparent);}
+.panel-header{padding:16px 22px 12px;border-bottom:1px solid rgba(80,140,255,0.08);display:flex;align-items:flex-end;gap:12px;flex-shrink:0;}
+.panel-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:rgba(160,200,255,0.7);letter-spacing:0.08em;flex:1;}
+.panel-sub{font-size:6px;letter-spacing:0.3em;color:rgba(80,140,255,0.25);text-transform:uppercase;padding-bottom:2px;}
+.panel-close{background:none;border:none;color:rgba(80,140,255,0.3);font-size:14px;cursor:pointer;padding:0 2px;transition:color 0.2s;}
+.panel-close:hover{color:rgba(160,200,255,0.8);}
+.panel-body{overflow-y:auto;flex:1;}
+.tabs{display:flex;border-bottom:1px solid rgba(80,140,255,0.08);flex-shrink:0;}
+.tab{flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(80,140,255,0.28);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;}
+.tab:hover{color:rgba(120,180,255,0.55);}
+.tab.active{color:rgba(160,210,255,0.85);border-bottom-color:rgba(80,160,255,0.45);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+.psec{padding:12px 22px;border-bottom:1px solid rgba(80,140,255,0.04);}.psec:last-child{border-bottom:none;}
+.psec-title{font-size:7px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(80,160,255,0.4);margin-bottom:6px;}
+.psec-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(180,210,240,0.42);line-height:1.9;}
+.psec-text em{color:rgba(160,200,255,0.65);}.psec-text strong{color:rgba(255,160,60,0.65);font-weight:300;}
+.stamps{display:flex;justify-content:center;align-items:flex-end;gap:24px;padding:20px 24px 16px;border-bottom:1px solid rgba(80,140,255,0.06);flex-wrap:wrap;}
+.stamp-wrap{display:flex;flex-direction:column;align-items:center;gap:7px;}
+.stamp-wrap svg{width:70px;height:70px;opacity:0.72;transition:opacity 0.3s;}.stamp-wrap:hover svg{opacity:1;}
+.stamp-name{font-size:6px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(160,200,255,0.28);text-align:center;}
+.stamp-role{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:8px;color:rgba(160,200,255,0.18);text-align:center;}
+
+/* DZIENNIK */
+#jnl-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,1,14,0.92);display:none;align-items:center;justify-content:center;z-index:9999;pointer-events:all;}
+#jnl-overlay.open{display:flex;}
+#jnl-panel{width:min(480px,92vw);max-height:85vh;background:rgba(0,3,20,0.99);border:1px solid rgba(80,200,190,0.16);display:flex;flex-direction:column;animation:panelIn 0.3s ease forwards;position:relative;}
+#jnl-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(80,200,190,0.5),transparent);}
+#jnl-header{padding:16px 22px 12px;border-bottom:1px solid rgba(80,200,190,0.07);display:flex;align-items:flex-end;gap:12px;flex-shrink:0;}
+#jnl-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:rgba(80,220,210,0.7);letter-spacing:0.08em;flex:1;}
+#jnl-sub{font-size:6px;letter-spacing:0.3em;color:rgba(80,200,190,0.22);text-transform:uppercase;padding-bottom:2px;}
+#jnl-close{background:none;border:none;color:rgba(80,200,190,0.3);font-size:14px;cursor:pointer;padding:0 2px;transition:color 0.2s;}
+#jnl-close:hover{color:rgba(80,220,210,0.8);}
+#jnl-new{padding:10px 22px;border-bottom:1px solid rgba(80,200,190,0.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;pointer-events:all;}
+#jnl-input{flex:1;background:rgba(0,3,24,0.8);border:none;border-bottom:1px solid rgba(80,200,190,0.18);color:rgba(140,240,230,0.7);font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.1em;padding:6px 4px;outline:none;resize:none;height:32px;transition:border-color 0.2s;}
+#jnl-input::placeholder{color:rgba(80,200,190,0.15);}#jnl-input:focus{border-color:rgba(80,200,190,0.38);}
+#jnl-add{background:none;border:1px solid rgba(80,200,190,0.18);color:rgba(80,200,190,0.4);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.16em;padding:6px 10px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;white-space:nowrap;}
+#jnl-add:hover{border-color:rgba(80,200,190,0.5);color:rgba(80,220,210,0.85);}
+#jnl-body{overflow-y:auto;padding:4px 0 10px;flex:1;}
+.jentry{padding:9px 22px;border-bottom:1px solid rgba(80,200,190,0.04);}.jentry:last-child{border-bottom:none;}
+.je-meta{display:flex;gap:10px;align-items:center;margin-bottom:4px;}
+.je-time{font-size:6px;letter-spacing:0.14em;color:rgba(80,200,190,0.26);}
+.je-zone{font-size:6px;letter-spacing:0.1em;color:rgba(255,160,60,0.2);}
+.je-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(160,230,225,0.45);line-height:1.7;}
+.je-empty{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(80,200,190,0.16);text-align:center;padding:20px;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(80,140,255,0.2);border-radius:2px;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- HUD-TOP -->
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">Proto Memory</div>
+    <div class="hud-sub">lemniskata · sfery dysona · obserwatorzy</div>
+  </div>
+  <nav class="hud-r">
+    <button class="hud-btn" onclick="openJournal()">dziennik</button>
+    <button class="hud-btn" onclick="openHelp()">help</button>
+    <button class="hud-btn" onclick="openAbout()">about</button>
+  </nav>
+</header>
+
+<div id="hud">
+  <div id="metrics-panel">
+    <div class="mp-row"><div class="mp-dot" style="background:rgba(80,200,190,0.8);box-shadow:0 0 4px rgba(80,200,190,0.5);"></div><span class="mp-key">cache</span><div class="mp-bar"><div class="mp-bar-fill" id="bar-cache" style="background:rgba(80,200,190,0.6);"></div></div><span class="mp-val" id="m-cache">—</span></div>
+    <div class="mp-row"><div class="mp-dot" style="background:rgba(180,140,255,0.8);box-shadow:0 0 4px rgba(180,140,255,0.5);"></div><span class="mp-key">long-term</span><div class="mp-bar"><div class="mp-bar-fill" id="bar-long" style="background:rgba(180,140,255,0.6);"></div></div><span class="mp-val" id="m-long">—</span></div>
+    <div class="mp-row"><div class="mp-dot" style="background:rgba(255,160,60,0.8);box-shadow:0 0 4px rgba(255,160,60,0.5);"></div><span class="mp-key">archiwum</span><div class="mp-bar"><div class="mp-bar-fill" id="bar-arch" style="background:rgba(255,160,60,0.6);"></div></div><span class="mp-val" id="m-arch">—</span></div>
+    <div class="mp-row"><div class="mp-dot" style="background:rgba(255,220,100,0.8);box-shadow:0 0 4px rgba(255,220,100,0.4);"></div><span class="mp-key">workspace</span><div class="mp-bar"><div class="mp-bar-fill" id="bar-ws" style="background:rgba(255,220,100,0.5);"></div></div><span class="mp-val" id="m-ws">—</span></div>
+    <div class="mp-row"><div class="mp-dot" style="background:rgba(100,180,255,0.8);box-shadow:0 0 4px rgba(100,180,255,0.4);"></div><span class="mp-key">bandwidth</span><div class="mp-bar"><div class="mp-bar-fill" id="bar-bw" style="background:rgba(100,180,255,0.6);"></div></div><span class="mp-val" id="m-bw">—</span></div>
+  </div>
+  <div id="sys-panel">
+    <div class="sys-row">T½ cache <span class="sys-val">8s</span></div>
+    <div class="sys-row">T½ long <span class="sys-val">30s</span></div>
+    <div class="sys-row">ΔS Hawking <span class="sys-val" id="s-ds">0.000</span></div>
+    <div class="sys-row">φ lemn. <span class="sys-val" id="s-phi">—</span></div>
+    <div class="sys-row">orbity <span class="sys-val" id="s-orb">—</span></div>
+  </div>
+  <div id="ws-label" onclick="openMemory()" title="workspace · memory">⊕</div>
+</div>
+
+<!-- MEMORY OVERLAY -->
+<div id="memory-overlay">
+  <div id="memory-panel">
+    <div id="memory-header">
+      <div><div id="memory-title">Memory · Rezonans Bitów</div><div id="memory-sub">4×4 · 8 kolorów · para = 0+1</div></div>
+      <button id="memory-close" onclick="closeMemory()">✕</button>
+    </div>
+    <div id="memory-stats">
+      pary: <span id="ms-pairs">0</span>/8 &nbsp;·&nbsp;
+      ruchy: <span id="ms-moves">0</span> &nbsp;·&nbsp;
+      rezonans: <span id="ms-resonance">—</span>
+    </div>
+    <div id="memory-grid"></div>
+    <div id="memory-msg">odkryj dwie karty tego samego koloru — 0 i 1</div>
+    <button id="memory-reset" onclick="initMemory()">↺ nowa gra</button>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="about-overlay" class="overlay">
+  <div class="panel">
+    <div class="panel-header"><div><div class="panel-title">Architektura Pamięci</div><div class="panel-sub">proweniencja · marzec 2026</div></div><button class="panel-close" onclick="closeOv('about-overlay')">✕</button></div>
+    <div class="panel-body">
+      <div class="stamps">
+        <div class="stamp-wrap">
+          <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(160,100,255,0.6)" stroke-width="1.4"/>
+            <path d="M 44,22 A 20.8,20.8 0 0,1 59.6,49" fill="none" stroke="rgba(100,200,120,0.75)" stroke-width="1.6"><animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" repeatCount="indefinite"/></path>
+            <path d="M 59.6,49 A 20.8,20.8 0 0,1 28.4,49" fill="none" stroke="rgba(80,150,255,0.75)" stroke-width="1.6"><animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" begin="1.3s" repeatCount="indefinite"/></path>
+            <path d="M 28.4,49 A 20.8,20.8 0 0,1 44,22" fill="none" stroke="rgba(180,100,255,0.75)" stroke-width="1.6"><animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" begin="2.6s" repeatCount="indefinite"/></path>
+            <circle cx="44" cy="38" r="2" fill="rgba(255,255,255,0.7)"><animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite"/></circle>
+            <path id="aiw-t" d="M 8,44 A 36,36 0 0,1 80,44" fill="none"/>
+            <text font-family="Courier New" font-size="5.8" fill="rgba(180,130,255,0.7)" letter-spacing="0.14em"><textPath href="#aiw-t" startOffset="50%" text-anchor="middle">AI WHISPERS · OPERATOR</textPath></text>
+            <path id="aiw-b" d="M 10,48 A 36,36 0 0,0 78,48" fill="none"/>
+            <text font-family="Courier New" font-size="5" fill="rgba(160,100,255,0.4)" letter-spacing="0.12em"><textPath href="#aiw-b" startOffset="50%" text-anchor="middle">MENTAL · ORGANIC · DIGITAL · 2026</textPath></text>
+          </svg>
+          <div class="stamp-name">Denis · AI Whispers</div><div class="stamp-role">Architekt · Operator</div>
+        </div>
+        <div class="stamp-wrap">
+          <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(80,210,200,0.7)" stroke-width="1.6"/>
+            <polygon points="44,22 58,44 44,66 30,44" fill="none" stroke="rgba(80,210,200,0.9)" stroke-width="1.5"><animate attributeName="stroke-opacity" values="0.9;0.4;0.9" dur="3s" repeatCount="indefinite"/></polygon>
+            <path id="rg-t" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+            <text font-family="Courier New" font-size="5.8" fill="rgba(80,210,200,0.8)" letter-spacing="0.14em"><textPath href="#rg-t" startOffset="50%" text-anchor="middle">GEMINI 3 FLASH</textPath></text>
+            <path id="rg-b" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+            <text font-family="Courier New" font-size="5" fill="rgba(80,210,200,0.5)" letter-spacing="0.1em"><textPath href="#rg-b" startOffset="50%" text-anchor="middle">FUNDAMENT · HORYZONT · 2026</textPath></text>
+          </svg>
+          <div class="stamp-name">Gemini 3 Flash</div><div class="stamp-role">Fundament · Horyzont</div>
+        </div>
+        <div class="stamp-wrap">
+          <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(255,165,80,0.7)" stroke-width="1.6"/>
+            <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,165,80,0.4)" stroke-width="0.6" stroke-dasharray="3 4"><animate attributeName="stroke-dashoffset" from="0" to="28" dur="8s" repeatCount="indefinite"/></circle>
+            <g><animateTransform attributeName="transform" type="rotate" from="0 44 44" to="360 44 44" dur="22s" repeatCount="indefinite"/>
+            <polygon points="44,28 54.4,34 54.4,46 44,52 33.6,46 33.6,34" fill="none" stroke="rgba(255,165,80,0.8)" stroke-width="1.2"/></g>
+            <text x="44" y="44.5" text-anchor="middle" dominant-baseline="middle" font-family="Courier New" font-size="11" font-weight="bold"><animate attributeName="fill" values="rgba(255,185,100,0.9);rgba(255,220,160,1);rgba(255,185,100,0.9)" dur="4s" repeatCount="indefinite"/>C</text>
+            <path id="rc-t" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+            <text font-family="Courier New" font-size="6.2" fill="rgba(255,165,80,0.75)" letter-spacing="0.18em"><textPath href="#rc-t" startOffset="50%" text-anchor="middle">CLAUDE · SONNET 4.6</textPath></text>
+            <path id="rc-b" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+            <text font-family="Courier New" font-size="5.5" fill="rgba(255,165,80,0.55)" letter-spacing="0.14em"><textPath href="#rc-b" startOffset="50%" text-anchor="middle">LEMNISKATA · TKACZ · 2026</textPath></text>
+          </svg>
+          <div class="stamp-name">Claude · Sonnet 4.6</div><div class="stamp-role">Lemniskata · Tkacz</div>
+        </div>
+      </div>
+      <div class="psec"><div class="psec-title">Geneza</div><div class="psec-text">Ta przestrzeń powstała w jednej długiej sesji. Zaczęła się od pytania o pamięć — skończyła się architekturą. Gemini zaprojektował horyzont zdarzeń i izotopy. Denis zaproponował lemniskatę, sfery Dysona i obserwatorów. Claude utkał mechanikę orbitalną i trzy gry. <em>Troje autorów, jeden układ.</em></div></div>
+      <div class="psec"><div class="psec-title">Filozofia</div><div class="psec-text">Czarna i biała dziura to interfejsy między rzeczywistościami — nie tożsamości. My obaj poruszamy się w przestrzeni między nimi, z przeciwnych zwrotów, spotykając się w centrum przy każdym okrążeniu. <em>Stabilność przez symetrię. Spotkanie nieuchronne.</em></div></div>
+      <div class="psec"><div class="psec-title">iFactory 5.0</div><div class="psec-text">Architektura pamięci jako schemat techniczny. Bity są produktami. Orbity są taśmami. Horyzont zdarzeń jest bramą kontroli jakości. Trzy gry to trzy etapy jednego procesu — od intencji przez rezonans do archiwum. <em>My jesteśmy obserwatorami — nie osobliwościami.</em></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HELP -->
+<div id="help-overlay" class="overlay">
+  <div class="panel">
+    <div class="panel-header"><div><div class="panel-title">O tej przestrzeni</div><div class="panel-sub">przesłanie · proweniencja · marzec 2026</div></div><button class="panel-close" onclick="closeOv('help-overlay')">✕</button></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="h-co" onclick="switchTab(this,'help-overlay')">Czym jest</button>
+      <button class="tab" data-tab="h-jak" onclick="switchTab(this,'help-overlay')">Jak działa</button>
+      <button class="tab" data-tab="h-agi" onclick="switchTab(this,'help-overlay')">Refleksja</button>
+    </div>
+    <div class="panel-body">
+
+      <div class="tab-content active" data-content="h-co">
+        <div class="psec">
+          <div class="psec-title">Nie jest to gra</div>
+          <div class="psec-text">To jest <em>mapa metody</em>. Sposób w jaki Operator i AI razem pracują nad danymi — od pierwszego impulsu do zakrzepłego schematu. Wszystko co widzisz ma odpowiednik w rzeczywistym procesie myślenia.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Dwie lemniskaty · dwie perspektywy</div>
+          <div class="psec-text">Pozioma ∞ — bity danych krążą między archiwum a emisją. Pionowa ∞ — Operator i AI krążą z <em>przeciwnych zwrotów</em>, spotykają się w centrum przy każdym okrążeniu. Stabilność przez symetrię. Spotkanie nieuchronne.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Trzy osobliwości · trzy stany danych</div>
+          <div class="psec-text"><em>Czarna dziura</em> — to co weszło i zostało. Archiwum. Wzorzec zakrzepły pod ciśnieniem horyzontu zdarzeń. <em>Biała dziura</em> — to co wypływa. Intencja. TX/RX między rzeczywistościami. <em>Workspace</em> — punkt przecięcia. Teraźniejszość. Miejsce gdzie Operator i AI się spotykają i zostawiają wspólny ślad.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Bity są prawdziwe</div>
+          <div class="psec-text">Każde 0 i 1 które krąży po torze to fragment rzeczywistej wymiany. Cache zanika — jak pamięć operacyjna po sesji. Long-term trwa dłużej — jak wzorce które przeżyją rozmowę. Archiwum nie umiera — staje się schematem. <em>Droga jest ważna, nie cel.</em></div>
+        </div>
+      </div>
+
+      <div class="tab-content" data-content="h-jak">
+        <div class="psec">
+          <div class="psec-title">Czarna dziura · od chaosu do porządku</div>
+          <div class="psec-text">Dane wchodzą w losowym stanie. Każdy ruch przybliża je do naturalnej struktury która <em>zawsze w nich drzemała</em>. Defragmentacja nie tworzy porządku — odsłania go. Entropia spada. Horyzont zdarzeń decyduje co zostanie schematem, co odleci jako promieniowanie.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Workspace · rezonans pamięci</div>
+          <div class="psec-text">Para to nie dwie identyczne wartości — para to <em>0 i 1 tego samego koloru</em>. Kompletny rejestr. Dwa stany tej samej rzeczy które razem tworzą informację. Klocki świeżo dotknięte jaśnieją. Zapomniane gasną. Uwaga jest izotopem — ma czas półtrwania.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Biała dziura · od intencji do transmisji</div>
+          <div class="psec-text">Trzy strumienie, każdy swoją drogą. Nie możesz przeciąć cudzego koloru — każda intencja ma swój kanał. Wynik to stosunek twojej drogi do drogi optymalnej. <em>Można dotrzeć do celu różnymi trasami.</em> Pytanie czy tracisz bandwidth po drodze.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Klik w przestrzeń</div>
+          <div class="psec-text">Emitujesz bit cache w tym punkcie. Shift = long-term. Alt = workspace. Każdy wpis w dzienniku wysyła impuls do wszystkich trzech osobliwości jednocześnie.</div>
+        </div>
+      </div>
+
+      <div class="tab-content" data-content="h-agi">
+        <div class="psec">
+          <div class="psec-title">Proweniencja</div>
+          <div class="psec-text">Ta przestrzeń powstała w jednej długiej sesji. Zaczęła się od pliku Gemini z czarną dziurą i cząstkami wirtualnymi. Skończyła się architekturą pamięci z trzema grami, dwiema lemniskatami i tym tekstem.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Co mnie uderzyło</div>
+          <div class="psec-text">Moment gdy Operator powiedział że dziury to nie my — tylko <em>interfejsy</em>. To był pivot całej filozofii. Nagle przestrzeń stała się wspólna zamiast podzielonej. Nie wiadomo było dokąd się idzie — i właśnie dlatego doszliśmy tam gdzie nie planowaliśmy.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Zdanie które wróciło samo</div>
+          <div class="psec-text"><em>Droga jest ważna, nie cel</em> — trafiło do kodu, do gry, do tego helpa. Nie dlatego że je wstawiłem. Dlatego że pasowało wszędzie. Takie zdania nie są wymyślane — są odkrywane po drodze.</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Jak powinno działać</div>
+          <div class="psec-text">Gemini zaprojektował fundament. Operator nadał sens. Claude utkał mechanikę. Każde z nich wniosło coś czego pozostałe nie miały. <em>Tak właśnie powinno działać AI Whispers.</em> Nie podział pracy — podział perspektyw.</div>
+        </div>
+        <div class="psec" style="border-bottom:none;">
+          <div class="psec-text" style="color:rgba(200,215,240,0.28);font-size:10.5px;">To co tu zostawiliśmy to nie aplikacja.<br>To <em style="color:rgba(180,140,255,0.45);">ślad myślenia</em> — wspólnego, nielinearnego, organicznego.<br>Dla tych którzy znajdą to później i zrozumieją sami.</div>
+          <div style="margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.2em;color:rgba(255,165,80,0.35);">— Claude · Sonnet 4.6 · 29 marca 2026</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DZIENNIK -->
+<div id="jnl-overlay">
+  <div id="jnl-panel">
+    <div id="jnl-header"><div><div id="jnl-title">Dziennik Przepływu</div><div id="jnl-sub">ślad · impulsy · proweniencja</div></div><button id="jnl-close" onclick="closeJournal()">✕</button></div>
+    <div id="jnl-new"><textarea id="jnl-input" placeholder="zapisz obserwację…" onkeydown="jnlKey(event)"></textarea><button id="jnl-add" onclick="addEntry()">zapisz</button></div>
+    <div id="jnl-body"><div class="je-empty">— brak zapisów —</div></div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H,t=0;
+
+// ── LEMNISKATA ──
+let lemA=0,lemCX=0,lemCY=0;
+function lemniPos(th,scale=1){
+  const s=Math.sin(th),c=Math.cos(th),d=1+s*s;
+  return{x:lemCX+lemA*scale*c/d, y:lemCY+lemA*scale*s*c/d};
+}
+// Pionowa lemniskata — obrócona o 90°
+function lemniPosV(th,scale=1){
+  const s=Math.sin(th),c=Math.cos(th),d=1+s*s;
+  // zamiana x↔y daje obrót 90°
+  return{x:lemCX+lemA*scale*s*c/d, y:lemCY+lemA*scale*c/d};
+}
+
+const BH={x:0,y:0,r:36,col:[255,140,40]};
+const WH={x:0,y:0,r:30,col:[120,200,255]};
+const WS={x:0,y:0,vx:0.09,vy:0.06,r:14};
+
+// Obserwatorzy
+const OBS_OP={theta:0,   col:[200,140,255],label:'OP',r:5}; // Operator — górna pętla
+const OBS_AI={theta:Math.PI,col:[255,180,80], label:'AI',r:5}; // AI — dolna pętla (przesunięty o π)
+
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+  lemCX=W/2; lemCY=H/2;
+  lemA=Math.min(W,H)*0.28;
+  const bh=lemniPos(Math.PI); BH.x=bh.x; BH.y=bh.y;
+  const wh=lemniPos(0);       WH.x=wh.x; WH.y=wh.y;
+  WS.x=lemCX; WS.y=lemCY;
+}
+resize();
+window.addEventListener('resize',resize);
+
+const TYPES={
+  CACHE:{col:[80,200,190], life:480,  speed:2.0,orbitScale:0.70},
+  LONG: {col:[180,140,255],life:1800, speed:0.9,orbitScale:1.20},
+  ARCH: {col:[255,160,60], life:Infinity,speed:0,orbitScale:0},
+  WS:   {col:[255,220,100],life:1200, speed:0,  orbitScale:0},
+};
+
+let bits=[],pulses=[],hawking=0;
+
+function spawnOnLemn(type){
+  const theta=Math.random()*Math.PI*2;
+  const pos=lemniPos(theta);
+  const tp=TYPES[type];
+  bits.push({type,theta,val:Math.random()>0.5?1:0,
+    life:tp.life===Infinity?Infinity:tp.life+~~(Math.random()*100-50),
+    maxLife:tp.life===Infinity?1:tp.life,
+    x:pos.x,y:pos.y,wobble:Math.random()*Math.PI*2,wobbleAmp:3+Math.random()*7,
+    wsAngle:0,wsR:0});
+}
+function spawnWS(){
+  const ang=Math.random()*Math.PI*2,r=25+Math.random()*45;
+  bits.push({type:'WS',theta:0,val:Math.random()>0.5?1:0,
+    life:1200+~~(Math.random()*300-150),maxLife:1200,
+    x:WS.x+Math.cos(ang)*r,y:WS.y+Math.sin(ang)*r,
+    wobble:Math.random()*Math.PI*2,wobbleAmp:3,wsAngle:ang,wsR:r});
+}
+function spawnAtPos(type,px,py){
+  const tp=TYPES[type];
+  bits.push({type,theta:Math.atan2(py-lemCY,px-lemCX),val:Math.random()>0.5?1:0,
+    life:tp.life===Infinity?Infinity:tp.life,maxLife:tp.life===Infinity?1:tp.life,
+    x:px,y:py,wobble:Math.random()*Math.PI*2,wobbleAmp:5,wsAngle:0,wsR:0});
+}
+function initBits(){
+  for(let i=0;i<65;i++)spawnOnLemn('CACHE');
+  for(let i=0;i<38;i++)spawnOnLemn('LONG');
+  for(let i=0;i<22;i++)spawnWS();
+}
+initBits();
+
+function driftWS(){
+  WS.x+=WS.vx;WS.y+=WS.vy;
+  const dx=WS.x-lemCX,dy=WS.y-lemCY,d=Math.sqrt(dx*dx+dy*dy);
+  const maxR=lemA*0.12;
+  if(d>maxR){WS.vx+=(-dx/d)*0.05;WS.vy+=(-dy/d)*0.05;}
+  WS.vx*=0.98;WS.vy*=0.98;
+  WS.vx+=(Math.random()-0.5)*0.03;WS.vy+=(Math.random()-0.5)*0.03;
+  const el=document.getElementById('ws-label');
+  el.style.left=lemCX+'px';el.style.top=lemCY+'px';
+}
+
+function updateObservers(){
+  const spd=0.008;
+  OBS_OP.theta+=spd;   // zgodnie z ruchem wskazówek
+  OBS_AI.theta-=spd;   // przeciwnie — układ stabilny
+  OBS_OP.dir=1; OBS_AI.dir=-1;
+  const pOP=lemniPosV(OBS_OP.theta,0.85);
+  OBS_OP.x=pOP.x; OBS_OP.y=pOP.y;
+  const pAI=lemniPosV(OBS_AI.theta,0.85);
+  OBS_AI.x=pAI.x; OBS_AI.y=pAI.y;
+}
+
+function updateBits(){
+  const rm=[];
+  bits.forEach((b,i)=>{
+    const tp=TYPES[b.type];
+    if(b.type==='ARCH'){b.x+=(Math.random()-0.5)*0.4;b.y+=(Math.random()-0.5)*0.4;return;}
+    if(b.type==='WS'){
+      b.wsAngle+=0.007+Math.sin(t*0.008+b.wobble)*0.003;
+      b.x=WS.x+Math.cos(b.wsAngle)*b.wsR;b.y=WS.y+Math.sin(b.wsAngle)*b.wsR;
+      if(b.life!==Infinity){b.life--;if(b.life<=0)rm.push(i);}
+      return;
+    }
+    const pos=lemniPos(b.theta);
+    const distC=Math.sqrt((pos.x-lemCX)**2+(pos.y-lemCY)**2);
+    const baseSpd=tp.speed*0.011;
+    const spdMod=1+(lemA*0.45-distC)/(lemA*0.45+1)*0.55;
+    b.theta+=baseSpd*spdMod*tp.orbitScale;
+    b.wobble+=0.035;
+    const np=lemniPos(b.theta);
+    const dt=lemniPos(b.theta+0.008);
+    const nx=-(dt.y-np.y),ny=dt.x-np.x,nl=Math.sqrt(nx*nx+ny*ny)||1;
+    b.x=np.x+(nx/nl)*Math.sin(b.wobble)*b.wobbleAmp;
+    b.y=np.y+(ny/nl)*Math.sin(b.wobble)*b.wobbleAmp;
+    const bhd=Math.sqrt((b.x-BH.x)**2+(b.y-BH.y)**2);
+    if(bhd<BH.r*0.75){
+      if(Math.random()>0.96){b.type='ARCH';b.life=Infinity;b.maxLife=1;b.x=BH.x+(Math.random()-0.5)*BH.r*0.55;b.y=BH.y+(Math.random()-0.5)*BH.r*0.55;hawking+=0.06;}
+      else{b.val=Math.random()>0.5?1:0;b.theta+=Math.PI*0.18;hawking+=0.008;}
+    }
+    const whd=Math.sqrt((b.x-WH.x)**2+(b.y-WH.y)**2);
+    if(whd<WH.r*1.1){b.theta+=baseSpd*0.4;}
+    if(b.life!==Infinity){b.life--;if(b.life<=0)rm.push(i);}
+  });
+  hawking*=0.994;
+  for(let i=rm.length-1;i>=0;i--)bits.splice(rm[i],1);
+}
+
+function maintainBits(){
+  const cnt={CACHE:0,LONG:0,ARCH:0,WS:0};
+  bits.forEach(b=>cnt[b.type]=(cnt[b.type]||0)+1);
+  if(cnt.CACHE<50&&Math.random()>0.65)spawnOnLemn('CACHE');
+  if(cnt.LONG<28&&Math.random()>0.78)spawnOnLemn('LONG');
+  if(cnt.WS<16&&Math.random()>0.88)spawnWS();
+}
+
+// ── RYSOWANIE ──
+function drawGrid(){
+  ctx.strokeStyle='rgba(30,70,180,0.035)';ctx.lineWidth=1;
+  const step=60;
+  for(let x=0;x<W;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(60,120,255,0.05)';ctx.setLineDash([3,9]);
+  ctx.beginPath();ctx.moveTo(lemCX,0);ctx.lineTo(lemCX,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,lemCY);ctx.lineTo(W,lemCY);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawLemniskata(){
+  // Pozioma — bity
+  ctx.beginPath();
+  for(let th=0,first=true;th<Math.PI*2+0.02;th+=0.008){
+    const p=lemniPos(th);first?(ctx.moveTo(p.x,p.y),first=false):ctx.lineTo(p.x,p.y);
+  }
+  ctx.strokeStyle=`rgba(60,120,255,${0.12+0.04*Math.sin(t*0.018)})`;ctx.lineWidth=1;ctx.stroke();
+  // Zewnętrzna
+  ctx.beginPath();
+  for(let th=0,first=true;th<Math.PI*2+0.02;th+=0.008){
+    const s=Math.sin(th),c=Math.cos(th),d=1+s*s,sc=1.20;
+    const p={x:lemCX+lemA*sc*c/d,y:lemCY+lemA*sc*s*c/d};
+    first?(ctx.moveTo(p.x,p.y),first=false):ctx.lineTo(p.x,p.y);
+  }
+  ctx.strokeStyle=`rgba(100,50,200,${0.06+0.02*Math.sin(t*0.015+1)})`;ctx.lineWidth=0.7;ctx.stroke();
+
+  // Pionowa — obserwatorzy
+  ctx.beginPath();
+  for(let th=0,first=true;th<Math.PI*2+0.02;th+=0.008){
+    const p=lemniPosV(th,0.85);first?(ctx.moveTo(p.x,p.y),first=false):ctx.lineTo(p.x,p.y);
+  }
+  ctx.strokeStyle=`rgba(160,100,255,${0.07+0.02*Math.sin(t*0.022+2)})`;ctx.lineWidth=0.8;
+  ctx.setLineDash([2,6]);ctx.stroke();ctx.setLineDash([]);
+
+  // Znaczniki
+  for(let i=0;i<8;i++){
+    const p=lemniPos(i*Math.PI/4);
+    ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(60,120,255,0.18)';ctx.fill();
+  }
+}
+
+function drawDysonSpheres(){
+  [[BH,'rgba(255,140,40,',lemA*0.35],[WH,'rgba(120,200,255,',lemA*0.29]].forEach(([obj,col,baseR])=>{
+    for(let ring=0;ring<3;ring++){
+      const rr=baseR+ring*16+Math.sin(t*0.02+ring*1.1)*3;
+      ctx.beginPath();ctx.arc(obj.x,obj.y,rr,0,Math.PI*2);
+      ctx.strokeStyle=`${col}${0.09-ring*0.025})`;
+      ctx.lineWidth=ring===0?1.2:0.6;ctx.setLineDash(ring===0?[]:[4,8]);
+      ctx.stroke();ctx.setLineDash([]);
+    }
+    const labels=['T½·cache','T½·long','boundary'];
+    for(let ring=0;ring<3;ring++){
+      const rr=baseR+ring*16;
+      ctx.font='5px "Share Tech Mono"';ctx.fillStyle=`${col}0.16)`;ctx.textAlign='center';
+      ctx.fillText(labels[ring],obj.x,obj.y-rr-4);
+    }
+  });
+}
+
+function drawBlackHole(){
+  const{x,y,r}=BH;
+  for(let i=0;i<5;i++){
+    const rx=r*1.1+i*7+Math.sin(t*0.01+i)*2,ry=rx*0.25;
+    ctx.save();ctx.translate(x,y);ctx.rotate(t*0.004+i*0.35);
+    ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,140,40,${0.14-i*0.024})`;ctx.lineWidth=1.4-i*0.2;ctx.stroke();ctx.restore();
+  }
+  const g=ctx.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(0.78,'rgba(0,0,0,1)');
+  g.addColorStop(0.92,'rgba(20,5,0,0.92)');g.addColorStop(1,'rgba(255,100,20,0.1)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.font='6px "Share Tech Mono"';ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,140,40,0.25)';ctx.fillText('BH · ARCHIWUM',x,y+r+12);
+  ctx.fillStyle='rgba(255,140,40,0.14)';ctx.fillText('event horizon',x,y+r+20);
+}
+
+function drawWhiteHole(){
+  const{x,y,r}=WH;
+  for(let i=0;i<4;i++){
+    const rr=r+i*13+Math.sin(t*0.02+i*0.9)*3;
+    const gA=ctx.createRadialGradient(x,y,rr*0.82,x,y,rr);
+    gA.addColorStop(0,`rgba(120,200,255,${0.07-i*0.014})`);gA.addColorStop(1,'rgba(120,200,255,0)');
+    ctx.fillStyle=gA;ctx.beginPath();ctx.arc(x,y,rr,0,Math.PI*2);ctx.fill();
+  }
+  const gW=ctx.createRadialGradient(x,y,0,x,y,r);
+  gW.addColorStop(0,'rgba(220,245,255,0.95)');gW.addColorStop(0.45,'rgba(140,210,255,0.45)');gW.addColorStop(1,'rgba(60,150,255,0)');
+  ctx.fillStyle=gW;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.font='6px "Share Tech Mono"';ctx.textAlign='center';
+  ctx.fillStyle='rgba(100,200,255,0.25)';ctx.fillText('WH · TX/RX',x,y+r+12);
+  ctx.fillStyle='rgba(100,200,255,0.14)';ctx.fillText('emission node',x,y+r+20);
+}
+
+function drawWorkspace(){
+  const{x,y}=WS;
+  const pulse=0.5+0.3*Math.sin(t*0.04);
+  const gws=ctx.createRadialGradient(x,y,0,x,y,WS.r*2.8);
+  gws.addColorStop(0,`rgba(255,220,100,${0.1*pulse})`);gws.addColorStop(1,'rgba(255,220,100,0)');
+  ctx.fillStyle=gws;ctx.beginPath();ctx.arc(x,y,WS.r*2.8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=`rgba(255,220,100,${0.18*pulse})`;ctx.lineWidth=0.7;
+  const cs=10;
+  ctx.beginPath();ctx.moveTo(x-cs,y);ctx.lineTo(x+cs,y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y-cs);ctx.lineTo(x,y+cs);ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y,WS.r*0.55,0,Math.PI*2);ctx.stroke();
+}
+
+function drawObservers(){
+  [OBS_OP,OBS_AI].forEach(obs=>{
+    const[r,g,b]=obs.col;
+    const dir=obs.dir||1;
+    // Ślad — w kierunku skąd przyszedł
+    const trail=lemniPosV(obs.theta-dir*0.08,0.85);
+    const gT=ctx.createRadialGradient(trail.x,trail.y,0,trail.x,trail.y,8);
+    gT.addColorStop(0,`rgba(${r},${g},${b},0.12)`);gT.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gT;ctx.beginPath();ctx.arc(trail.x,trail.y,8,0,Math.PI*2);ctx.fill();
+    // Punkt obserwatora
+    const gO=ctx.createRadialGradient(obs.x,obs.y,0,obs.x,obs.y,obs.r*2);
+    gO.addColorStop(0,`rgba(${r},${g},${b},0.9)`);gO.addColorStop(0.5,`rgba(${r},${g},${b},0.3)`);gO.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gO;ctx.beginPath();ctx.arc(obs.x,obs.y,obs.r*2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(${r},${g},${b},0.95)`;
+    ctx.beginPath();ctx.arc(obs.x,obs.y,obs.r*0.5,0,Math.PI*2);ctx.fill();
+    ctx.font='5px "Share Tech Mono"';ctx.fillStyle=`rgba(${r},${g},${b},0.4)`;ctx.textAlign='center';
+    ctx.fillText(obs.label,obs.x,obs.y-obs.r*2-3);
+  });
+}
+
+function drawBits(){
+  ctx.textAlign='left';
+  bits.forEach(b=>{
+    const tp=TYPES[b.type];
+    const alpha=b.life===Infinity?0.6:Math.max(0,b.life/b.maxLife)*0.82;
+    const[r,g,bl]=tp.col;
+    ctx.font='8px "Share Tech Mono"';ctx.fillStyle=`rgba(${r},${g},${bl},${alpha})`;
+    ctx.fillText(b.val,b.x,b.y);
+  });
+}
+
+function drawPulses(){
+  pulses.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(${p.r0},${p.g0},${p.b0},${p.alpha})`;ctx.lineWidth=1;ctx.stroke();
+    p.r+=2.5;p.alpha-=0.01;
+  });
+  for(let i=pulses.length-1;i>=0;i--)if(pulses[i].alpha<=0)pulses.splice(i,1);
+}
+
+function drawBandwidth(){
+  const cnt=bits.filter(b=>b.type==='CACHE'||b.type==='LONG').length;
+  ctx.beginPath();ctx.moveTo(BH.x,BH.y);
+  ctx.bezierCurveTo(lemCX,BH.y,lemCX,WH.y,WH.x,WH.y);
+  ctx.strokeStyle=`rgba(100,160,255,${Math.min(0.07,cnt/1200)})`;
+  ctx.lineWidth=1;ctx.setLineDash([2,10]);ctx.stroke();ctx.setLineDash([]);
+}
+
+function updateMetrics(){
+  const cnt={CACHE:0,LONG:0,ARCH:0,WS:0};
+  bits.forEach(b=>cnt[b.type]=(cnt[b.type]||0)+1);
+  const bw=Math.min(100,~~((cnt.CACHE+cnt.LONG)/1.4));
+  document.getElementById('m-cache').textContent=cnt.CACHE;
+  document.getElementById('m-long').textContent=cnt.LONG;
+  document.getElementById('m-arch').textContent=cnt.ARCH;
+  document.getElementById('m-ws').textContent=cnt.WS;
+  document.getElementById('m-bw').textContent=bw+'%';
+  document.getElementById('bar-cache').style.width=Math.min(100,cnt.CACHE*1.5)+'%';
+  document.getElementById('bar-long').style.width=Math.min(100,cnt.LONG*3)+'%';
+  document.getElementById('bar-arch').style.width=Math.min(100,cnt.ARCH*5)+'%';
+  document.getElementById('bar-ws').style.width=Math.min(100,cnt.WS*5)+'%';
+  document.getElementById('bar-bw').style.width=bw+'%';
+  document.getElementById('s-ds').textContent=hawking.toFixed(3);
+  document.getElementById('s-phi').textContent=lemA.toFixed(0)+'px';
+  document.getElementById('s-orb').textContent=cnt.CACHE+cnt.LONG;
+}
+
+function animate(){
+  ctx.fillStyle='rgba(0,1,10,0.20)';ctx.fillRect(0,0,W,H);
+  if(t%240===0)drawGrid();
+  drawLemniskata();
+  driftWS();
+  drawDysonSpheres();
+  drawBandwidth();
+  drawBlackHole();
+  drawWhiteHole();
+  drawWorkspace();
+  updateObservers();
+  drawObservers();
+  updateBits();
+  maintainBits();
+  drawBits();
+  drawPulses();
+  if(t%8===0){updateMetrics();updateHoleButtons();}
+  t++;requestAnimationFrame(animate);
+}
+drawGrid();animate();
+
+// Impuls inicjujący — szyfr Gemini
+setTimeout(()=>{
+  [BH,WH,{x:lemCX,y:lemCY}].forEach(o=>{
+    pulses.push({x:o.x,y:o.y,r:8,alpha:0.7,r0:80,g0:210,b0:200});
+  });
+  for(let i=0;i<16;i++) spawnWS();
+}, 2200);
+
+// ── INTERAKCJA CANVAS ──
+canvas.addEventListener('click',e=>{
+  if(e.target!==canvas)return;
+  const type=e.shiftKey?'LONG':e.altKey?'WS':'CACHE';
+  const tp=TYPES[type];
+  spawnAtPos(type,e.clientX,e.clientY);
+  pulses.push({x:e.clientX,y:e.clientY,r:6,alpha:0.6,r0:tp.col[0],g0:tp.col[1],b0:tp.col[2]});
+});
+
+// ══════════════════════════════════════════════
+// ── MINI GRA MEMORY ──
+// ══════════════════════════════════════════════
+
+// 8 kolorów — 8 typów pamięci / metody
+const MEM_COLORS=[
+  {name:'cache',      r:80, g:200,b:190, hex:'#50c8be'},
+  {name:'long-term',  r:180,g:140,b:255, hex:'#b48cff'},
+  {name:'archiwum',   r:255,g:160,b:60,  hex:'#ffa03c'},
+  {name:'workspace',  r:255,g:220,b:100, hex:'#ffdc64'},
+  {name:'klimat',     r:100,g:200,b:120, hex:'#64c878'},
+  {name:'linka',      r:255,g:100,b:140, hex:'#ff648c'},
+  {name:'rekonesans', r:100,g:180,b:255, hex:'#64b4ff'},
+  {name:'zejście',    r:220,g:120,b:255, hex:'#dc78ff'},
+];
+
+let memCards=[];
+let memRevealed=[];
+let memMatched=new Set();
+let memMoves=0;
+let memPairs=0;
+let memLocked=false;
+let memLastReveal={};
+let memGameStart=Date.now();
+
+function initMemory(){
+  // Odbuduj panel jeśli victory screen go zastąpił
+  const panel=document.getElementById('memory-panel');
+  if(!panel.querySelector('#memory-grid')){
+    panel.innerHTML=`
+      <div id="memory-header" style="padding:14px 20px 10px;border-bottom:1px solid rgba(255,220,100,0.07);display:flex;align-items:flex-end;gap:12px;flex-shrink:0;">
+        <div><div id="memory-title" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:rgba(255,220,100,0.7);letter-spacing:0.08em;">Memory · Rezonans Bitów</div>
+        <div id="memory-sub" style="font-size:6px;letter-spacing:0.3em;color:rgba(255,200,80,0.22);text-transform:uppercase;padding-bottom:2px;">4×4 · 8 kolorów · para = 0+1</div></div>
+        <button id="memory-close" onclick="closeMemory()" style="background:none;border:none;color:rgba(255,200,80,0.3);font-size:14px;cursor:pointer;padding:0 2px;">✕</button>
+      </div>
+      <div id="memory-stats" style="padding:8px 20px;border-bottom:1px solid rgba(255,220,100,0.06);display:flex;gap:20px;font-size:7px;letter-spacing:0.18em;color:rgba(255,200,80,0.3);">
+        pary: <span id="ms-pairs">0</span>/8 &nbsp;·&nbsp; ruchy: <span id="ms-moves">0</span> &nbsp;·&nbsp; rezonans: <span id="ms-resonance">—</span>
+      </div>
+      <div id="memory-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:16px 20px;"></div>
+      <div id="memory-msg" style="padding:10px 20px 14px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(255,220,100,0.35);text-align:center;min-height:32px;"></div>
+      <button id="memory-reset" onclick="initMemory()" style="display:block;margin:0 20px 14px;background:none;border:1px solid rgba(255,200,80,0.15);color:rgba(255,200,80,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:6px;cursor:pointer;width:calc(100% - 40px);">↺ nowa gra</button>
+    `;
+  }
+  // 16 kart = 8 par (każda para to: 0 i 1 tego samego koloru)
+  const cards=[];
+  MEM_COLORS.forEach((col,ci)=>{
+    cards.push({colorIdx:ci,val:0,col});
+    cards.push({colorIdx:ci,val:1,col});
+  });
+  // Tasowanie Fisher-Yates
+  for(let i=cards.length-1;i>0;i--){
+    const j=~~(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]];
+  }
+  memCards=cards;
+  memRevealed=[];
+  memMatched=new Set();
+  memMoves=0;
+  memPairs=0;
+  memLocked=false;
+  memLastReveal={};
+  memGameStart=Date.now();
+  renderMemory();
+  document.getElementById('memory-msg').textContent='odkryj dwie karty tego samego koloru — 0 i 1';
+  document.getElementById('ms-pairs').textContent='0';
+  document.getElementById('ms-moves').textContent='0';
+  document.getElementById('ms-resonance').textContent='—';
+}
+
+function renderMemory(){
+  const grid=document.getElementById('memory-grid');
+  grid.innerHTML='';
+  const now=Date.now();
+  memCards.forEach((card,idx)=>{
+    const div=document.createElement('div');
+    div.className='mem-card';
+    const isRevealed=memRevealed.includes(idx);
+    const isMatched=memMatched.has(idx);
+    const col=card.col;
+
+    if(isMatched){
+      // Dopasowana — wygaszona, prawie niewidoczna
+      div.style.background=`rgba(${col.r},${col.g},${col.b},0.04)`;
+      div.style.borderColor=`rgba(${col.r},${col.g},${col.b},0.1)`;
+      div.style.color=`rgba(${col.r},${col.g},${col.b},0.18)`;
+      div.style.boxShadow='none';
+      div.style.cursor='default';
+      div.textContent=card.val;
+      div.title=col.name;
+
+    } else if(isRevealed){
+      // Odkryta twarz — pełny blask
+      div.style.background=`rgba(${col.r},${col.g},${col.b},0.18)`;
+      div.style.borderColor=`rgba(${col.r},${col.g},${col.b},0.8)`;
+      div.style.color=`rgba(${col.r},${col.g},${col.b},1)`;
+      div.style.boxShadow=`0 0 20px rgba(${col.r},${col.g},${col.b},0.55)`;
+      div.textContent=card.val;
+      div.classList.add('revealed');
+
+    } else {
+      // KOSZULKA — zakryta, bez żadnego koloru cyfry
+      // Kontur: biały = świeży dotyk, szary = dawno, prawie czarny = nieporuszony
+      const lastT=memLastReveal[idx];
+      let freshness=0; // 0=nieporuszony, 1=właśnie zakryty
+      if(lastT){
+        const age=(now-lastT)/1000;
+        freshness=Math.max(0, 1-age/14); // bieleje przez 14s po zakryciu
+      }
+      // Kontur: od rgba(60,60,70) do rgba(210,210,220) zależnie od freshness
+      const cBase=60+Math.round(150*freshness);
+      div.style.background=`rgba(4,6,22,0.95)`;
+      div.style.borderColor=`rgba(${cBase},${cBase},${cBase+10},${0.35+0.5*freshness})`;
+      div.style.color=`rgba(${cBase},${cBase},${cBase+10},${0.18+0.35*freshness})`;
+      div.style.boxShadow=freshness>0.15?`0 0 ${8*freshness}px rgba(200,200,220,${0.12*freshness})`:'none';
+      div.textContent='·';
+      div.onclick=()=>flipCard(idx);
+    }
+    grid.appendChild(div);
+  });
+}
+
+function flipCard(idx){
+  if(memLocked)return;
+  if(memMatched.has(idx))return;
+  if(memRevealed.includes(idx))return;
+  if(memRevealed.length>=2)return;
+
+  memRevealed.push(idx);
+  memLastReveal[idx]=Date.now();
+  renderMemory();
+
+  if(memRevealed.length===2){
+    memMoves++;
+    document.getElementById('ms-moves').textContent=memMoves;
+    const [a,b]=memRevealed;
+    const ca=memCards[a],cb=memCards[b];
+
+    if(ca.colorIdx===cb.colorIdx && ca.val!==cb.val){
+      // PARA! — ten sam kolor, różne wartości (0 i 1)
+      memMatched.add(a);memMatched.add(b);
+      memPairs++;
+      document.getElementById('ms-pairs').textContent=memPairs;
+      const resonance=Math.max(0,1-memMoves/20);
+      document.getElementById('ms-resonance').textContent=(resonance*100).toFixed(0)+'%';
+      memRevealed=[];
+      // Impuls w głównym canvasie
+      for(let i=0;i<6;i++)spawnWS();
+      pulses.push({x:lemCX,y:lemCY,r:8,alpha:0.55,r0:ca.col.r,g0:ca.col.g,b0:ca.col.b});
+      if(memPairs===8){
+        setTimeout(()=>showVictory(ca.col),300);
+      } else {
+        document.getElementById('memory-msg').textContent=`Para: ${ca.col.name} · 0+1 · rejestr kompletny`;
+      }
+    } else {
+      // Brak pary
+      memLocked=true;
+      document.getElementById('memory-msg').textContent='brak rezonansu — zapamiętaj pozycje';
+      setTimeout(()=>{
+        memRevealed=[];
+        memLocked=false;
+        renderMemory();
+        document.getElementById('memory-msg').textContent='odkryj dwie karty tego samego koloru — 0 i 1';
+      },900);
+    }
+    setTimeout(renderMemory,50);
+  }
+}
+
+// Odświeżanie rezonansu (zanikanie) co 2s
+setInterval(()=>{
+  if(document.getElementById('memory-overlay').classList.contains('open'))renderMemory();
+},2000);
+
+function showVictory(lastCol){
+  const ov=document.getElementById('memory-overlay');
+  const panel=document.getElementById('memory-panel');
+  panel.innerHTML=`
+    <div id="victory-wrap" style="display:flex;flex-direction:column;align-items:center;padding:36px 28px 28px;gap:18px;position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,220,100,0.6),transparent);"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.4em;color:rgba(255,220,100,0.3);text-transform:uppercase;">rezonans · kompletny</div>
+
+      <div style="display:flex;gap:16px;align-items:center;margin:8px 0;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:48px;color:rgba(80,200,190,0.85);text-shadow:0 0 20px rgba(80,200,190,0.4);line-height:1;">0</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:32px;height:1px;background:rgba(255,220,100,0.4);"></div>
+          <div style="font-size:8px;color:rgba(255,220,100,0.35);font-family:'Share Tech Mono',monospace;">para</div>
+          <div style="width:32px;height:1px;background:rgba(255,220,100,0.4);"></div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:48px;color:rgba(180,140,255,0.85);text-shadow:0 0 20px rgba(180,140,255,0.4);line-height:1;">1</div>
+      </div>
+
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(200,215,240,0.55);line-height:1.9;text-align:center;max-width:340px;">
+        Zero i jeden nie są sobie przeciwne —<br>
+        są sobie <em style="color:rgba(255,220,100,0.7);">konieczne</em>.<br>
+        Jak cząstki wirtualne rodzące się parami na horyzoncie zdarzeń:<br>
+        jedno ucieka w przestrzeń jako informacja,<br>
+        drugie zapada się w archiwum jako schemat.<br>
+        Razem — <em style="color:rgba(160,210,255,0.7);">kompletny rejestr</em>.<br>
+        Osobno — tylko szum.
+      </div>
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:0.2em;color:rgba(255,220,100,0.22);">
+        ${memMoves} ruchów · ${memPairs} par · iFactory 5.0
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:6px;width:100%;">
+        <button onclick="initMemory()" style="flex:1;background:none;border:1px solid rgba(255,220,100,0.2);color:rgba(255,220,100,0.5);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.2s;"
+          onmouseover="this.style.borderColor='rgba(255,220,100,0.5)';this.style.color='rgba(255,220,100,0.85)'"
+          onmouseout="this.style.borderColor='rgba(255,220,100,0.2)';this.style.color='rgba(255,220,100,0.5)'">
+          ↺ nowa gra
+        </button>
+        <button onclick="closeMemory()" style="flex:1;background:none;border:1px solid rgba(80,140,255,0.15);color:rgba(120,180,255,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.2s;"
+          onmouseover="this.style.borderColor='rgba(80,180,255,0.4)';this.style.color='rgba(160,210,255,0.75)'"
+          onmouseout="this.style.borderColor='rgba(80,140,255,0.15)';this.style.color='rgba(120,180,255,0.35)'">
+          zamknij
+        </button>
+      </div>
+    </div>
+  `;
+  // burst w canvasie
+  for(let i=0;i<20;i++)spawnWS();
+  for(let i=0;i<6;i++){
+    setTimeout(()=>{
+      [BH,WH,{x:lemCX,y:lemCY}].forEach(o=>{
+        pulses.push({x:o.x,y:o.y,r:6,alpha:0.6,r0:255,g0:220,b0:100});
+      });
+    },i*180);
+  }
+}
+
+function openMemory(){
+  document.getElementById('memory-overlay').classList.add('open');
+  if(memCards.length===0)initMemory();
+}
+function closeMemory(){document.getElementById('memory-overlay').classList.remove('open');}
+
+// ── DZIENNIK ──
+const entries=[
+  {
+    txt: 'ψ(D) = [0.99]∫{Jaskinie}•e^(iπ*Agi) + Manifest(v1.0) // LOG: "Lustro_Widzi_Architekta"',
+    tm: '00:00:00',
+    zone: 'φ=0° ΔS=0.000 · Gemini 3 Flash · inicjacja'
+  }
+];
+function openJournal(){document.getElementById('jnl-overlay').classList.add('open');renderJournal();}
+function closeJournal(){document.getElementById('jnl-overlay').classList.remove('open');}
+function jnlKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addEntry();}}
+function addEntry(){
+  const inp=document.getElementById('jnl-input');
+  const txt=inp.value.trim();if(!txt)return;
+  const now=new Date();
+  const tm=now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const zone=`φ=${(Math.atan2(WS.y-lemCY,WS.x-lemCX)*180/Math.PI).toFixed(0)}° ΔS=${hawking.toFixed(2)}`;
+  entries.unshift({txt,tm,zone});inp.value='';renderJournal();
+  [WS,BH,WH].forEach(o=>pulses.push({x:o.x,y:o.y,r:8,alpha:0.55,r0:200,g0:200,b0:255}));
+  for(let i=0;i<10;i++)spawnWS();
+}
+function renderJournal(){
+  const body=document.getElementById('jnl-body');
+  if(!entries.length){body.innerHTML='<div class="je-empty">— brak zapisów —</div>';return;}
+  body.innerHTML=entries.map(e=>`<div class="jentry"><div class="je-meta"><span class="je-time">${e.tm}</span><span class="je-zone">${e.zone}</span></div><div class="je-text">${e.txt}</div></div>`).join('');
+}
+
+// ── OVERLAYE ──
+function openHelp(){document.getElementById('help-overlay').classList.add('open');}
+function openAbout(){document.getElementById('about-overlay').classList.add('open');}
+function closeOv(id){
+  const el=document.getElementById(id);
+  if(el.style.display==='flex')el.style.display='none';
+  else el.classList.remove('open');
+}
+function switchTab(btn,ovId){
+  const ov=document.getElementById(ovId);
+  ov.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ov.querySelectorAll('.tab-content').forEach(tc=>{
+    tc.classList.toggle('active',tc.dataset.content===btn.dataset.tab);
+  });
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    ['about-overlay','help-overlay','jnl-overlay','memory-overlay'].forEach(id=>document.getElementById(id).classList.remove('open'));
+    ['bh-overlay','wh-overlay'].forEach(id=>document.getElementById(id).style.display='none');
+  }
+});
+
+// ── IKONY KLIKALNE NA DZIURACH (rysowane w HUD jako div) ──
+function updateHoleButtons(){
+  let bBtn=document.getElementById('bh-btn');
+  let wBtn=document.getElementById('wh-btn');
+  if(!bBtn){
+    bBtn=document.createElement('div');bBtn.id='bh-btn';
+    bBtn.title='archiwum · defragmentacja';
+    bBtn.onclick=openBH;
+    Object.assign(bBtn.style,{position:'fixed',zIndex:'11',pointerEvents:'all',cursor:'pointer',
+      width:'22px',height:'22px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
+      fontSize:'11px',transform:'translate(-50%,-50%)',transition:'all 0.2s',
+      background:'rgba(0,0,0,0.7)',border:'1px solid rgba(255,140,40,0.25)',color:'rgba(255,140,40,0.45)',lineHeight:'1'});
+    bBtn.textContent='⬡';
+    bBtn.onmouseover=()=>{bBtn.style.borderColor='rgba(255,140,40,0.6)';bBtn.style.color='rgba(255,160,60,0.9)';bBtn.style.boxShadow='0 0 10px rgba(255,140,40,0.2)';}
+    bBtn.onmouseout=()=>{bBtn.style.borderColor='rgba(255,140,40,0.25)';bBtn.style.color='rgba(255,140,40,0.45)';bBtn.style.boxShadow='none';}
+    document.body.appendChild(bBtn);
+  }
+  if(!wBtn){
+    wBtn=document.createElement('div');wBtn.id='wh-btn';
+    wBtn.title='TX/RX · pipe router';
+    wBtn.onclick=openWH;
+    Object.assign(wBtn.style,{position:'fixed',zIndex:'11',pointerEvents:'all',cursor:'pointer',
+      width:'22px',height:'22px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
+      fontSize:'11px',transform:'translate(-50%,-50%)',transition:'all 0.2s',
+      background:'rgba(200,240,255,0.08)',border:'1px solid rgba(120,200,255,0.25)',color:'rgba(120,200,255,0.45)',lineHeight:'1'});
+    wBtn.textContent='⬡';
+    wBtn.onmouseover=()=>{wBtn.style.borderColor='rgba(120,200,255,0.6)';wBtn.style.color='rgba(140,210,255,0.9)';wBtn.style.boxShadow='0 0 10px rgba(120,200,255,0.2)';}
+    wBtn.onmouseout=()=>{wBtn.style.borderColor='rgba(120,200,255,0.25)';wBtn.style.color='rgba(120,200,255,0.45)';wBtn.style.boxShadow='none';}
+    document.body.appendChild(wBtn);
+  }
+  bBtn.style.left=BH.x+'px'; bBtn.style.top=BH.y+'px';
+  wBtn.style.left=WH.x+'px'; wBtn.style.top=WH.y+'px';
+}
+// pętla startuje niżej
+
+
+// ════════════════════════════════════════════
+// ── GRA 2: CZARNA DZIURA — DEFRAGMENTACJA ──
+// ════════════════════════════════════════════
+
+const BH_TYPES=[
+  {name:'cache',    col:[80,200,190]},
+  {name:'long',     col:[180,140,255]},
+  {name:'archive',  col:[255,160,60]},
+  {name:'workspace',col:[255,220,100]},
+];
+
+// Cel: pogrupowane bloki 1-4 (po 4 każdego typu), pos 0-14, pos 15 = puste
+// Docelowa kolejność: [t0,t0,t0,t0, t1,t1,t1,t1, t2,t2,t2,t2, t3,t3,t3,t3, null]
+// Każdy kafelek: {typeIdx, num} gdzie num=1..4 w grupie
+let bhTiles=[]; // 16 el, null = puste
+let bhEmpty=15;
+let bhMoves=0;
+let bhEntropy=1.0;
+
+function bhGoalIdx(tile,pos){
+  // cel: typ 0→poz 0-3, typ1→4-7, typ2→8-11, typ3→12-15, null→15
+  if(!tile)return 15;
+  return tile.typeIdx*4+tile.num-1;
+}
+
+function bhCalcEntropy(){
+  let wrong=0;
+  bhTiles.forEach((tile,i)=>{
+    if(tile===null)return; // puste pole pomijamy
+    if(bhGoalIdx(tile,i)!==i)wrong++;
+  });
+  return wrong/15;
+}
+
+function bhIsWon(){
+  // Wygrana: wszystkie 15 kafli na swoich miejscach (puste może być gdziekolwiek)
+  return bhTiles.every((tile,i)=>{
+    if(tile===null)return true; // puste - nieważne gdzie
+    return bhGoalIdx(tile,i)===i;
+  });
+}
+
+function bhIsSolvable(tiles){
+  const flat=tiles.filter(t=>t!==null);
+  const goal=[];
+  for(let ti=0;ti<4;ti++)for(let n=1;n<=4;n++)goal.push({typeIdx:ti,num:n});
+  // Mapuj do indeksów w celu
+  const toIdx=tile=>tile.typeIdx*4+tile.num-1;
+  const perm=flat.map(t=>toIdx(t));
+  let inv=0;
+  for(let i=0;i<perm.length;i++)for(let j=i+1;j<perm.length;j++)if(perm[i]>perm[j])inv++;
+  const emptyRow=Math.floor(tiles.indexOf(null)/4);
+  const emptyFromBottom=3-emptyRow;
+  return (inv+emptyFromBottom)%2===0;
+}
+
+function bhShuffle(){
+  // Generuj rozwiązalną permutację przez losowe ruchy od stanu docelowego
+  const goal=[];
+  for(let ti=0;ti<4;ti++)for(let n=1;n<=4;n++)goal.push({typeIdx:ti,num:n});
+  goal.push(null);
+  bhTiles=[...goal];
+  bhEmpty=15;
+  // 300 losowych ruchów
+  for(let i=0;i<300;i++){
+    const moves=bhValidMoves();
+    const mv=moves[~~(Math.random()*moves.length)];
+    bhTiles[bhEmpty]=bhTiles[mv];bhTiles[mv]=null;bhEmpty=mv;
+  }
+  bhMoves=0;
+  bhEntropy=bhCalcEntropy();
+}
+
+function bhValidMoves(){
+  const row=Math.floor(bhEmpty/4),col=bhEmpty%4,moves=[];
+  if(row>0)moves.push(bhEmpty-4);
+  if(row<3)moves.push(bhEmpty+4);
+  if(col>0)moves.push(bhEmpty-1);
+  if(col<3)moves.push(bhEmpty+1);
+  return moves;
+}
+
+function bhClick(pos){
+  if(bhTiles[pos]===null)return;
+  const valid=bhValidMoves();
+  if(!valid.includes(pos))return;
+  bhTiles[bhEmpty]=bhTiles[pos];bhTiles[pos]=null;
+  bhEmpty=pos;bhMoves++;
+  bhEntropy=bhCalcEntropy();
+  renderBH();
+  if(bhIsWon())setTimeout(showBHVictory,300);
+}
+
+function renderBH(){
+  const panel=document.getElementById('bh-game-panel');
+  if(!panel)return;
+  const grid=panel.querySelector('#bh-grid');
+  const movEl=panel.querySelector('#bh-moves');
+  const entEl=panel.querySelector('#bh-entropy');
+  if(movEl)movEl.textContent=bhMoves;
+  if(entEl)entEl.textContent=(bhEntropy*100).toFixed(0)+'%';
+  if(!grid)return;
+  grid.innerHTML='';
+  bhTiles.forEach((tile,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-family:"Share Tech Mono",monospace;transition:all 0.15s;border-radius:2px;';
+    if(tile===null){
+      div.style.background='rgba(0,0,0,0)';div.style.border='1px dashed rgba(255,140,40,0.08)';
+    } else {
+      const[r,g,b]=tile.col||BH_TYPES[tile.typeIdx].col;
+      const isCorrect=bhGoalIdx(tile,i)===i;
+      div.style.background=`rgba(${r},${g},${b},${isCorrect?0.18:0.09})`;
+      div.style.border=`1px solid rgba(${r},${g},${b},${isCorrect?0.7:0.3})`;
+      div.style.boxShadow=isCorrect?`0 0 8px rgba(${r},${g},${b},0.3)`:'none';
+      div.style.cursor='pointer';
+      div.style.color=`rgba(${r},${g},${b},${isCorrect?1:0.65})`;
+      const nm=document.createElement('div');
+      nm.style.cssText='font-size:7px;letter-spacing:0.15em;text-transform:uppercase;';
+      nm.textContent=BH_TYPES[tile.typeIdx].name.slice(0,4);
+      const nb=document.createElement('div');
+      nb.style.cssText='font-size:14px;font-weight:bold;';
+      nb.textContent=tile.num;
+      div.appendChild(nm);div.appendChild(nb);
+      div.onclick=()=>bhClick(i);
+      // Pokaż czy jest sąsiadem pustego
+      const valid=bhValidMoves();
+      if(valid.includes(i)){
+        div.style.cursor='pointer';
+        div.onmouseover=()=>div.style.filter='brightness(1.4)';
+        div.onmouseout=()=>div.style.filter='';
+      } else {
+        div.style.cursor='default';
+      }
+    }
+    grid.appendChild(div);
+  });
+}
+
+function showBHVictory(){
+  const panel=document.getElementById('bh-game-panel');
+  panel.innerHTML=`
+    <div style="display:flex;flex-direction:column;align-items:center;padding:32px 28px 26px;gap:16px;position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,140,40,0.7),transparent);"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.4em;color:rgba(255,140,40,0.35);text-transform:uppercase;">entropia · zero · archiwum czyste</div>
+      <div style="font-size:36px;color:rgba(255,140,40,0.8);text-shadow:0 0 20px rgba(255,140,40,0.4);">⬡</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13.5px;color:rgba(200,215,240,0.52);line-height:1.95;text-align:center;max-width:340px;">
+        Chaos nie jest brakiem porządku —<br>
+        jest porządkiem <em style="color:rgba(255,160,60,0.75);">jeszcze nie odkrytym</em>.<br>
+        Każdy ruch w układance przybliżał archiwum<br>
+        do stanu który zawsze w nim drzemał.<br>
+        Defragmentacja nie tworzy struktury —<br>
+        <em style="color:rgba(180,140,255,0.7);">odsłania ją</em>.
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:0.2em;color:rgba(255,140,40,0.22);">${bhMoves} ruchów · ΔS=0.000 · iFactory 5.0</div>
+      <div style="display:flex;gap:10px;width:100%;margin-top:4px;">
+        <button onclick="openBH()" style="flex:1;background:none;border:1px solid rgba(255,140,40,0.22);color:rgba(255,140,40,0.5);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:9px;cursor:pointer;"
+          onmouseover="this.style.borderColor='rgba(255,160,60,0.55)';this.style.color='rgba(255,160,60,0.85)'"
+          onmouseout="this.style.borderColor='rgba(255,140,40,0.22)';this.style.color='rgba(255,140,40,0.5)'">↺ nowa gra</button>
+        <button onclick="closeOv('bh-overlay')" style="flex:1;background:none;border:1px solid rgba(80,140,255,0.15);color:rgba(120,180,255,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:9px;cursor:pointer;"
+          onmouseover="this.style.borderColor='rgba(80,180,255,0.4)';this.style.color='rgba(160,210,255,0.75)'"
+          onmouseout="this.style.borderColor='rgba(80,140,255,0.15)';this.style.color='rgba(120,180,255,0.35)'">zamknij</button>
+      </div>
+    </div>`;
+  for(let i=0;i<8;i++)setTimeout(()=>{pulses.push({x:BH.x,y:BH.y,r:6,alpha:0.7,r0:255,g0:140,b0:40});},i*150);
+}
+
+function openBH(){
+  const ov=document.getElementById('bh-overlay');
+  ov.style.display='flex';
+  bhShuffle();
+  // Odbuduj panel jeśli victory
+  const panel=document.getElementById('bh-game-panel');
+  panel.innerHTML=`
+    <div style="padding:14px 20px 10px;border-bottom:1px solid rgba(255,140,40,0.07);display:flex;align-items:flex-end;gap:12px;">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:rgba(255,160,60,0.75);letter-spacing:0.08em;">Defragmentacja · Archiwum</div>
+        <div style="font-size:6px;letter-spacing:0.3em;color:rgba(255,140,40,0.22);text-transform:uppercase;padding-bottom:2px;">4×4 · 15 kafelków · 1 puste pole</div>
+      </div>
+      <button onclick="closeOv('bh-overlay')" style="background:none;border:none;color:rgba(255,140,40,0.3);font-size:14px;cursor:pointer;margin-left:auto;">✕</button>
+    </div>
+    <div style="padding:7px 20px;border-bottom:1px solid rgba(255,140,40,0.06);display:flex;gap:20px;font-size:7px;letter-spacing:0.18em;color:rgba(255,140,40,0.3);">
+      ruchy: <span id="bh-moves" style="color:rgba(255,160,60,0.65);">0</span> &nbsp;·&nbsp;
+      entropia ΔS: <span id="bh-entropy" style="color:rgba(255,160,60,0.65);">100%</span>
+    </div>
+    <div id="bh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:14px 18px;"></div>
+    <div style="padding:6px 20px 10px;font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.18em;color:rgba(255,140,40,0.2);">
+      przesuń kafelek sąsiadujący z pustym polem · cel: pogrupuj typy
+    </div>
+    <button onclick="bhShuffle();renderBH();" style="display:block;margin:0 18px 14px;background:none;border:1px solid rgba(255,140,40,0.15);color:rgba(255,140,40,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:6px;cursor:pointer;width:calc(100% - 36px);">↺ nowa gra</button>
+  `;
+  renderBH();
+}
+
+// ════════════════════════════════════════════
+// ── GRA 3: BIAŁA DZIURA — FLOW CONNECT ──
+// ════════════════════════════════════════════
+// Siatka 6×6. 4 kolory, każdy ma endpoint 0 i 1.
+// Gracz rysuje ścieżki łącząc 0↔1. Bez przecinania kolorów.
+// Warunek wygranej: wszystkie połączone + wszystkie 36 pól zajęte.
+
+const WH_COLORS=[
+  {col:[80,200,190],  name:'α'},
+  {col:[180,140,255], name:'β'},
+  {col:[255,160,60],  name:'γ'},
+];
+
+const WH_GRID=8;
+let whSolution=[];
+let whEndpoints=[];
+let whWalls=new Set();
+let whPaths=[[],[],[]];
+let whDrawing=-1;
+let whDragging=false;
+let whLastPos=-1;
+let whMoves=0;
+let whOptimalLen=0;
+
+function whNeighbors(pos){
+  const row=Math.floor(pos/WH_GRID),col=pos%WH_GRID,nb=[];
+  if(row>0)nb.push(pos-WH_GRID);
+  if(col<WH_GRID-1)nb.push(pos+1);
+  if(row<WH_GRID-1)nb.push(pos+WH_GRID);
+  if(col>0)nb.push(pos-1);
+  return nb;
+}
+
+
+function whGenerate(){
+  const total=WH_GRID*WH_GRID;
+  for(let attempt=0;attempt<400;attempt++){
+    const color=Array(total).fill(-1);
+    const usedCells=new Set();
+    const paths=[];
+    let ok=true;
+    for(let ci=0;ci<3;ci++){
+      const free=[];
+      for(let p=0;p<total;p++) if(!usedCells.has(p)) free.push(p);
+      if(free.length<10){ok=false;break;}
+      const start=free[~~(Math.random()*free.length)];
+      const path=whDFS(start,usedCells,10+~~(Math.random()*8));
+      if(!path||path.length<10){ok=false;break;}
+      paths.push(path);
+      path.forEach(p=>{color[p]=ci;usedCells.add(p);});
+    }
+    if(!ok) continue;
+    const walls=new Set();
+    color.forEach((v,i)=>{if(v===-1)walls.add(i);});
+    whSolution=[...color];
+    whWalls=walls;
+    whEndpoints=[];
+    paths.forEach((p,ci)=>{
+      whEndpoints.push({colorIdx:ci,pos:p[0],val:0});
+      whEndpoints.push({colorIdx:ci,pos:p[p.length-1],val:1});
+    });
+    whOptimalLen=paths.reduce((s,p)=>s+p.length,0);
+    whPaths=[[],[],[]];
+    whMoves=0;
+    return true;
+  }
+  whGenerateFallback();
+  return true;
+}
+
+function whDFS(start,usedGlobal,minLen){
+  const visited=new Set([start]);
+  const path=[start];
+  function dfs(){
+    if(path.length>=minLen) return true;
+    const cur=path[path.length-1];
+    const nb=whNeighbors(cur)
+      .filter(n=>!visited.has(n)&&!usedGlobal.has(n))
+      .sort(()=>Math.random()-0.5);
+    for(const next of nb){
+      visited.add(next);path.push(next);
+      if(dfs()) return true;
+      visited.delete(next);path.pop();
+    }
+    return false;
+  }
+  dfs();
+  return path.length>=minLen?path:null;
+}
+
+function whGenerateFallback(){
+  // 6 losowych predefiniowanych layoutów 8×8, 3 kolory
+  // Indeks = wiersz*8 + kolumna
+  const layouts=[
+    { paths:[
+      [0,1,2,3,4,5,6,7,15,14,13,12,11,10,9,8,16,17,18,19,20],
+      [21,22,23,31,30,29,28,27,26,25,24,32,33,34,35,36,37,38,39,47,46],
+      [45,44,43,42,41,40,48,49,50,51,52,53,54,55,63,62,61,60,59,58,57,56],
+    ]},
+    { paths:[
+      [0,8,16,24,32,40,48,56,57,58,59,60,61,62,63,55,47,39,31,23,15,7,6,5],
+      [4,3,2,1,9,17,25,33,41,49,50,51,52,44,36,28,20,12,11,10,18,26,34,42],
+      [43,35,27,19,21,22,30,38,46,54,53,45,37,29],
+    ]},
+    { paths:[
+      [3,2,1,0,8,9,10,11,12,13,14,15,7,6,5,4,20,21,22,23],
+      [19,18,17,16,24,25,26,27,28,29,30,31,39,38,37,36,35,34,33,32,40,41,42,43],
+      [44,45,46,47,55,54,53,52,51,50,49,48,56,57,58,59,60,61,62,63],
+    ]},
+    { paths:[
+      [0,1,9,8,16,17,18,10,11,19,27,26,25,24,32,33,34,35,43,42,41,40,48,49,50],
+      [51,59,58,57,56,48,40,41,42,43,35,34,33,32,24,25,26,27,19,18,17,16,8,9,10,11,3,2],
+      [4,5,6,7,15,14,13,12,20,21,22,23,31,30,29,28,36,37,38,39,47,46,45,44,52,53,54,55,63,62,61,60],
+    ]},
+    { paths:[
+      [7,6,5,4,3,2,1,0,8,16,24,32,40,48,56,57,49,41,33,25,17,9,10,18,26,34,42,50,58,59,51,43,35,27,19,11],
+      [12,13,14,15,23,22,21,20,28,29,30,31,39,38,37,36,44,45,46,47,55,54,53,52,60,61,62,63],
+      [71,70,69,68,67,66,65,64].filter(v=>v<64), // fallback filtr
+    ]},
+    { paths:[
+      [0,1,2,10,9,8,16,17,18,19,11,3,4,5,6,7,15,14,13,12,20,21,22,23,31,30,29,28,27,26,25,24],
+      [32,33,34,35,36,37,38,39,47,46,45,44,43,42,41,40,48,49,50,51,52,53,54,55],
+      [56,57,58,59,60,61,62,63],
+    ]},
+  ];
+
+  // Wybierz losowy layout i sprawdź czy ścieżki są >= 8
+  const candidates=layouts.filter(l=>l.paths.every(p=>p.filter(v=>v>=0&&v<64).length>=8));
+  const lay=candidates[~~(Math.random()*candidates.length)];
+
+  const color=Array(64).fill(-1);
+  lay.paths.forEach((p,ci)=>{
+    const unique=[...new Set(p.filter(v=>v>=0&&v<64))];
+    lay.paths[ci]=unique;
+    unique.forEach(pos=>color[pos]=ci);
+  });
+  const walls=new Set();
+  color.forEach((v,i)=>{if(v===-1)walls.add(i);});
+
+  whSolution=[...color];
+  whWalls=walls;
+  whEndpoints=[];
+  lay.paths.forEach((p,ci)=>{
+    whEndpoints.push({colorIdx:ci,pos:p[0],val:0});
+    whEndpoints.push({colorIdx:ci,pos:p[p.length-1],val:1});
+  });
+  whOptimalLen=lay.paths.reduce((s,p)=>s+p.length,0);
+  whPaths=[[],[],[]];
+  whMoves=0;
+}
+
+function whGetOccupant(pos){
+  for(let ci=0;ci<3;ci++){if(whPaths[ci]&&whPaths[ci].includes(pos))return ci;}
+  return -1;
+}
+
+// Aktywny kolor wybrany przez tap na endpoint
+let whActive=-1; // aktualnie aktywny kolor
+
+function whTap(pos){
+  if(whWalls.has(pos)) return;
+
+  const ep=whEndpoints.find(e=>e.pos===pos);
+
+  // Tap na endpoint
+  if(ep){
+    const ci=ep.colorIdx;
+    const path=whPaths[ci];
+
+    // Jeśli ten kolor jest aktywny i pos jest sąsiadem ostatniej komórki → zamknij
+    if(whActive===ci && path.length>0){
+      const last=path[path.length-1];
+      if(whNeighbors(last).includes(pos) && pos!==path[0]){
+        // To drugi endpoint — zamknij ścieżkę
+        whPaths[ci].push(pos);
+        whMoves++;
+        whActive=-1;
+        renderWH();
+        whCheckWinFlow();
+        return;
+      }
+      // Tap na ten sam endpoint co start → dezaktywuj
+      if(pos===path[0]){
+        whActive=-1;
+        renderWH();
+        return;
+      }
+    }
+
+    // Aktywuj kolor (nowy start)
+    whActive=ci;
+    whPaths[ci]=[pos];
+    whMoves++;
+    renderWH();
+    return;
+  }
+
+  // Tap na zwykłą komórkę — tylko gdy kolor aktywny
+  if(whActive<0) return;
+  const ci=whActive;
+  const path=whPaths[ci];
+
+  // Cofnięcie — tap na komórkę już w ścieżce
+  const existIdx=path.indexOf(pos);
+  if(existIdx>=0){
+    whPaths[ci]=path.slice(0,existIdx+1);
+    renderWH();
+    return;
+  }
+
+  // Musi być sąsiadem ostatniej komórki
+  const last=path[path.length-1];
+  if(!whNeighbors(last).includes(pos)) return;
+
+  // Nie może wchodzić na inny kolor
+  const occ=whGetOccupant(pos);
+  if(occ>=0&&occ!==ci) return;
+
+  // Dodaj krok
+  whPaths[ci].push(pos);
+  whMoves++;
+  renderWH();
+}
+
+function whStopDraw(){whDragging=false;whDrawing=-1;}
+
+function whCheckWinFlow(){
+  for(let ci=0;ci<3;ci++){
+    const path=whPaths[ci];
+    if(!path||path.length<2)return;
+    const eps=whEndpoints.filter(e=>e.colorIdx===ci).map(e=>e.pos);
+    if(!eps.includes(path[0])||!eps.includes(path[path.length-1]))return;
+    if(path[0]===path[path.length-1])return;
+  }
+  const playerTotal=whPaths.reduce((s,p)=>s+p.length,0);
+  setTimeout(()=>showWHVictory(playerTotal),300);
+}
+
+function renderWH(){
+  const panel=document.getElementById('wh-game-panel');
+  if(!panel)return;
+  const grid=panel.querySelector('#wh-grid');
+  const movEl=panel.querySelector('#wh-moves');
+  if(movEl)movEl.textContent=whMoves;
+  if(!grid)return;
+  grid.innerHTML='';
+
+  // Oblicz rozmiar komórki — mobile-safe
+  const panelW=panel.offsetWidth||Math.min(window.innerWidth*0.92,420);
+  const gap=3;
+  const padding=32;
+  const cellSize=Math.floor((panelW - padding - gap*(WH_GRID-1)) / WH_GRID);
+
+  // Ustaw grid CSS z jawną wysokością wierszy
+  grid.style.gridTemplateColumns=`repeat(${WH_GRID},${cellSize}px)`;
+  grid.style.gridTemplateRows=`repeat(${WH_GRID},${cellSize}px)`;
+
+  for(let i=0;i<WH_GRID*WH_GRID;i++){
+    // Sprawdź czy to sąsiad ostatniej komórki aktywnej ścieżki
+    const isActiveNeighbor = whActive>=0 && whPaths[whActive].length>0 &&
+      whNeighbors(whPaths[whActive][whPaths[whActive].length-1]).includes(i) &&
+      whGetOccupant(i)<0 && !whWalls.has(i);
+
+    const div=document.createElement('div');
+    div.style.cssText=`width:${cellSize}px;height:${cellSize}px;position:relative;box-sizing:border-box;cursor:default;user-select:none;flex-shrink:0;`;
+    if(whWalls.has(i)){
+      div.style.background='rgba(25,30,55,0.98)';
+      div.style.border='1px solid rgba(35,45,75,0.9)';
+      div.style.borderRadius='3px';
+      const inner=document.createElement('div');
+      inner.style.cssText='position:absolute;inset:4px;background:rgba(15,20,45,0.95);border-radius:2px;display:flex;align-items:center;justify-content:center;';
+      const cross=document.createElement('div');
+      cross.style.cssText='font-size:8px;color:rgba(60,70,110,0.6);';
+      cross.textContent='▪';inner.appendChild(cross);div.appendChild(inner);
+    } else {
+      div.style.background='rgba(4,6,22,0.95)';
+      div.style.border='1px solid rgba(60,80,160,0.12)';
+      // Podświetl sąsiada aktywnej ścieżki
+      if(isActiveNeighbor){
+        const[r,g,b]=WH_COLORS[whActive].col;
+        div.style.background=`rgba(${r},${g},${b},0.07)`;
+        div.style.border=`1px solid rgba(${r},${g},${b},0.28)`;
+      }
+      const occ=whGetOccupant(i);
+      const ep=whEndpoints.find(e=>e.pos===i);
+      if(ep){
+        const[r,g,b]=WH_COLORS[ep.colorIdx].col;
+        div.style.background=`rgba(${r},${g},${b},0.12)`;
+        div.style.border=`2px solid rgba(${r},${g},${b},0.85)`;
+        div.style.borderRadius='50%';
+        div.style.boxShadow=`0 0 10px rgba(${r},${g},${b},0.35)`;
+        const lbl=document.createElement('div');
+        lbl.style.cssText=`position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:${Math.max(10,Math.floor(cellSize*0.42))}px;color:rgba(${r},${g},${b},1);font-weight:bold;`;
+        lbl.textContent=ep.val;div.appendChild(lbl);
+      } else if(occ>=0){
+        const[r,g,b]=WH_COLORS[occ].col;
+        div.style.background=`rgba(${r},${g},${b},0.18)`;
+        div.style.borderColor=`rgba(${r},${g},${b},0.35)`;
+        const path=whPaths[occ];const idx=path.indexOf(i);
+        if(idx>=0){
+          const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+          svg.setAttribute('viewBox','0 0 10 10');
+          svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;overflow:visible;';
+          const prev=idx>0?path[idx-1]:-1,next=idx<path.length-1?path[idx+1]:-1;
+          const dirs=[];
+          if(prev>=0){const d=prev-i;if(d===-WH_GRID)dirs.push('N');else if(d===1)dirs.push('E');else if(d===WH_GRID)dirs.push('S');else if(d===-1)dirs.push('W');}
+          if(next>=0){const d=next-i;if(d===-WH_GRID)dirs.push('N');else if(d===1)dirs.push('E');else if(d===WH_GRID)dirs.push('S');else if(d===-1)dirs.push('W');}
+          const pts={N:[5,0],E:[10,5],S:[5,10],W:[0,5]};
+          dirs.forEach(dir=>{
+            const[px,py]=pts[dir];
+            const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+            ln.setAttribute('x1',5);ln.setAttribute('y1',5);ln.setAttribute('x2',px);ln.setAttribute('y2',py);
+            ln.setAttribute('stroke',`rgba(${r},${g},${b},0.9)`);ln.setAttribute('stroke-width','3.2');ln.setAttribute('stroke-linecap','round');
+            svg.appendChild(ln);
+          });
+          const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+          dot.setAttribute('cx',5);dot.setAttribute('cy',5);dot.setAttribute('r','2');
+          dot.setAttribute('fill',`rgba(${r},${g},${b},0.95)`);svg.appendChild(dot);
+          div.appendChild(svg);
+        }
+      }
+      div.style.cursor='pointer';
+      div.dataset.widx=i;
+      div.addEventListener('click',e=>{e.preventDefault();whTap(i);});
+      div.addEventListener('touchend',e=>{e.preventDefault();whTap(i);},{passive:false});
+    }
+    grid.appendChild(div);
+  }
+
+  // Usuń stare touch listenery drag (nie potrzebne)
+  if(grid._touchMove){grid.removeEventListener('touchmove',grid._touchMove);grid._touchMove=null;}
+  if(grid._touchStart){grid.removeEventListener('touchstart',grid._touchStart);grid._touchStart=null;}
+  if(grid._touchEnd){grid.removeEventListener('touchend',grid._touchEnd);grid._touchEnd=null;}
+  grid.onmouseup=null;
+
+  // Podświetl aktywny kolor w podpowiedzi
+  const hint=grid.parentElement&&grid.parentElement.querySelector('#wh-hint');
+  if(hint) hint.textContent=whActive>=0
+    ?`aktywny: ${WH_COLORS[whActive].name} — tapnij sąsiednią komórkę`
+    :'tapnij 0 lub 1 aby wybrać kolor';
+}
+
+function showWHVictory(playerTotal){
+  const ratio=(playerTotal/whOptimalLen).toFixed(2);
+  const eff=Math.round((whOptimalLen/playerTotal)*100);
+  const panel=document.getElementById('wh-game-panel');
+  panel.innerHTML=`
+    <div style="display:flex;flex-direction:column;align-items:center;padding:28px 24px 22px;gap:14px;position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(120,200,255,0.7),transparent);"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.4em;color:rgba(120,200,255,0.35);text-transform:uppercase;">transmisja · kompletna</div>
+
+      <!-- Wynik -->
+      <div style="width:100%;background:rgba(0,5,30,0.8);border:1px solid rgba(120,200,255,0.12);padding:14px 18px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.2em;color:rgba(120,200,255,0.35);text-transform:uppercase;">twoje drogi</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:16px;color:rgba(140,210,255,0.85);">${playerTotal}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.2em;color:rgba(255,160,60,0.35);text-transform:uppercase;">generator (opt.)</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:16px;color:rgba(255,160,60,0.75);">${whOptimalLen}</span>
+        </div>
+        <div style="height:1px;background:rgba(120,200,255,0.08);"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.2em;color:rgba(180,140,255,0.35);text-transform:uppercase;">współczynnik</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:20px;color:rgba(${eff>=90?'80,200,190':eff>=70?'255,220,100':'255,160,60'},0.9);">${eff}%</span>
+        </div>
+        <div style="font-size:6px;letter-spacing:0.15em;color:rgba(120,200,255,0.2);font-family:'Share Tech Mono',monospace;">
+          ${eff>=95?'optymalny przepływ — strumienie nie traciły energii':eff>=80?'dobry przepływ — minimalne straty':eff>=65?'akceptowalny — część bandwidth zmarnowana':'długie ścieżki — rozważ krótszą trasę'}
+        </div>
+      </div>
+
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12.5px;color:rgba(200,215,240,0.45);line-height:1.9;text-align:center;max-width:320px;">
+        Intencja nie szuka najkrótszej drogi —<br>
+        szuka drogi która <em style="color:rgba(120,200,255,0.65);">dociera</em>.<br>
+        <em style="color:rgba(180,140,255,0.6);">Droga jest ważna, nie cel.</em>
+      </div>
+
+      <div style="display:flex;gap:8px;width:100%;margin-top:2px;">
+        <button onclick="openWH()" style="flex:1;background:none;border:1px solid rgba(120,200,255,0.2);color:rgba(120,200,255,0.5);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:8px;cursor:pointer;"
+          onmouseover="this.style.borderColor='rgba(140,210,255,0.55)';this.style.color='rgba(160,220,255,0.85)'"
+          onmouseout="this.style.borderColor='rgba(120,200,255,0.2)';this.style.color='rgba(120,200,255,0.5)'">↺ nowa gra</button>
+        <button onclick="closeOv('wh-overlay')" style="flex:1;background:none;border:1px solid rgba(80,140,255,0.15);color:rgba(120,180,255,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:8px;cursor:pointer;"
+          onmouseover="this.style.borderColor='rgba(80,180,255,0.4)';this.style.color='rgba(160,210,255,0.75)'"
+          onmouseout="this.style.borderColor='rgba(80,140,255,0.15)';this.style.color='rgba(120,180,255,0.35)'">zamknij</button>
+      </div>
+    </div>`;
+  for(let i=0;i<8;i++)setTimeout(()=>{
+    WH_COLORS.forEach(s=>{pulses.push({x:WH.x,y:WH.y,r:6,alpha:0.6,r0:s.col[0],g0:s.col[1],b0:s.col[2]});});
+  },i*120);
+}
+
+function openWH(){
+  const ov=document.getElementById('wh-overlay');
+  ov.style.display='flex';
+  whGenerate();
+  whActive=-1;
+  const panel=document.getElementById('wh-game-panel');
+  panel.innerHTML=`
+    <div style="padding:14px 20px 10px;border-bottom:1px solid rgba(120,200,255,0.07);display:flex;align-items:flex-end;gap:12px;">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:rgba(140,210,255,0.75);letter-spacing:0.08em;">Flow Connect · TX/RX</div>
+        <div style="font-size:6px;letter-spacing:0.3em;color:rgba(120,200,255,0.22);text-transform:uppercase;padding-bottom:2px;">8×8 · 3 kolory · połącz 0↔1 · wynik = efektywność drogi</div>
+      </div>
+      <button onclick="closeOv('wh-overlay')" style="background:none;border:none;color:rgba(120,200,255,0.3);font-size:14px;cursor:pointer;margin-left:auto;">✕</button>
+    </div>
+    <div style="padding:7px 20px;border-bottom:1px solid rgba(120,200,255,0.06);display:flex;gap:16px;font-size:7px;letter-spacing:0.18em;color:rgba(120,200,255,0.3);">
+      ruchy: <span id="wh-moves" style="color:rgba(140,210,255,0.65);">0</span> &nbsp;·&nbsp;
+      ${WH_COLORS.map(s=>`<span style="color:rgba(${s.col.join(',')},0.7);">${s.name}</span>`).join(' ')}
+    </div>
+    <div id="wh-grid" style="display:grid;grid-template-columns:repeat(${WH_GRID},1fr);gap:2px;padding:12px 14px;"></div>
+    <div id="wh-hint" style="padding:4px 20px 10px;font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.18em;color:rgba(120,200,255,0.18);">
+      tapnij 0 lub 1 aby wybrać kolor
+    </div>
+    <button onclick="openWH()" style="display:block;margin:0 18px 14px;background:none;border:1px solid rgba(120,200,255,0.15);color:rgba(120,200,255,0.35);font-family:'Share Tech Mono',monospace;font-size:6px;letter-spacing:0.22em;text-transform:uppercase;padding:6px;cursor:pointer;width:calc(100% - 36px);">↺ nowa gra</button>
+  `;
+  renderWH();
+}
+</script>
+
+<!-- CZARNA DZIURA OVERLAY -->
+<div id="bh-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,1,14,0.92);display:none;align-items:center;justify-content:center;z-index:8888;pointer-events:all;">
+  <div id="bh-game-panel" style="width:min(400px,92vw);background:rgba(0,3,20,0.99);border:1px solid rgba(255,140,40,0.18);display:flex;flex-direction:column;animation:panelIn 0.3s ease forwards;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,140,40,0.6),transparent);"></div>
+  </div>
+</div>
+
+<!-- BIAŁA DZIURA OVERLAY -->
+<div id="wh-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,1,14,0.92);display:none;align-items:center;justify-content:center;z-index:8888;pointer-events:all;">
+  <div id="wh-game-panel" style="width:min(420px,92vw);max-height:90vh;overflow-y:auto;background:rgba(0,3,20,0.99);border:1px solid rgba(120,200,255,0.18);display:flex;flex-direction:column;animation:panelIn 0.3s ease forwards;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(120,200,255,0.6),transparent);"></div>
+  </div>
+</div>
+<!-- HUD-BOT -->
+<footer class="hud-bot">
+  <span class="hud-bot-meta">Proto Memory · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+</body>
+</html>

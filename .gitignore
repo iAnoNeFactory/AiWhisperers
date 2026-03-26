@@ -1,0 +1,10 @@
+.venv/
+.claude/
+.data/
+.logs/
+.docs/
+.test/
+.secrets/
+__pycache__/
+aiw-export*
+*.pyc

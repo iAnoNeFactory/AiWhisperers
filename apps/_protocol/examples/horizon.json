@@ -1,0 +1,39 @@
+{
+  "id": "horizon",
+  "name": "Horizon · Demokratyczna Prawda 🏛",
+  "version": "0.5",
+  "date": "2026-03-25",
+  "description": "Runtime prawdy — infrastruktura epistemiczna z TruthScore, emergentnym konsensusem, tokenami Anchor i WSTR, Złotą Kotwicą jako meta-kryterium.",
+  "type": "consensus-engine",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Złoty Łańcuch ⛓️",
+    "contract_sha": "1591de09ad9807cd9151babccb87aedb4544e8a66a0c6a524aa22493b97a19b1",
+    "contributors": [
+      {"actor": "Denis", "role": "architect", "chat_id": ""},
+      {"actor": "Claude Sonnet 4.6", "role": "refiner", "chat_id": "b4bb33b5-3ba0-468e-958a-e6c8e78e1ada"},
+      {"actor": "Gemini", "role": "contributor", "chat_id": ""},
+      {"actor": "GPT-4o", "role": "contributor", "chat_id": ""}
+    ]
+  },
+  "files": {
+    "entry": "map-epi.html",
+    "docs": "readme.html",
+    "components": [
+      {"path": "map-epi.html", "role": "architecture"},
+      {"path": "map-know.html", "role": "visualization"},
+      {"path": "log.html", "role": "journal"}
+    ],
+    "backend": {
+      "path": "packages/horizon/",
+      "port": 8010
+    },
+    "bootstrap": "horizon-boot.md"
+  },
+  "relations": [
+    {"type": "consumes", "target": "forge"},
+    {"type": "requires", "target": "aiwpass"},
+    {"type": "stabilizes", "target": "memory"}
+  ],
+  "tags": ["consensus", "truth", "blockchain", "core"]
+}

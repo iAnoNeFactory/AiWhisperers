@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiWVerify · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04050c; --bg2:#07080f; --bg3:#0c0d1a; --bg4:#10111f;
+  --gold:#e8c878; --gold-d:#a88850; --gold-l:#f0d890;
+  --gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;
+  --ink-dim:rgba(240,232,216,.65);
+  --ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);
+  --border-h:rgba(240,232,216,.18);
+  --border-b:rgba(232,200,120,.08);
+  --mg:#c060c0; --mg-d:#6a306a; --mg-b:#e080e0; --mg-dim:rgba(192,96,192,0.05);
+  --silver:#8a9bb0;
+  --green:#4a9a6a; --green-d:#1a3a2a; --red:#8a3a3a; --red-b:#d05050; --cyan:#50d8c8;
+  --orange:rgba(255,160,60,.85);
+  --mono:'JetBrains Mono',monospace; --serif:'Cormorant Garamond',serif; --sans:'Syne',sans-serif;
+  --hud-top-h:76px; --hud-bot-h:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(232,200,120,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(232,200,120,.012) 1px,transparent 1px);
+  background-size:72px 72px;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── HUD ── */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+
+/* ── TABS ── */
+#main-tabs{position:fixed;top:76px;left:0;right:0;z-index:100;display:flex;gap:8px;justify-content:center;pointer-events:none;}
+.main-tab{pointer-events:all;background:rgba(4,5,12,.92);border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;padding:9px 26px;cursor:pointer;transition:all .2s;}
+.main-tab:hover{border-color:var(--mg-d);color:var(--mg-b);}
+.main-tab.active{border-color:var(--gold-d);color:var(--gold);background:rgba(168,136,80,.1);}
+.tab-view{display:none;min-height:100vh;position:relative;z-index:1;}
+.tab-view.active{display:block;}
+
+/* ── LAYOUT ── */
+.wrap{max-width:660px;width:100%;margin:0 auto;padding:128px 28px 88px;position:relative;z-index:1;}
+
+/* ── DROP ZONE ── */
+.drop-zone{border:1px dashed rgba(232,200,120,.2);background:rgba(7,8,15,.6);padding:48px 28px;text-align:center;cursor:pointer;transition:all .25s;position:relative;}
+.drop-zone:hover,.drop-zone.drag{border-color:rgba(232,200,120,.5);background:rgba(232,200,120,.03);}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px;}
+.drop-hint{font-family:var(--serif);font-size:13px;font-style:italic;color:rgba(200,180,140,.3);}
+.drop-zone.profile-zone{border-color:rgba(80,216,200,.15);}
+.drop-zone.profile-zone:hover,.drop-zone.profile-zone.drag{border-color:rgba(80,216,200,.45);background:rgba(80,216,200,.02);}
+
+/* ── COMPONENTS ── */
+.section-label{font-family:var(--mono);font-size:7px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+.section-label.cyan{color:rgba(80,216,200,.5);}
+.section-label.cyan::after{background:linear-gradient(90deg,rgba(80,216,200,.3),transparent);}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;margin-bottom:20px;}
+.summary-cell{background:var(--bg2);border:1px solid var(--border);padding:14px 12px 10px;}
+.summary-key{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:6px;}
+.summary-val{font-family:var(--mono);font-size:13px;letter-spacing:0;}
+
+.meta-block{background:var(--bg2);border:1px solid var(--border);padding:12px 16px;margin-bottom:16px;}
+.meta-block.cyan-border{border-color:rgba(80,216,200,.12);}
+.meta-row{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.02);}
+.meta-row:last-child{border-bottom:none;}
+.meta-key{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;flex-shrink:0;}
+.meta-val{font-family:var(--mono);font-size:8px;color:var(--ink-dim);text-align:right;word-break:break-all;}
+
+.contract-card{margin-bottom:3px;}
+.cc-hdr{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:border-color .2s;}
+.cc-body{display:none;background:rgba(7,8,15,.7);border:1px solid var(--border);border-top:none;padding:12px 14px;}
+.cc-row{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.02);}
+.cc-row:last-child{border-bottom:none;}
+.cc-key{font-family:var(--mono);font-size:8.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;}
+.cc-val{font-family:var(--mono);font-size:8.5px;text-align:right;}
+.sha-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:5px 0 0;}
+
+.chain-block{background:var(--bg2);border:1px solid rgba(80,216,200,.1);padding:14px 16px;margin-bottom:16px;}
+.chain-node{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.02);}
+.chain-node:last-child{border-bottom:none;}
+.chain-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.chain-line{width:1px;height:14px;background:rgba(80,216,200,.15);margin:0 3px;}
+.chain-label{font-family:var(--mono);font-size:8.5px;flex:1;}
+.chain-meta{font-family:var(--mono);font-size:7px;color:var(--ink-faint);}
+
+/* ── COLOR UTILS ── */
+.ok{color:var(--green);}
+.fail{color:var(--red-b);}
+.warn{color:var(--orange);}
+.dim{color:var(--ink-dim);}
+.gold{color:var(--gold);}
+.gold-d{color:var(--gold-d);}
+.cyan{color:var(--cyan);}
+
+.drop-zone.chain-zone{border-color:rgba(232,200,120,.15);}
+.drop-zone.chain-zone:hover,.drop-zone.chain-zone.drag{border-color:rgba(232,200,120,.4);background:rgba(232,200,120,.02);}
+.chain-files{display:flex;flex-direction:column;gap:2px;margin-top:8px;}
+.chain-file-row{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);}
+.chain-file-name{font-family:var(--mono);font-size:7px;color:var(--ink-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chain-file-type{font-family:var(--mono);font-size:6px;letter-spacing:.12em;border:1px solid;padding:1px 5px;text-transform:uppercase;flex-shrink:0;}
+.chain-node-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);margin-bottom:2px;}
+.chain-node-name{font-family:var(--mono);font-size:8.5px;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chain-node-role{font-family:var(--mono);font-size:6px;letter-spacing:.1em;border:1px solid;padding:1px 5px;text-transform:uppercase;flex-shrink:0;}
+.chain-node-key{font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;}
+.chain-node-cert{font-family:var(--mono);font-size:9px;flex-shrink:0;font-weight:500;}
+
+/* ── OVERLAYS ── */
+.v-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,5,12,.93);backdrop-filter:blur(14px);align-items:center;justify-content:center;}
+.v-overlay.open{display:flex;}
+.v-panel{background:var(--bg2);border:1px solid var(--border);width:min(640px,96vw);max-height:88vh;display:flex;flex-direction:column;}
+.v-panel-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.v-panel-title{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--ink);}
+.v-panel-sub{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-top:3px;}
+.v-panel-close{background:none;border:none;color:var(--ink-faint);font-size:14px;cursor:pointer;padding:2px 6px;transition:color .2s;}
+.v-panel-close:hover{color:var(--mg-b);}
+.v-panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.v-ptab{background:none;border:none;border-bottom:2px solid transparent;font-family:var(--mono);font-size:7px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);padding:10px 16px;cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.v-ptab:hover{color:var(--ink-dim);}
+.v-ptab.active{color:var(--gold);border-bottom-color:var(--gold-d);}
+.v-panel-body{overflow-y:auto;flex:1;padding:22px 24px 28px;}
+.v-tab{display:none;}.v-tab.active{display:block;}
+.v-sec{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.03);}
+.v-sec:last-child{border-bottom:none;margin-bottom:0;}
+.v-sec-title{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--gold-d);text-transform:uppercase;margin-bottom:9px;}
+.v-sec-text{font-family:var(--serif);font-size:13px;font-weight:300;color:var(--ink-dim);line-height:1.85;}
+.v-sec-text em{font-style:italic;color:var(--ink);}
+.v-code{font-family:var(--mono);font-size:7.5px;color:var(--gold-d);background:var(--bg3);padding:8px 10px;margin-top:6px;line-height:1.9;}
+/* stamps */
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0 8px;}
+.stamp{border:1px solid rgba(232,200,120,.18);padding:16px 14px;display:flex;flex-direction:column;gap:9px;background:rgba(20,16,40,.4);}
+.stamp-header{display:flex;align-items:center;gap:10px;}
+.stamp-glyph{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,200,120,.4);font-family:var(--sans);font-weight:500;color:var(--gold);font-size:13px;flex-shrink:0;}
+.stamp-id{font-family:var(--mono);font-size:7px;letter-spacing:.28em;color:var(--gold-d);text-transform:uppercase;line-height:1.6;}
+.stamp-id strong{display:block;color:var(--gold);font-weight:500;font-size:11px;letter-spacing:.16em;margin-bottom:2px;text-transform:none;font-family:var(--sans);}
+.stamp-name{font-family:var(--sans);font-size:13px;color:var(--ink);font-weight:500;letter-spacing:.04em;}
+.stamp-role{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-dim);line-height:1.6;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .3s ease forwards;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_pass/AiWPass.html">PASS</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI · WHISPERERS</div>
+    <div class="hud-mod">Verify</div>
+    <div class="hud-sub" id="hud-sub">weryfikacja kontraktów · audytor</div>
+  </div>
+  <nav class="hud-r">
+    <a class="hud-btn" href="../_schema/AiWSchema.html">SCHEMA</a>
+    <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')">HELP</button>
+    <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')">ABOUT</button>
+  </nav>
+</header>
+<canvas id="bg-canvas"></canvas>
+
+<div id="main-tabs">
+  <button class="main-tab active" data-tab="kontrakt">Kontrakt</button>
+  <button class="main-tab" data-tab="profil">Profil</button>
+  <button class="main-tab" data-tab="lancuch">Łańcuch</button>
+  <button class="main-tab" data-tab="sesja">Sesja</button>
+  <button class="main-tab" data-tab="artefakty">Artefakty</button>
+  <button class="main-tab" data-tab="akty">Akty</button>
+</div>
+
+<!-- ═══ KONTRAKT ══════════════════════════════════════════ -->
+<div id="view-kontrakt" class="tab-view active">
+  <div class="wrap">
+    <div class="drop-zone" id="drop-zone-contract">
+      <input type="file" id="file-input-contract" accept=".json"/>
+      <div class="drop-lbl">↑ wczytaj plik kontraktu</div>
+      <div class="drop-hint">przeciągnij JSON lub kliknij · aiw_contracts_v1</div>
+    </div>
+    <div id="results-contract" style="margin-top:24px;"></div>
+  </div>
+</div>
+
+<!-- ═══ PROFIL ════════════════════════════════════════════ -->
+<div id="view-profil" class="tab-view">
+  <div class="wrap">
+    <div class="drop-zone profile-zone" id="drop-zone-profile">
+      <input type="file" id="file-input-profile" accept=".json"/>
+      <div class="drop-lbl" style="color:rgba(80,216,200,.4);">↑ wczytaj plik profilu</div>
+      <div class="drop-hint">przeciągnij JSON lub kliknij · aiw_profile_export_v2</div>
+    </div>
+    <div id="results-profile" style="margin-top:24px;"></div>
+  </div>
+</div>
+
+<!-- ═══ ŁAŃCUCH ═══════════════════════════════════════════ -->
+<div id="view-lancuch" class="tab-view">
+  <div class="wrap">
+    <div class="drop-zone chain-zone" id="drop-zone-chain">
+      <input type="file" id="file-input-chain" accept=".json" multiple/>
+      <div class="drop-lbl" style="color:rgba(232,200,120,.4);">↑ wczytaj pliki łańcucha</div>
+      <div class="drop-hint">wiele plików jednocześnie · profil lub children · przeciągnij lub kliknij</div>
+    </div>
+    <div class="chain-files" id="chain-files-list"></div>
+    <div style="display:none;justify-content:flex-end;margin-top:6px;" id="chain-clear-wrap">
+      <button id="btn-chain-clear" style="background:transparent;border:1px solid rgba(138,58,58,.3);color:rgba(200,80,80,.5);font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;cursor:pointer;transition:all .2s;">✕ wyczyść</button>
+    </div>
+    <div id="results-chain" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- ═══ SESJA ══════════════════════════════════════════════ -->
+<div id="view-sesja" class="tab-view">
+  <div class="wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:18px;">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:rgba(192,96,192,.3);">w rozwoju</div>
+    <div style="font-family:var(--serif);font-size:22px;font-style:italic;color:rgba(200,160,220,.25);">Sesja</div>
+    <div style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ink-faint);text-align:center;max-width:420px;line-height:1.8;">
+      Weryfikacja danych sesji — <code>session_sha</code>, payload proweniencji,<br>
+      zgodność z kontraktem · ciągłość <code>parent_sid</code>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ARTEFAKTY ══════════════════════════════════════════ -->
+<div id="view-artefakty" class="tab-view">
+  <div class="wrap">
+    <div class="drop-zone" id="drop-zone-artefakty" style="border-color:rgba(192,96,192,.25);">
+      <input type="file" id="file-input-artefakty" accept=".json,.md" multiple/>
+      <div class="drop-lbl" style="color:rgba(192,96,192,.4);">↑ wczytaj manifest.json + HTML + *-boot.md</div>
+      <div class="drop-hint">wiele plików jednocześnie · entry_sha + bootstrap_sha · przeciągnij lub kliknij</div>
+    </div>
+    <div id="results-artefakty" style="margin-top:24px;"></div>
+  </div>
+</div>
+
+<!-- ═══ AKTY ════════════════════════════════════════════════ -->
+<div id="view-akty" class="tab-view">
+  <div class="wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:18px;">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:rgba(192,96,192,.3);">w rozwoju</div>
+    <div style="font-family:var(--serif);font-size:22px;font-style:italic;color:rgba(200,160,220,.25);">Akty</div>
+    <div style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ink-faint);text-align:center;max-width:420px;line-height:1.8;">
+      Weryfikacja paczek — <code>aiw-export-*.json</code>,<br>
+      łańcuch aktów · SHA zbiorowy · anchor blockchain
+    </div>
+  </div>
+</div>
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">AiWVerify · v2.1 · AiWhisperers · © Denis Czuliński · 2026</span>
+</footer>
+
+<script>
+// ── BACKGROUND ────────────────────────────────────────────
+const cv = document.getElementById('bg-canvas'), cx = cv.getContext('2d');
+let W, H, dust = [], orbs = [], rings = [];
+function initCanvas() {
+  W = cv.width = innerWidth; H = cv.height = innerHeight;
+  dust = Array.from({length:110}, () => ({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*.7+.1, a:Math.random()*.6+.05, da:(Math.random()-.5)*.004,
+    dx:(Math.random()-.5)*.12, dy:(Math.random()-.5)*.12
+  }));
+  orbs = Array.from({length:5}, () => ({
+    x:Math.random()*W, y:Math.random()*H, r:100+Math.random()*160,
+    a:.02+Math.random()*.045, da:(Math.random()-.5)*.00025,
+    dx:(Math.random()-.5)*.22, dy:(Math.random()-.5)*.22
+  }));
+  rings = []; for (let i=0;i<3;i++) spawnRing();
+}
+function spawnRing() {
+  rings.push({x:.2*W+Math.random()*.6*W, y:.2*H+Math.random()*.6*H,
+    r:20+Math.random()*40, maxR:120+Math.random()*180, a:.18, speed:.25+Math.random()*.35});
+}
+function drawCanvas() {
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o => {
+    o.x+=o.dx; o.y+=o.dy; o.a+=o.da;
+    if(o.x<-o.r||o.x>W+o.r) o.dx*=-1;
+    if(o.y<-o.r||o.y>H+o.r) o.dy*=-1;
+    if(o.a<.01||o.a>.07) o.da*=-1;
+    const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,`rgba(232,200,120,${o.a})`); g.addColorStop(1,'rgba(232,200,120,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2); cx.fill();
+  });
+  rings = rings.filter(r => {
+    r.r+=r.speed; r.a=.18*(1-r.r/r.maxR);
+    if(r.r>=r.maxR){spawnRing();return false;}
+    cx.strokeStyle=`rgba(232,200,120,${r.a})`; cx.lineWidth=.6;
+    cx.beginPath(); cx.arc(r.x,r.y,r.r,0,Math.PI*2); cx.stroke();
+    return true;
+  });
+  dust.forEach(d => {
+    d.x+=d.dx; d.y+=d.dy; d.a+=d.da;
+    if(d.x<0||d.x>W) d.dx*=-1;
+    if(d.y<0||d.y>H) d.dy*=-1;
+    if(d.a<.05||d.a>.65) d.da*=-1;
+    cx.fillStyle=`rgba(232,200,120,${d.a*.25})`;
+    cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2); cx.fill();
+  });
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize', initCanvas);
+initCanvas(); drawCanvas();
+
+// ── TABS ──────────────────────────────────────────────────
+const HUD_SUBS = { kontrakt: 'weryfikacja kontraktów · audytor', profil: 'weryfikacja profili · lineage', lancuch: 'łańcuch tożsamości · auto-chain', sesja: 'weryfikacja sesji · session_sha · w rozwoju', artefakty: 'integralność artefaktów · entry_sha + bootstrap_sha', akty: 'weryfikacja paczek · łańcuch aktów · w rozwoju' };
+document.querySelectorAll('.main-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-view').forEach(v => v.classList.toggle('active', v.id === 'view-' + tab));
+    document.getElementById('hud-sub').textContent = HUD_SUBS[tab] || '';
+  });
+});
+
+// ── CRYPTO ────────────────────────────────────────────────
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function sha256bytes(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return new Uint8Array(buf);
+}
+
+async function verifyBytes(hashBytes, sigB64, pubB64) {
+  try {
+    const isP256 = pubB64.startsWith('P256:');
+    const pubBytes = Uint8Array.from(atob((isP256 ? pubB64.slice(5) : pubB64).replace(/\s/g,'')), c => c.charCodeAt(0));
+    const sigBytes = Uint8Array.from(atob(sigB64.replace(/\s/g,'')), c => c.charCodeAt(0));
+    const alg = isP256 ? {name:'ECDSA',namedCurve:'P-256'} : {name:'Ed25519'};
+    const key = await crypto.subtle.importKey('raw', pubBytes.buffer, alg, false, ['verify']);
+    const verAlg = isP256 ? {name:'ECDSA',hash:'SHA-256'} : {name:'Ed25519'};
+    return await crypto.subtle.verify(verAlg, key, sigBytes, hashBytes);
+  } catch(e) { return false; }
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+const MODELS_COLOR = {
+  Claude:'rgba(255,165,80,.85)', GPT:'rgba(140,160,255,.85)',
+  Gemini:'rgba(80,210,200,.85)', Grok:'rgba(0,220,255,.85)', Copilot:'rgba(80,140,255,.85)'
+};
+const trunc  = (s, n=20) => s ? s.slice(0,n)+'…' : '—';
+const sym    = ok => ok ? '✓' : '✗';
+const cl     = ok => ok ? 'ok' : 'fail';
+const dot    = (ok, color) => `<span style="width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0;background:${color};box-shadow:0 0 5px ${color};"></span>`;
+
+function toggleCard(hdr) {
+  const body  = hdr.nextElementSibling;
+  const arrow = hdr.querySelector('.cc-arrow');
+  const open  = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  arrow.textContent  = open ? '▾' : '▴';
+  hdr.style.borderColor = open ? 'var(--border)' : 'rgba(232,200,120,.2)';
+}
+
+function showError(elId, msg) {
+  document.getElementById(elId).innerHTML =
+    `<div class="fade-in" style="font-family:var(--mono);font-size:8px;color:var(--red-b);text-align:center;padding:24px 0;">${msg}</div>`;
+}
+
+// ── DROP ZONES ────────────────────────────────────────────
+function initDrop(zoneId, inputId, handler) {
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    const f = e.dataTransfer.files[0]; if (f) readFile(f, handler);
+  });
+  input.addEventListener('change', function() { if (this.files[0]) readFile(this.files[0], handler); });
+}
+
+function readFile(file, handler) {
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try { await handler(JSON.parse(e.target.result)); }
+    catch(err) { handler(null, err); }
+  };
+  reader.readAsText(file);
+}
+
+initDrop('drop-zone-contract', 'file-input-contract', (data, err) => {
+  if (err || !data) { showError('results-contract', 'Błąd parsowania JSON: ' + (err?.message||'nieznany')); return; }
+  verifyContract(data);
+});
+
+initDrop('drop-zone-profile', 'file-input-profile', (data, err) => {
+  if (err || !data) { showError('results-profile', 'Błąd parsowania JSON: ' + (err?.message||'nieznany')); return; }
+  verifyProfile(data);
+});
+
+// ════════════════════════════════════════════════════════════
+//  KONTRAKT
+// ════════════════════════════════════════════════════════════
+async function verifyContract(data) {
+  if (data._version !== 'aiw_contracts_v1') {
+    showError('results-contract', 'Nieznany format — oczekiwano aiw_contracts_v1'); return;
+  }
+
+  const contracts  = data.contracts  || [];
+  const declaration = data.declaration || [];
+  const conditions  = data.conditions  || [];
+
+  const declText = declaration.join('\n');
+  const condText = conditions.map(w => w.num + ': ' + w.text).join('\n');
+  const [shaDecl, shaWar] = await Promise.all([sha256hex(declText), sha256hex(condText)]);
+
+  const storedShaDecl = data.sha_declaration || '';
+  const storedShaWar  = data.sha_warunki     || '';
+  const declMatch = !!storedShaDecl && shaDecl === storedShaDecl;
+  const warMatch  = !!storedShaWar  && shaWar  === storedShaWar;
+
+  const contractChecks = await Promise.all(contracts.map(async c => {
+    const full = { operator: data.operator||c.operator, pubkey: data.pubkey||c.pubkey,
+      sha_declaration: data.sha_declaration||c.sha_declaration, sha_warunki: data.sha_warunki||c.sha_warunki, ...c };
+    const payload = { operator: full.operator, model: full.model, version: full.version, date: full.date,
+      pubkey: full.pubkey, sha_declaration: full.sha_declaration, sha_warunki: full.sha_warunki, timestamp: full.sealed_at };
+    const recomputed = await sha256hex(JSON.stringify(payload));
+    const sha256Match = full.sha256 === recomputed;
+    return { c: full, sha256Match, ok: sha256Match };
+  }));
+
+  const okCount = contractChecks.filter(r => r.ok).length;
+  const total   = contractChecks.length;
+  const allOk   = declMatch && warMatch && okCount === total;
+
+  const summaryHTML = `
+    <div class="section-label">podsumowanie</div>
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="summary-key">sha declaration</div><div class="summary-val ${cl(declMatch)}">${sym(declMatch)} ${declMatch?'zgodna':'niezgodna'}</div></div>
+      <div class="summary-cell"><div class="summary-key">sha conditions</div><div class="summary-val ${cl(warMatch)}">${sym(warMatch)} ${warMatch?'zgodne':'niezgodne'}</div></div>
+      <div class="summary-cell"><div class="summary-key">kontrakty</div><div class="summary-val ${cl(okCount===total)}">${okCount}/${total} ✓</div></div>
+      <div class="summary-cell"><div class="summary-key">status</div><div class="summary-val ${cl(allOk)}">${allOk?'✓ czysty':'✗ błędy'}</div></div>
+    </div>`;
+
+  const metaHTML = `
+    <div class="section-label" style="margin-top:4px;">dane pliku</div>
+    <div class="meta-block">
+      ${[
+        ['operator',   data.operator  || '—'],
+        ['pub key',    data.pubkey    ? trunc(data.pubkey, 32)    : '—'],
+        ['eksport',    data._exported ? data._exported.slice(0,19).replace('T',' ') : '—'],
+        ['sha declar', storedShaDecl  ? trunc(storedShaDecl,32)+' '+sym(declMatch) : '—'],
+        ['sha cond',   storedShaWar   ? trunc(storedShaWar, 32)+' '+sym(warMatch)  : '—'],
+      ].map(([k,v])=>`<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`).join('')}
+    </div>`;
+
+  const contractsHTML = contractChecks.length ? `
+    <div class="section-label" style="margin-top:4px;">kontrakty</div>
+    ${contractChecks.map(({c, sha256Match, ok}) => {
+      const modelColor = MODELS_COLOR[c.model] || 'var(--gold-d)';
+      const d = dot(ok, ok ? 'var(--green)' : 'var(--red-b)');
+      return `<div class="contract-card">
+        <div class="cc-hdr" onclick="toggleCard(this)">
+          ${d}
+          <span style="font-family:var(--mono);font-size:9px;font-weight:500;color:${modelColor};flex-shrink:0;">${c.model||'—'}</span>
+          <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;">${c.version||'—'}</span>
+          <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.date||'—'}</span>
+          <span class="cc-arrow" style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">▾</span>
+        </div>
+        <div class="cc-body">
+          ${[['operator',c.operator,'dim'],['model',c.model,'dim'],['wersja',c.version,'dim'],['data',c.date,'dim'],
+             ['pub key',c.pubkey?trunc(c.pubkey,28):'—','gold-d'],
+             ['sha declar',c.sha_declaration?trunc(c.sha_declaration,24):'—','dim'],
+             ['sha cond',c.sha_warunki?trunc(c.sha_warunki,24):'—','dim'],
+          ].map(([k,v,cs])=>`<div class="cc-row"><span class="cc-key">${k}</span><span class="cc-val ${cs}">${v||'—'}</span></div>`).join('')}
+          <div class="sha-row">
+            <span class="cc-key">sha-256</span>
+            <span class="cc-val ${cl(sha256Match)}" style="font-size:7.5px;word-break:break-all;flex:1;text-align:right;">${c.sha256||'—'} ${sym(sha256Match)}</span>
+          </div>
+          <div style="margin-top:8px;font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);">zapieczętowany · ${c.sealed_at?.slice(0,19).replace('T',' ')||'—'}</div>
+        </div>
+      </div>`;
+    }).join('')}` : '';
+
+  document.getElementById('results-contract').innerHTML =
+    `<div class="fade-in">${summaryHTML}${metaHTML}${contractsHTML}</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PROFIL
+// ════════════════════════════════════════════════════════════
+async function verifyProfile(data) {
+  if (data._version !== 'aiw_profile_export_v2') {
+    showError('results-profile', 'Nieznany format — oczekiwano aiw_profile_export_v2'); return;
+  }
+
+  const prof = data.profile || {};
+
+  // 1. Profile SHA
+  const shaPayload = JSON.stringify({
+    operator:  prof.operator  || '', domain:    prof.domain    || '',
+    node:      prof.node      || '', inception: prof.inception || '',
+    country:   prof.country   || '', pubkey:    prof.pubkey    || ''
+  });
+  const computedProfileSha = await sha256hex(shaPayload);
+  const profileShaMatch = !!prof.profileSha && computedProfileSha === prof.profileSha;
+
+  // 2. Certyfikat — backward compat: try with signedAt (new), fall back to without (legacy)
+  let certValid  = null;
+  let isSelfCert = false;
+  if (prof.certificationSig && prof.parentPubkey) {
+    const ts = prof.certificationTs || '';
+    const payloadNew = JSON.stringify({ operator: prof.operator||'', pubkey: prof.pubkey||'', inception: prof.inception||'', signedAt: ts });
+    const payloadOld = JSON.stringify({ operator: prof.operator||'', pubkey: prof.pubkey||'', inception: prof.inception||'' });
+    const hashNew = await sha256bytes(payloadNew);
+    const hashOld = await sha256bytes(payloadOld);
+    const okNew = ts ? await verifyBytes(hashNew, prof.certificationSig, prof.parentPubkey) : false;
+    certValid  = okNew || await verifyBytes(hashOld, prof.certificationSig, prof.parentPubkey);
+    isSelfCert = prof.parentPubkey === prof.pubkey;
+  }
+
+  // 3. Kontrakty z eksportu
+  const contracts = data.contracts || [];
+  const contractChecks = await Promise.all(contracts.map(async c => {
+    const payload = { operator: c.operator, model: c.model, version: c.version, date: c.date,
+      pubkey: c.pubkey, sha_declaration: c.sha_declaration, sha_warunki: c.sha_warunki, timestamp: c.sealed_at };
+    const recomputed  = await sha256hex(JSON.stringify(payload));
+    const sha256Match = c.sha256 === recomputed;
+    const pubkeyMatch = prof.pubkey ? c.pubkey === prof.pubkey : null;
+    return { c, sha256Match, pubkeyMatch, ok: sha256Match && pubkeyMatch !== false };
+  }));
+
+  const children = data.children || [];
+
+  renderProfileResults({ prof, data, profileShaMatch, computedProfileSha, certValid, isSelfCert, contractChecks, children });
+}
+
+function renderProfileResults({ prof, data, profileShaMatch, computedProfileSha, certValid, isSelfCert, contractChecks, children }) {
+  const el = document.getElementById('results-profile');
+
+  const certStatus = certValid === null ? '? brak' : certValid ? (isSelfCert ? 'root ✓' : '✓ ważny') : '✗ nieważny';
+  const certCls    = certValid === null ? 'dim' : certValid ? 'ok' : 'fail';
+
+  let typeLabel, typeCls;
+  if      (certValid === null)         { typeLabel = 'niezertyfikowany'; typeCls = 'dim'; }
+  else if (isSelfCert  && certValid)   { typeLabel = 'root';             typeCls = 'cyan'; }
+  else if (!isSelfCert && certValid)   { typeLabel = 'potomek';          typeCls = 'ok'; }
+  else                                 { typeLabel = 'błąd cert';        typeCls = 'fail'; }
+
+  const contractsOk = contractChecks.length === 0 || contractChecks.every(r => r.ok);
+  const allOk       = profileShaMatch && certValid !== false && contractsOk;
+
+  // ── SUMMARY ──
+  const summaryHTML = `
+    <div class="section-label cyan">podsumowanie</div>
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="summary-key">profile sha</div><div class="summary-val ${cl(profileShaMatch)}">${sym(profileShaMatch)} ${profileShaMatch?'zgodny':'niezgodny'}</div></div>
+      <div class="summary-cell"><div class="summary-key">certyfikat</div><div class="summary-val ${certCls}">${certStatus}</div></div>
+      <div class="summary-cell"><div class="summary-key">typ</div><div class="summary-val ${typeCls}">${typeLabel}</div></div>
+      <div class="summary-cell"><div class="summary-key">status</div><div class="summary-val ${cl(allOk)}">${allOk?'✓ czysty':'✗ błędy'}</div></div>
+    </div>`;
+
+  // ── PROFIL DATA ──
+  const profRows = [
+    ['operator',    prof.operator   || '—', 'gold'],
+    ['dziedzina',   prof.domain     || '—', 'dim'],
+    ['węzeł',       prof.node       || '—', 'dim'],
+    ['inauguracja', prof.inception  || '—', 'dim'],
+    ['kraj',        prof.country    || '—', 'dim'],
+    ['pub key',     prof.pubkey     ? trunc(prof.pubkey, 36) : '—', 'gold-d'],
+    ['profile sha', prof.profileSha ? trunc(computedProfileSha, 32)+' '+sym(profileShaMatch) : '—', profileShaMatch ? 'ok' : 'fail'],
+    ['eksport',     data._exported  ? data._exported.slice(0,19).replace('T',' ') : '—', 'dim'],
+  ];
+  const profileDataHTML = `
+    <div class="section-label cyan" style="margin-top:4px;">dane profilu</div>
+    <div class="meta-block cyan-border">
+      ${profRows.map(([k,v,cs])=>`<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val ${cs}">${v}</span></div>`).join('')}
+    </div>`;
+
+  // ── CERTYFIKAT ──
+  let certHTML = '';
+  if (prof.certificationSig) {
+    const certifierLabel = isSelfCert
+      ? `${prof.certifiedBy||'—'} <span style="color:var(--cyan);font-size:7px;">(self · root)</span>`
+      : (prof.certifiedBy || '—');
+    const parentKeyLabel = prof.parentPubkey ? trunc(prof.parentPubkey, 36) : '—';
+    const sigLabel       = prof.certificationSig ? trunc(prof.certificationSig, 36)+' <span class="'+certCls+'">'+sym(certValid===true)+'</span>' : '—';
+    const tsLabel        = prof.certificationTs ? prof.certificationTs.slice(0,19).replace('T',' ') : '—';
+    const certRows = [
+      ['certyfikował',  certifierLabel, ''],
+      ['parent key',    parentKeyLabel, isSelfCert ? 'cyan' : 'dim'],
+      ['podpis',        sigLabel,       ''],
+      ['data podpisu',  tsLabel,        'dim'],
+    ];
+    certHTML = `
+      <div class="section-label cyan" style="margin-top:4px;">certyfikat tożsamości</div>
+      <div class="meta-block cyan-border">
+        ${certRows.map(([k,v,cs])=>`<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val ${cs}">${v}</span></div>`).join('')}
+      </div>`;
+  }
+
+  // ── CHAIN VISUALIZATION ──
+  let chainHTML = '';
+  if (prof.certificationSig) {
+    const nodes = [];
+    if (!isSelfCert && prof.certifiedBy) {
+      nodes.push({ label: prof.certifiedBy, key: trunc(prof.parentPubkey||'',20), color: 'var(--cyan)', role: 'certyfikator' });
+    }
+    nodes.push({ label: prof.operator||'—', key: trunc(prof.pubkey||'',20), color: certValid ? 'var(--green)' : 'var(--red-b)', role: isSelfCert ? 'root' : 'potomek' });
+
+    chainHTML = `
+      <div class="section-label cyan" style="margin-top:4px;">łańcuch tożsamości</div>
+      <div class="chain-block">
+        ${nodes.map((n, i) => `
+          ${i > 0 ? '<div style="display:flex;align-items:center;padding:0 0 0 3px;"><div class="chain-line"></div></div>' : ''}
+          <div class="chain-node">
+            <div class="chain-dot" style="background:${n.color};box-shadow:0 0 6px ${n.color};"></div>
+            <div class="chain-label" style="color:${n.color};">${n.label}</div>
+            <div class="chain-meta">${n.role} · ${n.key}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  // ── KONTRAKTY ──
+  let contractsHTML = '';
+  if (contractChecks.length) {
+    const cOk = contractChecks.filter(r=>r.ok).length;
+    contractsHTML = `
+      <div class="section-label cyan" style="margin-top:4px;">kontrakty (${cOk}/${contractChecks.length} ✓)</div>
+      ${contractChecks.map(({c, sha256Match, pubkeyMatch, ok}) => {
+        const modelColor = MODELS_COLOR[c.model] || 'var(--gold-d)';
+        const d = dot(ok, ok ? 'var(--green)' : 'var(--red-b)');
+        const pubCol = pubkeyMatch === null ? 'dim' : pubkeyMatch ? 'ok' : 'warn';
+        const pubMark = pubkeyMatch === null ? ' ?' : pubkeyMatch ? ' ✓' : ' ✗';
+        return `<div class="contract-card">
+          <div class="cc-hdr" onclick="toggleCard(this)">
+            ${d}
+            <span style="font-family:var(--mono);font-size:9px;font-weight:500;color:${modelColor};flex-shrink:0;">${c.model||'—'}</span>
+            <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;">${c.version||'—'}</span>
+            <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.date||'—'}</span>
+            <span class="cc-arrow" style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">▾</span>
+          </div>
+          <div class="cc-body">
+            ${[['operator',c.operator,'dim'],['model',c.model,'dim'],['wersja',c.version,'dim'],['data',c.date,'dim'],
+               ['pub key',c.pubkey?trunc(c.pubkey,28)+pubMark:'—',pubCol],
+            ].map(([k,v,cs])=>`<div class="cc-row"><span class="cc-key">${k}</span><span class="cc-val ${cs}">${v||'—'}</span></div>`).join('')}
+            <div class="sha-row">
+              <span class="cc-key">sha-256</span>
+              <span class="cc-val ${cl(sha256Match)}" style="font-size:7.5px;word-break:break-all;flex:1;text-align:right;">${c.sha256||'—'} ${sym(sha256Match)}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}`;
+  }
+
+  // ── CERTYFIKOWANI ──
+  let childrenHTML = '';
+  if (children.length) {
+    childrenHTML = `
+      <div class="section-label cyan" style="margin-top:4px;">certyfikowani (${children.length})</div>
+      <div class="meta-block cyan-border">
+        ${children.map(ch=>`
+          <div class="meta-row">
+            <span class="meta-key">${ch.operator||'—'}</span>
+            <span class="meta-val dim">${ch.inception||'—'} · ${ch.pubkey?trunc(ch.pubkey,16):'—'} · ${ch.signedAt?ch.signedAt.slice(0,10):'—'}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  el.innerHTML = `<div class="fade-in">${summaryHTML}${profileDataHTML}${certHTML}${chainHTML}${contractsHTML}${childrenHTML}</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ŁAŃCUCH
+// ════════════════════════════════════════════════════════════
+let chainFiles = []; // { data, type, filename }
+
+// ── Multi-file drop zone ───────────────────────────────────
+const chainZone  = document.getElementById('drop-zone-chain');
+const chainInput = document.getElementById('file-input-chain');
+
+chainZone.addEventListener('dragover',  e => { e.preventDefault(); chainZone.classList.add('drag'); });
+chainZone.addEventListener('dragleave', () => chainZone.classList.remove('drag'));
+chainZone.addEventListener('drop', e => {
+  e.preventDefault(); chainZone.classList.remove('drag');
+  chainFiles = [];
+  loadChainFiles(e.dataTransfer.files);
+});
+chainInput.addEventListener('change', function() {
+  chainFiles = [];
+  loadChainFiles(this.files); this.value = '';
+});
+document.getElementById('btn-chain-clear').addEventListener('click', () => {
+  chainFiles = []; renderChainFilesList(); buildAndVerifyChain();
+  document.getElementById('chain-clear-wrap').style.display = 'none';
+  document.getElementById('results-chain').innerHTML = '';
+});
+
+function loadChainFiles(fileList) {
+  const promises = Array.from(fileList).map(file => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const type = data._version === 'aiw_profile_export_v2' ? 'profile'
+                   : data._type   === 'aiw_children_v1'       ? 'children' : null;
+        if (type) resolve({ data, type, filename: file.name });
+        else resolve(null);
+      } catch { resolve(null); }
+    };
+    reader.readAsText(file);
+  }));
+  Promise.all(promises).then(results => {
+    results.filter(Boolean).forEach(f => {
+      const dup = chainFiles.some(existing =>
+        existing.type === f.type &&
+        (f.type === 'profile'  ? existing.data.profile?.pubkey === f.data.profile?.pubkey :
+         f.type === 'children' ? existing.data._exported       === f.data._exported : false)
+      );
+      if (!dup) chainFiles.push(f);
+    });
+    renderChainFilesList();
+    buildAndVerifyChain();
+  });
+}
+
+function renderChainFilesList() {
+  const el = document.getElementById('chain-files-list');
+  const clearWrap = document.getElementById('chain-clear-wrap');
+  if (!chainFiles.length) { el.innerHTML = ''; clearWrap.style.display = 'none'; return; }
+  clearWrap.style.display = 'flex';
+  el.innerHTML = chainFiles.map((f, i) => {
+    const typeColor = f.type === 'profile' ? 'rgba(80,216,200,.6)' : 'rgba(232,200,120,.6)';
+    const typeLabel = f.type === 'profile' ? 'profil' : 'children';
+    const opLabel   = f.type === 'profile' ? (f.data.profile?.operator || '—') : (f.data.certifier?.operator || '—');
+    return `<div class="chain-file-row">
+      <span class="chain-file-type" style="border-color:${typeColor};color:${typeColor};">${typeLabel}</span>
+      <span class="chain-file-name">${opLabel} <span style="color:var(--ink-faint);">· ${f.filename}</span></span>
+      <button onclick="removeChainFile(${i})" style="background:transparent;border:none;color:var(--ink-faint);font-family:var(--mono);font-size:10px;cursor:pointer;padding:0 2px;transition:color .2s;" onmouseover="this.style.color='var(--red-b)'" onmouseout="this.style.color='var(--ink-faint)'">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeChainFile(idx) {
+  chainFiles.splice(idx, 1);
+  renderChainFilesList();
+  buildAndVerifyChain();
+}
+
+// ── Node extraction ────────────────────────────────────────
+function extractNodes() {
+  const nodeMap = new Map(); // pubkey → node
+
+  function upsert(node) {
+    if (!node.pubkey) return;
+    const existing = nodeMap.get(node.pubkey);
+    // prefer full profile nodes over stubs
+    if (!existing || existing.source === 'stub') nodeMap.set(node.pubkey, node);
+  }
+
+  for (const { data, type } of chainFiles) {
+    if (type === 'profile') {
+      const prof = data.profile || {};
+      if (prof.pubkey) {
+        upsert({
+          operator: prof.operator || '—', pubkey: prof.pubkey,
+          parentPubkey: prof.parentPubkey || null, certificationSig: prof.certificationSig || null,
+          inception: prof.inception || '', certifiedBy: prof.certifiedBy || null,
+          signedAt: prof.certificationTs || null, source: 'profile'
+        });
+      }
+      for (const ch of (data.children || [])) {
+        if (ch.pubkey) upsert({
+          operator: ch.operator || '—', pubkey: ch.pubkey,
+          parentPubkey: prof.pubkey, certificationSig: ch.sig || null,
+          inception: ch.inception || '', certifiedBy: prof.operator || null, source: 'stub'
+        });
+      }
+    } else if (type === 'children') {
+      const cert = data.certifier || {};
+      if (cert.pubkey) upsert({
+        operator: cert.operator || '—', pubkey: cert.pubkey,
+        parentPubkey: cert.parentPubkey || null, certificationSig: null,
+        inception: '', certifiedBy: null, source: 'stub'
+      });
+      for (const ch of (data.children || [])) {
+        if (ch.pubkey) upsert({
+          operator: ch.operator || '—', pubkey: ch.pubkey,
+          parentPubkey: cert.pubkey || null, certificationSig: ch.sig || null,
+          inception: ch.inception || '', certifiedBy: cert.operator || null,
+          signedAt: ch.signedAt || null, source: 'child_entry'
+        });
+      }
+    }
+  }
+  return nodeMap;
+}
+
+// ── Forest builder ─────────────────────────────────────────
+function buildForest(nodeMap) {
+  // roots: self-signed OR parent not in map
+  const roots = [];
+  for (const [pk, node] of nodeMap) {
+    const isSelf   = node.parentPubkey === node.pubkey;
+    const noParent = !node.parentPubkey || !nodeMap.has(node.parentPubkey);
+    if (isSelf || noParent) roots.push(node);
+  }
+
+  function getChildren(parentPubkey) {
+    const ch = [];
+    for (const [pk, node] of nodeMap) {
+      if (node.parentPubkey === parentPubkey && node.pubkey !== parentPubkey) ch.push(node);
+    }
+    return ch.sort((a, b) => a.operator.localeCompare(b.operator));
+  }
+
+  function subtree(node, depth) {
+    return { ...node, depth, treeChildren: getChildren(node.pubkey).map(c => subtree(c, depth + 1)) };
+  }
+
+  return roots
+    .sort((a, b) => { // roots: self-signed first
+      const aRoot = a.parentPubkey === a.pubkey; const bRoot = b.parentPubkey === b.pubkey;
+      return (bRoot ? 1 : 0) - (aRoot ? 1 : 0);
+    })
+    .map(r => subtree(r, 0));
+}
+
+// ── Build & verify chain ───────────────────────────────────
+async function buildAndVerifyChain() {
+  const el = document.getElementById('results-chain');
+  const nodeMap = extractNodes();
+  if (!nodeMap.size) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);text-align:center;padding:16px;">weryfikuję…</div>`;
+
+  const verifyMap = new Map(); // pubkey → true|false|null
+  await Promise.all([...nodeMap.values()].map(async node => {
+    if (node.certificationSig && node.parentPubkey) {
+      const ts = node.signedAt || '';
+      const payloadNew = JSON.stringify({ operator: node.operator, pubkey: node.pubkey, inception: node.inception||'', signedAt: ts });
+      const payloadOld = JSON.stringify({ operator: node.operator, pubkey: node.pubkey, inception: node.inception||'' });
+      const hashNew = await sha256bytes(payloadNew);
+      const hashOld = await sha256bytes(payloadOld);
+      const okNew = ts ? await verifyBytes(hashNew, node.certificationSig, node.parentPubkey) : false;
+      const ok    = okNew || await verifyBytes(hashOld, node.certificationSig, node.parentPubkey);
+      verifyMap.set(node.pubkey, ok);
+    } else {
+      verifyMap.set(node.pubkey, null);
+    }
+  }));
+
+  const forest = buildForest(nodeMap);
+  renderChain(forest, verifyMap, nodeMap);
+}
+
+// ── Render chain ───────────────────────────────────────────
+function renderChain(forest, verifyMap, nodeMap) {
+  const el = document.getElementById('results-chain');
+  const total    = nodeMap.size;
+  const verified = [...verifyMap.values()].filter(v => v === true).length;
+  const failed   = [...verifyMap.values()].filter(v => v === false).length;
+  const unknown  = [...verifyMap.values()].filter(v => v === null).length;
+  const allOk    = failed === 0;
+
+  const summaryHTML = `
+    <div class="section-label" style="color:rgba(232,200,120,.5);">podsumowanie łańcucha<span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(232,200,120,.2),transparent);opacity:.5;margin-left:10px;display:inline-block;vertical-align:middle;"></span></div>
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="summary-key">węzły</div><div class="summary-val gold">${total}</div></div>
+      <div class="summary-cell"><div class="summary-key">zweryfikowane</div><div class="summary-val ok">${verified}${verified?'  ✓':''}</div></div>
+      <div class="summary-cell"><div class="summary-key">błędy</div><div class="summary-val ${failed?'fail':'dim'}">${failed?failed+' ✗':'—'}</div></div>
+      <div class="summary-cell"><div class="summary-key">status</div><div class="summary-val ${cl(allOk)}">${allOk?'✓ spójny':'✗ błędy'}</div></div>
+    </div>`;
+
+  function renderNode(node) {
+    const vr          = verifyMap.get(node.pubkey);
+    const isSelf      = node.parentPubkey === node.pubkey;
+    const isStub      = node.source === 'stub' && !node.certificationSig;
+    const parentInMap = !!(node.parentPubkey && nodeMap.has(node.parentPubkey) && node.parentPubkey !== node.pubkey);
+    const isOrphan    = !isSelf && !!node.parentPubkey && !parentInMap;
+
+    let dotClr, dotSym;
+    if (isSelf) {
+      // Root: verified=cyan, stub(no sig)=purple/magenta
+      dotClr = vr === true ? 'var(--cyan)' : 'var(--mg)';
+      dotSym = vr === null ? '◆' : '●';
+    } else if (isOrphan && vr !== false) {
+      // Certified by parent not loaded in chain → blue
+      dotClr = 'rgba(80,140,255,.85)';
+      dotSym = vr === true ? '●' : '◦';
+    } else if (vr === false) {
+      dotClr = 'var(--red-b)'; dotSym = '●';
+    } else if (vr === true) {
+      dotClr = 'var(--green)';  dotSym = '●';
+    } else {
+      dotClr = 'var(--ink-faint)'; dotSym = '◦'; // no cert info
+    }
+    const certSym = vr === null ? '' : vr ? '✓' : '✗';
+    const certClr = dotClr;
+    const roleLabel = isSelf ? 'root' : isStub ? 'stub' : 'potomek';
+    const roleClr = isSelf ? 'rgba(80,216,200,.8)' : isStub ? 'rgba(58,66,80,.8)' : 'rgba(74,154,106,.8)';
+    const borderClr = vr === false ? 'rgba(208,80,80,.25)' : 'var(--border)';
+    const indent = node.depth * 22;
+    const hasChildren = node.treeChildren && node.treeChildren.length > 0;
+
+    let html = `<div class="chain-node-row" style="margin-left:${indent}px;border-color:${borderClr};">
+      <span style="font-size:10px;color:${dotClr};flex-shrink:0;">${dotSym}</span>
+      <span class="chain-node-name">${node.operator}</span>
+      <span class="chain-node-role" style="border-color:${roleClr};color:${roleClr};">${roleLabel}</span>
+      <span class="chain-node-key">${node.pubkey?node.pubkey.slice(0,14)+'…':'—'}</span>
+      ${certSym ? `<span class="chain-node-cert" style="color:${certClr};">${certSym}</span>` : ''}
+    </div>`;
+
+    if (hasChildren) {
+      html += `<div style="margin-left:${indent+11}px;border-left:1px solid rgba(232,200,120,.08);padding-left:11px;">`;
+      for (const child of node.treeChildren) html += renderNode(child);
+      html += '</div>';
+    }
+    return html;
+  }
+
+  const treeHTML = forest.map(root => renderNode(root)).join('');
+  const roots = forest.length;
+  const rootLabel = roots === 1 ? '1 korzeń' : roots + ' korzenie';
+
+  el.innerHTML = `<div class="fade-in">${summaryHTML}
+    <div class="section-label" style="margin-top:4px;color:rgba(232,200,120,.5);">drzewo · ${rootLabel}</div>
+    ${treeHTML}
+  </div>`;
+}
+
+// Overlay close — binding po załadowaniu DOM (overlaye są za tym blokiem)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.v-panel-close').forEach(btn =>
+    btn.addEventListener('click', () => btn.closest('.v-overlay').classList.remove('open'))
+  );
+  document.querySelectorAll('.v-overlay').forEach(o =>
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); })
+  );
+  document.querySelectorAll('.v-ptab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.panel;
+      document.querySelectorAll(`.v-ptab[data-panel="${panel}"]`).forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll(`.v-tab[data-panel="${panel}"]`).forEach(t => t.classList.toggle('active', t.dataset.tab === btn.dataset.tab));
+    });
+  });
+});
+</script>
+
+<!-- ═══ HELP ══════════════════════════════════════════ -->
+<div id="help-overlay" class="v-overlay">
+  <div class="v-panel">
+    <div class="v-panel-hdr">
+      <div><div class="v-panel-title">AiWVerify · pomoc</div><div class="v-panel-sub">weryfikacja · sześć kart</div></div>
+      <button class="v-panel-close">✕</button>
+    </div>
+    <div class="v-panel-tabs">
+      <button class="v-ptab active" data-panel="help" data-tab="kontrakt">Kontrakt</button>
+      <button class="v-ptab" data-panel="help" data-tab="profil">Profil</button>
+      <button class="v-ptab" data-panel="help" data-tab="lancuch">Łańcuch</button>
+      <button class="v-ptab" data-panel="help" data-tab="sesja">Sesja</button>
+      <button class="v-ptab" data-panel="help" data-tab="artefakty">Artefakty</button>
+      <button class="v-ptab" data-panel="help" data-tab="akty">Akty</button>
+    </div>
+    <div class="v-panel-body">
+
+      <div class="v-tab active" data-panel="help" data-tab="kontrakt">
+        <div class="v-sec">
+          <div class="v-sec-title">Format pliku</div>
+          <div class="v-sec-text">Wgraj plik eksportu kontraktów z AiWPass (<em>aiw_contracts_v1</em>). Zawiera treść deklaracji, warunki, listę kontraktów i metadane operatora.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Co jest weryfikowane</div>
+          <div class="v-sec-text">
+            <strong style="color:var(--gold-d);font-weight:400;">SHA deklaracji</strong> — treść deklaracji jest haszowana i porównywana z zapisanym skrótem.<br><br>
+            <strong style="color:var(--gold-d);font-weight:400;">SHA warunków</strong> — analogicznie dla pięciu warunków kontraktu.<br><br>
+            <strong style="color:var(--gold-d);font-weight:400;">SHA-256 każdego kontraktu</strong> — rekomputacja z payloadu: operator, model, wersja, data, pubkey, sha_declaration, sha_warunki, timestamp. Niezgodność oznacza ingerencję w dane.
+          </div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Weryfikacja offline</div>
+          <div class="v-sec-text">Wszystkie obliczenia wykonywane są lokalnie przez Web Crypto API przeglądarki. Żaden bajt nie opuszcza urządzenia.</div>
+        </div>
+      </div>
+
+      <div class="v-tab" data-panel="help" data-tab="profil">
+        <div class="v-sec">
+          <div class="v-sec-title">Format pliku</div>
+          <div class="v-sec-text">Wgraj eksport profilu z AiWPass (<em>aiw_profile_export_v2</em>). Zawiera dane operatora, certyfikat tożsamości, kontrakty i listę certyfikowanych.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Co jest weryfikowane</div>
+          <div class="v-sec-text">
+            <strong style="color:var(--cyan);font-weight:400;">Profile SHA</strong> — SHA-256 z pól: operator · dziedzina · węzeł · inauguracja · kraj · pubkey.<br><br>
+            <strong style="color:var(--cyan);font-weight:400;">Certyfikat</strong> — weryfikacja podpisu Ed25519: <span style="font-family:var(--mono);font-size:8px;">Ed25519Verify(parentPubkey, sig, SHA256({operator,pubkey,inception}))</span>. Root ma parentPubkey === pubkey.<br><br>
+            <strong style="color:var(--cyan);font-weight:400;">Kontrakty</strong> — SHA-256 każdego kontraktu + zgodność pubkey z profilem.
+          </div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Typy węzłów</div>
+          <div class="v-sec-text">
+            <span style="color:var(--cyan);">root</span> — operator self-signed (parentPubkey = własny pubkey)<br>
+            <span style="color:var(--green);">potomek</span> — certyfikowany przez innego operatora<br>
+            <span style="color:var(--ink-dim);">niezertyfikowany</span> — brak certyfikatu w eksporcie
+          </div>
+        </div>
+      </div>
+
+      <div class="v-tab" data-panel="help" data-tab="lancuch">
+        <div class="v-sec">
+          <div class="v-sec-title">Wiele plików naraz</div>
+          <div class="v-sec-text">Wgraj dowolną kombinację plików: profile (<em>aiw_profile_export_v2</em>) i/lub węzły children (<em>aiw_children_v1</em>). Algorytm sam wyodrębni węzły, wykryje korzenie i ułoży drzewo.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Algorytm układania drzewa</div>
+          <div class="v-sec-text">
+            1. Z każdego pliku wyodrębniane są węzły (operator + pubkey + parentPubkey + podpis).<br>
+            2. Korzeń: węzeł gdzie parentPubkey === pubkey lub parent nieobecny w zbiorze.<br>
+            3. Dzieci: węzły gdzie parentPubkey = pubkey rodzica.<br>
+            4. BFS od korzenia w dół — głębokość nieograniczona.<br>
+            5. Dla każdego węzła z podpisem: Ed25519Verify asynchronicznie.
+          </div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Symbole na drzewie</div>
+          <div class="v-sec-text">
+            <span style="color:var(--green);">● ✓</span> — podpis zweryfikowany poprawnie<br>
+            <span style="color:var(--red-b);">● ✗</span> — podpis nieprawidłowy lub dane zmienione<br>
+            <span style="color:var(--ink-faint);">◦</span> — brak podpisu (stub — znany z children, ale bez pełnego profilu)
+          </div>
+        </div>
+      </div>
+
+      <div class="v-tab" data-panel="help" data-tab="sesja">
+        <div class="v-sec">
+          <div class="v-sec-title">Status</div>
+          <div class="v-sec-text" style="color:rgba(192,96,192,.5);font-style:italic;">Karta w rozwoju.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Planowane funkcje</div>
+          <div class="v-sec-text">
+            Weryfikacja danych sesji eksportowanych z AiWQuick — <code>session_sha</code>, kanoniczny payload proweniencji, zgodność z kontraktem operatora, ciągłość łańcucha <code>parent_sid</code>.<br><br>
+            Format wejściowy: plik JSON sesji (eksport z archiwum AiWPass lub bezpośrednio z AiWQuick).
+          </div>
+        </div>
+      </div>
+
+      <div class="v-tab" data-panel="help" data-tab="artefakty">
+        <div class="v-sec">
+          <div class="v-sec-title">Format plików</div>
+          <div class="v-sec-text">Wgraj dowolną kombinację: <code>manifest.json</code>, pliki HTML artefaktów, pliki <code>*-boot.md</code>. Verifier automatycznie paruje je po nazwach z pól <code>files.entry</code> i <code>files.bootstrap</code>.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Co jest weryfikowane</div>
+          <div class="v-sec-text">
+            <strong style="color:var(--mg-d);font-weight:400;">entry_sha</strong> — SHA-256 pliku HTML artefaktu (<code>files.entry</code>). Wykrywa zmiany w kodzie bez aktualizacji manifestu.<br><br>
+            <strong style="color:var(--mg-d);font-weight:400;">bootstrap_sha</strong> — SHA-256 pliku wiedzy <code>*-boot.md</code> (<code>files.bootstrap</code>). Wykrywa dryf między dokumentacją a zarejestrowaną wersją.<br><br>
+            <strong style="color:var(--mg-d);font-weight:400;">docs_sha</strong> — SHA-256 pliku dokumentacji (<code>files.docs</code>: readme.html, *-api-spec.md itp.). Wykrywa zmiany w dokumentacji czytelnej dla człowieka.
+          </div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Symbole</div>
+          <div class="v-sec-text">
+            <span style="color:var(--green);">✓ SHA zgodny</span> — plik identyczny z wersją w manifeście<br>
+            <span style="color:var(--red-b);">✗ NIEZGODNOŚĆ</span> — plik zmieniony bez aktualizacji manifestu<br>
+            <span style="color:var(--ink-faint);">◦ brak SHA</span> — pole puste w manifeście<br>
+            <span style="color:var(--orange);">? brak pliku</span> — plik nie wczytany
+          </div>
+        </div>
+      </div>
+
+      <div class="v-tab" data-panel="help" data-tab="akty">
+        <div class="v-sec">
+          <div class="v-sec-title">Status</div>
+          <div class="v-sec-text" style="color:rgba(192,96,192,.5);font-style:italic;">Karta w rozwoju.</div>
+        </div>
+        <div class="v-sec">
+          <div class="v-sec-title">Planowane funkcje</div>
+          <div class="v-sec-text">
+            Weryfikacja paczek aktów — <code>aiw-export-*.json</code>. Sprawdzanie SHA zbiorowego aktu, ciągłości łańcucha aktów, zgodności z anchorem blockchain.<br><br>
+            Format wejściowy: pliki eksportu paczek z AiWPass (<code>.data/_pass/</code>).
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ABOUT ═════════════════════════════════════════ -->
+<div id="about-overlay" class="v-overlay">
+  <div class="v-panel" style="width:min(560px,96vw);">
+    <div class="v-panel-hdr">
+      <div><div class="v-panel-title">AiWVerify · about</div><div class="v-panel-sub">weryfikacja bez zaufania do serwera</div></div>
+      <button class="v-panel-close">✕</button>
+    </div>
+    <div class="v-panel-body">
+      <div class="v-sec">
+        <div class="v-sec-title">Zasada</div>
+        <div class="v-sec-text" style="font-style:italic;">AiWVerify nie pyta serwera. Każdy SHA, każdy podpis Ed25519, każde porównanie — oblicza lokalnie Web Crypto API przeglądarki. Plik wgrany tutaj nie trafia nigdzie. Weryfikacja to czysty dowód matematyczny: dane albo zgadzają się z kluczem, albo nie.</div>
+      </div>
+      <div class="v-sec">
+        <div class="v-sec-title">Skąd pochodzi</div>
+        <div class="v-sec-text" style="font-style:italic;">AiWVerify jest lustrem AiWPass — każda zmiana w Pass (nowe pola, nowe payload) musi znaleźć odzwierciedlenie tutaj. Powstał równolegle z systemem certyfikacji i łańcucha, jako jego konieczny dopełnienie: bez weryfikatora podpis kryptograficzny jest tylko deklaracją.</div>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);opacity:.2;margin:18px 0;"></div>
+      <div class="stamp-grid">
+        <div class="stamp">
+          <div class="stamp-header">
+            <div class="stamp-glyph">D</div>
+            <div class="stamp-id"><strong>Denis · AI Whispers</strong>iFactory 5.0 · ROOT · 2026</div>
+          </div>
+          <div class="stamp-name">Operator · Nawigator</div>
+          <div class="stamp-role">Inicjator ekosystemu AiWhisperers. Wyznacza kierunek bez narzucania trasy.</div>
+        </div>
+        <div class="stamp">
+          <div class="stamp-header">
+            <div class="stamp-glyph">✦</div>
+            <div class="stamp-id"><strong>Claude · Sonnet 4.6</strong>Anthropic · maj 2026</div>
+          </div>
+          <div class="stamp-name">Model · Budowniczy</div>
+          <div class="stamp-role">Zaprojektował i zakodował AiWVerify — silnik weryfikacji, sześć kart, auto-chain, entry_sha + bootstrap_sha.</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:6.5px;letter-spacing:.15em;color:var(--ink-faint);text-align:center;margin-top:8px;">AiWhisperers · iFactory 5.0 · Denis Czuliński · github.com/iAnoNeFactory</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── MODUŁY · bootstrap_sha verifier ──────────────────────────────────────────
+
+(function() {
+  const dropZone   = document.getElementById('drop-zone-artefakty');
+  const fileInput  = document.getElementById('file-input-artefakty');
+  const resultsDiv = document.getElementById('results-artefakty');
+  if (!dropZone) return;
+
+  // Kolekcja wczytanych plików: { name → content }
+  const loadedFiles = {};
+
+  async function sha256fromBytes(bytes) {
+    const buf = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function readFile(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => resolve({ name: file.name, arrayBuffer: e.target.result, text: null });
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  async function processFiles(files) {
+    for (const file of files) {
+      const { name, arrayBuffer } = await readFile(file);
+      loadedFiles[name] = arrayBuffer;
+    }
+    await renderResults();
+  }
+
+  async function renderResults() {
+    // Zbierz manifesty
+    const manifests = [];
+    for (const [name, buf] of Object.entries(loadedFiles)) {
+      if (name === 'manifest.json' || name.endsWith('/manifest.json')) {
+        try {
+          const text = new TextDecoder().decode(buf);
+          manifests.push({ fileName: name, data: JSON.parse(text) });
+        } catch { /* ignore malformed */ }
+      }
+    }
+
+    if (manifests.length === 0) {
+      resultsDiv.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);text-align:center;padding:32px;">wczytaj pliki manifest.json + *-boot.md</div>';
+      return;
+    }
+
+    async function checkFile(name, shaExp) {
+      if (!name) return { status: 'none', actual: '', expected: '' };
+      const buf = loadedFiles[name] || loadedFiles[name.split('/').pop()];
+      if (!buf)   return { status: 'missing', actual: '', expected: shaExp };
+      const actual = await sha256fromBytes(buf);
+      if (!shaExp) return { status: 'no-sha', actual, expected: '' };
+      return { status: actual === shaExp ? 'ok' : 'fail', actual, expected: shaExp };
+    }
+
+    const rows = await Promise.all(manifests.map(async ({ fileName, data }) => {
+      const id      = data.id || '?';
+      const version = data.version || '';
+      const entry   = { name: data.files?.entry     || '', exp: data.files?.entry_sha     || '' };
+      const boot    = { name: data.files?.bootstrap || '', exp: data.files?.bootstrap_sha || '' };
+      const docs    = { name: data.files?.docs      || '', exp: data.files?.docs_sha      || '' };
+      const entryR  = await checkFile(entry.name, entry.exp);
+      const bootR   = await checkFile(boot.name,  boot.exp);
+      const docsR   = await checkFile(docs.name,  docs.exp);
+      const allResults = [entryR, bootR, docsR];
+      const worstStatus = ['fail','missing'].find(s => allResults.some(r => r.status===s))
+                       || (allResults.some(r => r.status==='no-sha') ? 'no-sha' : 'ok');
+      return { id, version, entry: { ...entry, ...entryR }, boot: { ...boot, ...bootR }, docs: { ...docs, ...docsR }, worstStatus };
+    }));
+
+    const order = { fail: 0, missing: 1, 'no-sha': 2, none: 3, ok: 4 };
+    rows.sort((a, b) => (order[a.worstStatus] ?? 5) - (order[b.worstStatus] ?? 5));
+
+    const icon  = s => ({ ok:'✓', fail:'✗', missing:'?', 'no-sha':'◦', none:'◦' }[s] ?? '◦');
+    const color = s => ({ ok:'var(--green)', fail:'var(--red-b)', missing:'var(--orange)',
+                          'no-sha':'var(--ink-faint)', none:'var(--ink-faint)' }[s] ?? 'var(--ink-faint)');
+    const label = s => ({ ok:'SHA zgodny', fail:'NIEZGODNOŚĆ', missing:'brak pliku',
+                          'no-sha':'brak SHA w manifeście', none:'—' }[s] ?? '');
+
+    function cell(r) {
+      const detail = r.status === 'fail'
+        ? `<div style="color:var(--ink-faint);font-size:7px;margin-top:2px;">exp: ${r.expected.slice(0,12)}…<br>act: ${r.actual.slice(0,12)}…</div>`
+        : '';
+      return `<td style="padding:6px 8px;color:${color(r.status)};">${icon(r.status)} ${label(r.status)}${detail}</td>`;
+    }
+
+    const mono = "font-family:var(--mono);font-size:8px;letter-spacing:.05em;";
+    let html = `<table style="width:100%;border-collapse:collapse;${mono}">
+      <thead><tr style="color:var(--ink-faint);border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:6px 8px;">ID</th>
+        <th style="text-align:left;padding:6px 8px;">v</th>
+        <th style="text-align:left;padding:6px 8px;">HTML (entry_sha)</th>
+        <th style="text-align:left;padding:6px 8px;">Boot (bootstrap_sha)</th>
+        <th style="text-align:left;padding:6px 8px;">Docs (docs_sha)</th>
+      </tr></thead><tbody>`;
+
+    for (const r of rows) {
+      const idColor = color(r.worstStatus);
+      html += `<tr style="border-bottom:1px solid rgba(255,255,255,.03);">
+        <td style="padding:6px 8px;color:${idColor};">${r.id}</td>
+        <td style="padding:6px 8px;color:var(--ink-faint);">${r.version}</td>
+        ${cell(r.entry)}
+        ${cell(r.boot)}
+        ${cell(r.docs)}
+      </tr>`;
+    }
+    html += '</tbody></table>';
+
+    const okCount   = rows.filter(r => r.worstStatus === 'ok').length;
+    const failCount = rows.filter(r => r.worstStatus === 'fail').length;
+    const summary = `<div style="${mono}color:var(--ink-faint);text-align:right;margin-top:8px;font-size:7.5px;">
+      ${rows.length} artefaktów · <span style="color:var(--green)">${okCount} OK</span>${failCount ? ` · <span style="color:var(--red-b)">${failCount} FAIL</span>` : ''}
+    </div>`;
+
+    resultsDiv.innerHTML = html + summary;
+  }
+
+  // Drop zone events
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'rgba(192,96,192,.6)'; });
+  dropZone.addEventListener('dragleave', ()  => { dropZone.style.borderColor = 'rgba(192,96,192,.25)'; });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(192,96,192,.25)';
+    processFiles([...e.dataTransfer.files]);
+  });
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => processFiles([...fileInput.files]));
+})();
+</script>
+</body>
+</html>

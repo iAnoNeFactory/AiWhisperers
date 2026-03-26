@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moje Aplikacje ✨</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
+
+:root {
+  --sky-top:    #060412;
+  --sky-mid:    #12082e;
+  --sky-deep:   #1e0d4a;
+  --sky-purple: #2e1065;
+  --horizon:    #4a1942;
+  --glow-red:   #7b1e3a;
+  --glow-amber: #b85c1a;
+  --glow-gold:  #d4820a;
+
+  --text-warm:  #fff8ee;
+  --text-soft:  #e8cfa0;
+  --text-dim:   #9a7d5a;
+
+  --gold:       #f1c40f;
+  --ember:      #e8955c;
+  --ember-dark: #b05a1a;
+  --glass:      rgba(255,240,210,0.07);
+  --glass-border: rgba(255,220,160,0.14);
+  --glass-hover:  rgba(255,240,210,0.13);
+
+  --font-display: 'Baloo 2', cursive;
+  --font-body:    'Nunito', sans-serif;
+}
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; scroll-behavior:smooth; }
+
+body {
+  font-family: var(--font-body);
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 105%, rgba(180,80,10,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%,  rgba(100,20,60,0.15) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 75%,  rgba(80,10,40,0.12) 0%, transparent 40%),
+    linear-gradient(180deg,
+      var(--sky-top)    0%,
+      var(--sky-mid)    20%,
+      var(--sky-deep)   40%,
+      var(--sky-purple) 60%,
+      var(--horizon)    78%,
+      var(--glow-red)   88%,
+      var(--glow-amber) 95%,
+      var(--glow-gold)  100%
+    );
+  color: var(--text-warm);
+  overflow-x: hidden;
+}
+
+/* ── STARS ── */
+#starfield {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute; border-radius: 50%;
+  background: white;
+  animation: twinkle var(--d,3s) ease-in-out infinite var(--dl,0s);
+  opacity: 0;
+}
+@keyframes twinkle {
+  0%,100%{ opacity:0; transform:scale(.7); }
+  50%{ opacity:var(--op,.8); transform:scale(1.3); }
+}
+/* shooting star */
+.shoot {
+  position: absolute; height: 1.5px;
+  background: linear-gradient(90deg, transparent, white, transparent);
+  border-radius: 2px;
+  animation: shoot var(--sd,4s) linear infinite var(--sdl,0s);
+  opacity: 0;
+}
+@keyframes shoot {
+  0%   { opacity:0; transform:translateX(0) translateY(0) rotate(-25deg) scaleX(0); }
+  5%   { opacity:.9; transform:translateX(0) translateY(0) rotate(-25deg) scaleX(1); }
+  30%  { opacity:0; transform:translateX(280px) translateY(120px) rotate(-25deg) scaleX(1); }
+  100% { opacity:0; transform:translateX(280px) translateY(120px) rotate(-25deg) scaleX(0); }
+}
+
+/* horizon glow */
+.h-glow {
+  position: fixed; bottom:0; left:0; right:0; height:30%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(212,130,10,.2) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── LAYOUT ── */
+#app {
+  position: relative; z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.5rem,4vw,3.5rem) clamp(1rem,3vw,2.5rem);
+  display: flex; flex-direction: column; gap: clamp(2rem,4vw,3.5rem);
+}
+
+/* ── HEADER ── */
+.site-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .8rem;
+  padding-bottom: clamp(1rem,2vw,1.5rem);
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+}
+.site-name {
+  font-family: var(--font-display);
+  font-size: clamp(2rem,6vw,4rem);
+  font-weight: 800;
+  color: var(--text-warm);
+  text-shadow: 0 0 40px rgba(241,196,15,.35), 0 2px 8px rgba(0,0,0,.6);
+  letter-spacing: -.01em;
+  text-align: center;
+}
+.site-name span { color: var(--gold); }
+.site-sub {
+  font-size: clamp(.85rem,2vw,1.1rem);
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.header-stars {
+  font-size: clamp(1.2rem,3vw,1.8rem);
+  display: flex; gap: .5rem;
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: var(--font-display);
+  font-size: clamp(.8rem,1.8vw,1rem);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: .6rem;
+}
+
+/* ── FILTER PILLS ── */
+.filters-block { display:flex; flex-direction:column; gap:1rem; }
+
+.pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(.4rem,1.2vw,.7rem);
+}
+
+.pill {
+  display: inline-flex; align-items: center; gap: .4em;
+  font-family: var(--font-display);
+  font-size: clamp(.8rem,1.8vw,1rem);
+  font-weight: 700;
+  padding: clamp(.4em,.8vw,.55em) clamp(.9em,2vw,1.3em);
+  border-radius: 100px;
+  border: 1.5px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, transform .15s, box-shadow .18s;
+  min-height: clamp(38px,6vw,48px);
+  outline: none;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.pill:hover, .pill:focus {
+  background: var(--glass-hover);
+  border-color: rgba(255,220,160,.3);
+  transform: translateY(-2px);
+}
+.pill:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.pill.active {
+  background: linear-gradient(135deg, rgba(232,149,92,.25), rgba(176,90,26,.3));
+  border-color: var(--ember);
+  color: var(--text-warm);
+  box-shadow: 0 0 16px rgba(232,149,92,.2);
+}
+.pill.active-age {
+  background: linear-gradient(135deg, rgba(241,196,15,.2), rgba(180,120,0,.25));
+  border-color: var(--gold);
+  color: var(--text-warm);
+  box-shadow: 0 0 16px rgba(241,196,15,.15);
+}
+.pill-icon { font-size: 1.1em; }
+
+/* divider */
+.filter-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--glass-border);
+  border: none;
+}
+
+/* ── RESULTS INFO ── */
+.results-info {
+  font-size: clamp(.8rem,1.8vw,.95rem);
+  color: var(--text-dim);
+  display: flex; align-items: center; gap: .5rem;
+}
+.results-count {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--ember);
+  font-size: 1.2em;
+}
+
+/* ── APP GRID ── */
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(200px,30vw,280px),1fr));
+  gap: clamp(1rem,2.5vw,1.6rem);
+}
+
+/* ── APP CARD ── */
+.app-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  padding: clamp(1.2rem,3vw,1.8rem);
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: .9rem;
+  transition: transform .22s, background .2s, box-shadow .2s, border-color .2s, opacity .3s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  outline: none;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  animation: cardIn .5s ease both;
+  animation-delay: var(--cd, 0s);
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:none; }
+}
+.app-card::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 30% 0%, rgba(255,220,160,.07) 0%, transparent 60%);
+  pointer-events:none;
+}
+.app-card:hover, .app-card:focus {
+  background: var(--glass-hover);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(255,220,160,.1);
+  border-color: rgba(255,220,160,.28);
+}
+.app-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.app-card.hidden { opacity:0; pointer-events:none; height:0; padding:0; margin:0; overflow:hidden; border:none; min-height:0; }
+
+/* card icon */
+.card-icon {
+  font-size: clamp(2.4rem,6vw,3.4rem);
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.4));
+  line-height: 1;
+}
+
+/* card body */
+.card-body { display:flex; flex-direction:column; gap:.4rem; flex:1; }
+.card-title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem,2.2vw,1.25rem);
+  font-weight: 800;
+  color: var(--text-warm);
+  line-height: 1.2;
+}
+.card-desc {
+  font-size: clamp(.78rem,1.6vw,.9rem);
+  color: var(--text-soft);
+  line-height: 1.55;
+  opacity: .85;
+}
+
+/* card footer */
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .4rem;
+}
+.card-tags { display:flex; flex-wrap:wrap; gap:.3rem; }
+.tag {
+  font-size: clamp(.6rem,1.3vw,.72rem);
+  font-weight: 700;
+  padding: .2em .65em;
+  border-radius: 100px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.tag-age {
+  background: rgba(241,196,15,.12);
+  border: 1px solid rgba(241,196,15,.25);
+  color: var(--gold);
+}
+.tag-cat {
+  background: rgba(232,149,92,.1);
+  border: 1px solid rgba(232,149,92,.2);
+  color: var(--ember);
+}
+
+/* launch button */
+.card-launch {
+  font-family: var(--font-display);
+  font-size: clamp(.72rem,1.5vw,.85rem);
+  font-weight: 700;
+  padding: .35em .9em;
+  border-radius: 100px;
+  border: 1.5px solid rgba(232,149,92,.4);
+  background: rgba(232,149,92,.12);
+  color: var(--ember);
+  cursor: pointer;
+  transition: background .18s, border-color .18s, transform .15s;
+  display: flex; align-items: center; gap: .3em;
+  outline: none;
+  white-space: nowrap;
+}
+.card-launch:hover, .card-launch:focus {
+  background: rgba(232,149,92,.22);
+  border-color: var(--ember);
+  transform: scale(1.05);
+}
+.card-launch:focus-visible { outline: 2px solid var(--gold); }
+
+/* NEW badge */
+.badge-new {
+  position: absolute; top: 12px; right: 12px;
+  background: linear-gradient(135deg, var(--gold), #c8980a);
+  color: #1a0a00;
+  font-family: var(--font-display);
+  font-size: .65rem; font-weight: 800;
+  padding: .2em .55em;
+  border-radius: 100px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(241,196,15,.35);
+}
+
+/* COMING SOON */
+.app-card.coming-soon {
+  opacity: .45;
+  cursor: default;
+  pointer-events: none;
+}
+.badge-soon {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: .65rem; font-weight: 700;
+  padding: .2em .55em;
+  border-radius: 100px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: none;
+  flex-direction: column; align-items: center; gap: 1rem;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.empty-state.visible { display:flex; }
+.empty-emoji { font-size: clamp(3rem,8vw,5rem); opacity:.5; }
+.empty-text { color: var(--text-dim); font-size: clamp(.9rem,2vw,1.1rem); }
+
+/* ── FOOTER ── */
+.site-footer {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 1.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  text-align: center;
+}
+.footer-text {
+  font-size: clamp(.72rem,1.5vw,.85rem);
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.footer-stars { font-size: 1rem; opacity: .4; letter-spacing: .3em; }
+
+/* ── RESPONSIVE ── */
+@media(min-width:900px){
+  .filters-block { flex-direction:row; align-items:flex-start; gap:1.5rem; }
+  .filters-block .filter-group { flex:1; }
+  .filter-divider { display:none; }
+  .v-divider {
+    width:1px; background:var(--glass-border);
+    align-self:stretch; flex-shrink:0; display:block;
+  }
+}
+@media(max-width:899px){ .v-divider{ display:none; } }
+@media(min-width:1800px){ html{ font-size:19px; } }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+<div class="h-glow"></div>
+
+<div id="app">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="site-header">
+    <div class="header-stars">⭐ 🌟 ✨ 🌟 ⭐</div>
+    <!-- ↓ ZMIEŃ NAZWĘ TUTAJ -->
+    <div class="site-name">Moje <span>Aplikacje</span> ✨</div>
+    <div class="site-sub">Wybierz wiek · wybierz temat · baw się i ucz</div>
+  </header>
+
+  <!-- ══════════ FILTERS ══════════ -->
+  <section>
+    <div class="filters-block">
+
+      <!-- Wiek -->
+      <div class="filter-group">
+        <div class="section-label">👶 Wiek</div>
+        <div class="pills-row" id="age-pills"></div>
+      </div>
+
+      <div class="v-divider"></div>
+      <hr class="filter-divider">
+
+      <!-- Kategoria -->
+      <div class="filter-group">
+        <div class="section-label">🎨 Temat</div>
+        <div class="pills-row" id="cat-pills"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ RESULTS ══════════ -->
+  <section>
+    <div class="results-info">
+      <span>Aplikacji:</span>
+      <span class="results-count" id="results-count">—</span>
+    </div>
+  </section>
+
+  <!-- ══════════ GRID ══════════ -->
+  <main>
+    <div class="apps-grid" id="apps-grid"></div>
+    <div class="empty-state" id="empty-state">
+      <div class="empty-emoji">🔭</div>
+      <div class="empty-text">Brak aplikacji dla wybranych filtrów.<br>Wracaj — niedługo będzie więcej! 🌙</div>
+    </div>
+  </main>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer class="site-footer">
+    <div class="footer-stars">· · · · · · ·</div>
+    <div class="footer-text">
+      Dodawaj nowe aplikacje w pliku <code>index.html</code> w sekcji <code>APPS</code>.<br>
+      Każda apka to jeden obiekt — wystarczy skopiować wzór. 🛠️
+    </div>
+  </footer>
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  KONFIGURACJA — grupy wiekowe
+// ══════════════════════════════════════════════════════════════
+const AGE_GROUPS = [
+  { id:'all',   label:'Wszystkie', icon:'🌟' },
+  { id:'2-4',   label:'2–4 lata',  icon:'🍼' },
+  { id:'5-8',   label:'5–8 lat',   icon:'🎒' },
+  { id:'9-12',  label:'9–12 lat',  icon:'🔬' },
+  { id:'teen',  label:'Nastolatki',icon:'🎧' },
+  { id:'adult', label:'Dorośli',   icon:'☕' },
+];
+
+// ══════════════════════════════════════════════════════════════
+//  KONFIGURACJA — kategorie tematyczne
+// ══════════════════════════════════════════════════════════════
+const CATEGORIES = [
+  { id:'all',      label:'Wszystkie',          icon:'✨' },
+  { id:'chores',   label:'Sprzątanie',          icon:'🧹' },
+  { id:'nature',   label:'Przyroda',            icon:'🌿' },
+  { id:'math',     label:'Matematyka',          icon:'🔢' },
+  { id:'creative', label:'Kreatywność / Sztuka',icon:'🎨' },
+  { id:'logic',    label:'Gry logiczne',        icon:'🧩' },
+];
+
+// ══════════════════════════════════════════════════════════════
+//  APLIKACJE
+//  Aby dodać nową apkę — skopiuj jeden obiekt i uzupełnij pola.
+//  url: ścieżka do pliku HTML apki (np. 'zabawki/index.html')
+//  ages: tablica id grup wiekowych (np. ['2-4','5-8'])
+//  cats: tablica id kategorii (np. ['chores','nature'])
+//  isNew: true = pokazuje badge "Nowość"
+//  comingSoon: true = karta jest wyszarzona (w budowie)
+// ══════════════════════════════════════════════════════════════
+const APPS = [
+  {
+    id: 'zabawki',
+    icon: '🧸',
+    title: 'Czas sprzątać!',
+    desc: 'Pomóż zabawkom wrócić na swoje miejsca. 7 minigierek na dobranoc.',
+    ages: ['2-4','5-8'],
+    cats: ['chores'],
+    url: 'zabawki.html',
+    isNew: true,
+    comingSoon: false,
+  },
+  // ── przykłady w budowie (comingSoon: true) ──────────────────
+  {
+    id: 'zwierzeta',
+    icon: '🦁',
+    title: 'Safari zwierząt',
+    desc: 'Poznaj zwierzęta z całego świata i ich siedliska.',
+    ages: ['5-8','9-12'],
+    cats: ['nature'],
+    url: '#',
+    isNew: false,
+    comingSoon: true,
+  },
+  {
+    id: 'liczby',
+    icon: '🔢',
+    title: 'Fabryka liczb',
+    desc: 'Dodawanie, odejmowanie i proste mnożenie przez zabawę.',
+    ages: ['5-8','9-12'],
+    cats: ['math'],
+    url: '#',
+    isNew: false,
+    comingSoon: true,
+  },
+  {
+    id: 'kolory',
+    icon: '🎨',
+    title: 'Pracownia kolorów',
+    desc: 'Mieszaj kolory, maluj i twórz własne wzory.',
+    ages: ['2-4','5-8'],
+    cats: ['creative'],
+    url: '#',
+    isNew: false,
+    comingSoon: true,
+  },
+  {
+    id: 'labirynt',
+    icon: '🧩',
+    title: 'Labirynt',
+    desc: 'Logiczne łamigłówki i labirynty o rosnącej trudności.',
+    ages: ['9-12','teen'],
+    cats: ['logic'],
+    url: '#',
+    isNew: false,
+    comingSoon: true,
+  },
+  {
+    id: 'recykling',
+    icon: '♻️',
+    title: 'Mistrz recyklingu',
+    desc: 'Sortuj śmieci do właściwych pojemników i dbaj o planetę.',
+    ages: ['5-8','9-12'],
+    cats: ['chores','nature'],
+    url: '#',
+    isNew: false,
+    comingSoon: true,
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+//  STAN FILTRÓW
+// ══════════════════════════════════════════════════════════════
+let activeAge = 'all';
+let activeCat = 'all';
+
+// ══════════════════════════════════════════════════════════════
+//  GWIAZDKI I SPADAJĄCE
+// ══════════════════════════════════════════════════════════════
+(function(){
+  const sf = document.getElementById('starfield');
+  // static stars
+  for(let i=0;i<70;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.2+.8;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*65}%;--d:${(Math.random()*3+2).toFixed(1)}s;--dl:${(Math.random()*5).toFixed(1)}s;--op:${(Math.random()*.55+.3).toFixed(2)}`;
+    sf.appendChild(s);
+  }
+  // shooting stars
+  for(let i=0;i<4;i++){
+    const sh=document.createElement('div'); sh.className='shoot';
+    const w=Math.random()*80+60;
+    sh.style.cssText=`width:${w}px;left:${Math.random()*70}%;top:${Math.random()*35}%;--sd:${(Math.random()*8+6).toFixed(1)}s;--sdl:${(Math.random()*10).toFixed(1)}s`;
+    sf.appendChild(sh);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD PILLS
+// ══════════════════════════════════════════════════════════════
+function buildPills(){
+  const agePills = document.getElementById('age-pills');
+  AGE_GROUPS.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='pill'+(g.id==='all'?' active-age':'');
+    b.dataset.id=g.id; b.dataset.type='age';
+    b.innerHTML=`<span class="pill-icon">${g.icon}</span>${g.label}`;
+    b.tabIndex=0;
+    b.onclick=()=>setFilter('age',g.id);
+    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setFilter('age',g.id);}};
+    agePills.appendChild(b);
+  });
+
+  const catPills = document.getElementById('cat-pills');
+  CATEGORIES.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='pill'+(c.id==='all'?' active':'');
+    b.dataset.id=c.id; b.dataset.type='cat';
+    b.innerHTML=`<span class="pill-icon">${c.icon}</span>${c.label}`;
+    b.tabIndex=0;
+    b.onclick=()=>setFilter('cat',c.id);
+    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setFilter('cat',c.id);}};
+    catPills.appendChild(b);
+  });
+}
+
+function setFilter(type, id){
+  if(type==='age'){ activeAge=id; }
+  else            { activeCat=id; }
+  // update pills
+  document.querySelectorAll(`.pill[data-type="${type}"]`).forEach(p=>{
+    p.classList.remove(type==='age'?'active-age':'active');
+  });
+  const cls = type==='age'?'active-age':'active';
+  document.querySelector(`.pill[data-type="${type}"][data-id="${id}"]`).classList.add(cls);
+  renderGrid();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD GRID
+// ══════════════════════════════════════════════════════════════
+function buildGrid(){
+  const grid = document.getElementById('apps-grid');
+  APPS.forEach((app,i)=>{
+    const card = document.createElement('a');
+    card.className = 'app-card'+(app.comingSoon?' coming-soon':'');
+    card.style.setProperty('--cd', (i*.07)+'s');
+    card.href = app.comingSoon ? '#' : app.url;
+    if(!app.comingSoon) card.target='_self';
+    card.dataset.ages = app.ages.join(',');
+    card.dataset.cats = app.cats.join(',');
+    card.id = 'card-'+app.id;
+    card.tabIndex = app.comingSoon ? -1 : 0;
+    if(app.comingSoon){ card.onclick=e=>e.preventDefault(); }
+
+    // age tags
+    const ageTags = app.ages.map(a=>{
+      const g=AGE_GROUPS.find(x=>x.id===a);
+      return g?`<span class="tag tag-age">${g.icon} ${g.label}</span>`:'';
+    }).join('');
+
+    // cat tags
+    const catTags = app.cats.map(c=>{
+      const ct=CATEGORIES.find(x=>x.id===c);
+      return ct?`<span class="tag tag-cat">${ct.icon} ${ct.label}</span>`:'';
+    }).join('');
+
+    const badge = app.isNew
+      ? `<div class="badge-new">Nowość</div>`
+      : app.comingSoon
+      ? `<div class="badge-soon">Wkrótce</div>`
+      : '';
+
+    card.innerHTML = `
+      ${badge}
+      <div class="card-icon">${app.icon}</div>
+      <div class="card-body">
+        <div class="card-title">${app.title}</div>
+        <div class="card-desc">${app.desc}</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-tags">${ageTags}${catTags}</div>
+        ${!app.comingSoon ? `<button class="card-launch" tabindex="-1">Graj →</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER (filtrowanie)
+// ══════════════════════════════════════════════════════════════
+function renderGrid(){
+  let visible=0;
+  APPS.forEach(app=>{
+    const card=document.getElementById('card-'+app.id);
+    const ageOk = activeAge==='all' || app.ages.includes(activeAge);
+    const catOk = activeCat==='all' || app.cats.includes(activeCat);
+    const show  = ageOk && catOk;
+    card.classList.toggle('hidden', !show);
+    if(show) visible++;
+  });
+  document.getElementById('results-count').textContent = visible;
+  const empty=document.getElementById('empty-state');
+  empty.classList.toggle('visible', visible===0);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+buildPills();
+buildGrid();
+renderGrid();
+</script>
+</body>
+</html>

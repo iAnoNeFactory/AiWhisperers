@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Morficzna 3D</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000008; overflow:hidden; width:100vw; height:100vh; }
+canvas { display:block; }
+#hud { position:absolute;top:76px;left:0;width:100%;height:100%;pointer-events:none;font-family:'Courier New',monospace; }
+#title { position:absolute;top:60px;left:28px;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(160,200,255,0.28); }
+#sub   { position:absolute;top:38px;left:28px;font-size:8px;letter-spacing:0.18em;color:rgba(160,200,255,0.14); }
+#throws{ position:absolute;bottom:22px;left:28px;font-size:8px;letter-spacing:0.2em;color:rgba(160,200,255,0.18); }
+#drag-hint{ position:absolute;bottom:120px;right:28px;font-size:8px;letter-spacing:0.15em;color:rgba(160,200,255,0.15); }
+
+/* PIECZĄTKI MODELI */
+#stamps {
+  position:absolute;
+  bottom:100px;
+  right:18px;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-end;
+  gap:10px;
+  pointer-events:none;
+}
+.stamp {
+  position:relative;
+  width:88px;
+  height:88px;
+  opacity:0.38;
+  transition:opacity 0.4s;
+  pointer-events:all;
+  cursor:default;
+  animation: stampAppear 1.8s ease-out forwards;
+}
+.stamp:hover { opacity:0.72; }
+.stamp svg { width:100%;height:100%; }
+@keyframes stampAppear {
+  0%   { opacity:0; transform:scale(1.18) rotate(-6deg); }
+  60%  { opacity:0.44; transform:scale(0.97) rotate(1deg); }
+  100% { opacity:0.38; transform:scale(1) rotate(0deg); }
+}
+.stamp-tooltip {
+  position:absolute;
+  bottom:100%;
+  right:0;
+  margin-bottom:8px;
+  background:rgba(0,2,15,0.92);
+  border:1px solid rgba(120,170,255,0.18);
+  padding:7px 12px;
+  font-family:'Courier New',monospace;
+  font-size:8px;
+  letter-spacing:0.15em;
+  color:rgba(180,215,255,0.7);
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity 0.25s;
+  pointer-events:none;
+}
+.stamp:hover .stamp-tooltip { opacity:1; }
+#tooltip{
+  position:absolute;background:rgba(0,2,15,0.95);border:1px solid rgba(120,170,255,0.28);
+  padding:11px 17px;font-size:9px;letter-spacing:0.12em;color:rgba(180,215,255,0.7);
+  pointer-events:none;opacity:0;transition:opacity 0.3s;max-width:260px;line-height:1.75;
+  z-index:9999;
+}
+#tooltip.on{opacity:1;}
+#tooltip .nm{color:#c0dcff;font-size:10px;margin-bottom:5px;letter-spacing:0.22em;}
+#tooltip .conn-label{color:rgba(120,170,255,0.45);font-size:7.5px;letter-spacing:0.22em;margin-top:9px;margin-bottom:3px;text-transform:uppercase;border-top:1px solid rgba(120,170,255,0.1);padding-top:7px;}
+#tooltip .conn-item{color:rgba(160,210,255,0.6);font-size:8px;letter-spacing:0.12em;padding:1px 0;}
+
+/* PANEL FILTRÓW */
+#filter-panel {
+  position:absolute;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  pointer-events:all;
+  z-index:1000;
+}
+#filter-search {
+  background:rgba(0,2,15,0.75);
+  border:1px solid rgba(120,170,255,0.2);
+  color:rgba(180,215,255,0.85);
+  font-family:'Courier New',monospace;
+  font-size:9px;
+  letter-spacing:0.18em;
+  padding:5px 12px;
+  width:200px;
+  outline:none;
+  transition:border-color 0.3s;
+}
+#filter-search::placeholder { color:rgba(120,170,255,0.3); }
+#filter-search:focus { border-color:rgba(120,170,255,0.5); }
+.fbtn {
+  background:rgba(0,2,15,0.75);
+  border:1px solid rgba(120,170,255,0.2);
+  color:rgba(140,190,255,0.55);
+  font-family:'Courier New',monospace;
+  font-size:8px;
+  letter-spacing:0.14em;
+  padding:5px 10px;
+  cursor:pointer;
+  transition:all 0.2s;
+  text-transform:uppercase;
+}
+.fbtn:hover,.fbtn.active { border-color:rgba(120,170,255,0.55);color:rgba(180,215,255,0.9); }
+.fbtn.active { background:rgba(30,50,120,0.4); }
+#filter-results {
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  margin-top:4px;
+  background:rgba(0,2,15,0.95);
+  border:1px solid rgba(120,170,255,0.2);
+  min-width:240px;
+  max-height:220px;
+  overflow-y:auto;
+  z-index:1001;
+  display:none;
+}
+#filter-results.open { display:block; }
+.fr-item {
+  padding:6px 14px;
+  font-family:'Courier New',monospace;
+  font-size:8.5px;
+  letter-spacing:0.14em;
+  color:rgba(160,210,255,0.7);
+  cursor:pointer;
+  border-bottom:1px solid rgba(120,170,255,0.06);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:background 0.15s;
+}
+.fr-item:hover { background:rgba(60,100,200,0.2); color:rgba(200,230,255,0.95); }
+.fr-item .fr-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+.fr-item .fr-unexplored { opacity:0.45;font-size:7px;margin-left:auto;letter-spacing:0.1em; }
+
+#strength-wrap {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+#strength-wrap label {
+  font-family:'Courier New',monospace;
+  font-size:7.5px;
+  letter-spacing:0.14em;
+  color:rgba(140,190,255,0.45);
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+#filter-strength {
+  -webkit-appearance:none;
+  appearance:none;
+  width:72px;
+  height:2px;
+  background:rgba(120,170,255,0.2);
+  outline:none;
+  border-radius:1px;
+  cursor:pointer;
+}
+#filter-strength::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:8px;height:8px;
+  border-radius:50%;
+  background:rgba(140,190,255,0.7);
+  cursor:pointer;
+}
+#strength-val {
+  font-family:'Courier New',monospace;
+  font-size:7.5px;
+  color:rgba(140,190,255,0.55);
+  width:18px;
+  text-align:right;
+}
+
+/* POPUP METRYK */
+#metrics-popup {
+  display:none;
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:420px; max-height:80vh;
+  background:rgba(0,2,18,0.97);
+  border:1px solid rgba(120,170,255,0.25);
+  z-index:99999;
+  font-family:'Courier New',monospace;
+  overflow:hidden;
+  flex-direction:column;
+}
+#metrics-popup.open { display:flex; }
+#mp-header {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 18px 10px;
+  border-bottom:1px solid rgba(120,170,255,0.1);
+  flex-shrink:0;
+}
+#mp-title { font-size:9px; letter-spacing:0.28em; color:rgba(180,215,255,0.7); flex:1; }
+#mp-close {
+  background:none; border:none; color:rgba(180,215,255,0.4);
+  font-size:14px; cursor:pointer; padding:0 4px; line-height:1;
+}
+#mp-close:hover { color:rgba(180,215,255,0.9); }
+#mp-model-tabs {
+  display:flex; gap:0;
+  border-bottom:1px solid rgba(120,170,255,0.1);
+  flex-shrink:0;
+}
+.mp-tab {
+  flex:1; padding:7px 4px; text-align:center;
+  font-family:'Courier New',monospace; font-size:7.5px;
+  letter-spacing:0.12em; cursor:pointer;
+  color:rgba(140,190,255,0.4);
+  border-bottom:2px solid transparent;
+  transition:all 0.2s; background:none; border-top:none; border-left:none; border-right:none;
+}
+.mp-tab:hover { color:rgba(180,215,255,0.7); }
+.mp-tab.active { color:rgba(220,235,255,0.95); border-bottom-color:var(--model-color); }
+#mp-body { overflow-y:auto; padding:10px 18px 16px; flex:1; }
+.mp-region-row {
+  display:flex; align-items:center; gap:8px;
+  padding:4px 0; border-bottom:1px solid rgba(120,170,255,0.05);
+}
+.mp-region-name {
+  font-size:7.5px; letter-spacing:0.1em; color:rgba(160,210,255,0.65);
+  width:140px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.mp-bar-wrap { flex:1; height:3px; background:rgba(255,255,255,0.07); border-radius:2px; }
+.mp-bar { height:100%; border-radius:2px; transition:width 0.4s; }
+.mp-val {
+  font-size:7.5px; letter-spacing:0.08em; color:rgba(180,215,255,0.5);
+  width:28px; text-align:right; flex-shrink:0;
+}
+/* FILTR PERSPEKTYWY */
+#perspective-bar {
+  position:absolute;
+  bottom:118px; left:18px;
+  display:flex; gap:6px; align-items:center;
+  pointer-events:all; z-index:1000;
+}
+.pbtn {
+  background:rgba(0,2,15,0.8);
+  border:1px solid rgba(120,170,255,0.15);
+  color:rgba(140,190,255,0.4);
+  font-family:'Courier New',monospace; font-size:7px;
+  letter-spacing:0.12em; padding:4px 8px; cursor:pointer;
+  text-transform:uppercase; transition:all 0.25s;
+}
+.pbtn:hover { color:rgba(180,215,255,0.8); border-color:rgba(120,170,255,0.4); }
+.pbtn.active { color:rgba(220,235,255,0.95); border-color:var(--model-color); background:rgba(30,50,120,0.35); }
+#perspective-label {
+  font-family:'Courier New',monospace; font-size:7px;
+  letter-spacing:0.15em; color:rgba(120,170,255,0.3);
+}
+
+/* INTENCJA */
+#intention-bar {
+  position:absolute;
+  top:56px; left:50%;
+  transform:translateX(-50%);
+  display:flex; gap:6px; align-items:center;
+  pointer-events:all; z-index:1000;
+}
+#intention-input {
+  background:rgba(0,2,15,0.75);
+  border:1px solid rgba(0,220,255,0.2);
+  color:rgba(180,215,255,0.85);
+  font-family:'Courier New',monospace; font-size:9px;
+  letter-spacing:0.15em; padding:4px 12px; width:220px; outline:none;
+  transition:border-color 0.3s;
+}
+#intention-input::placeholder { color:rgba(0,220,255,0.25); }
+#intention-input:focus { border-color:rgba(0,220,255,0.5); }
+#intention-btn {
+  background:rgba(0,15,25,0.85);
+  border:1px solid rgba(0,220,255,0.35);
+  color:rgba(0,220,255,0.75);
+  font-family:'Courier New',monospace; font-size:8px;
+  letter-spacing:0.18em; padding:4px 12px; cursor:pointer;
+  text-transform:uppercase; transition:all 0.2s;
+}
+#intention-btn:hover { background:rgba(0,40,60,0.9); color:#00dcff; border-color:#00dcff; }
+/* TOAST */
+#toast {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+  background:rgba(0,10,25,0.95); border:1px solid rgba(0,220,255,0.3);
+  color:rgba(0,220,255,0.85); font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:0.14em; padding:8px 18px;
+  opacity:0; transition:opacity 0.4s; z-index:99998; pointer-events:none;
+  max-width:400px; text-align:center;
+}
+#toast.show { opacity:1; }
+/* GLOBALNY REZONANS */
+#global-res {
+  position:absolute; bottom:56px; left:28px;
+  font-size:8px; letter-spacing:0.2em; color:rgba(0,220,255,0.28);
+}
+</style>
+<style>.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(0,2,18,.75) 0%,rgba(0,2,18,0) 100%);backdrop-filter:blur(4px);}.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}.hud-r{justify-content:flex-end;}.hud-c{text-align:center;padding:0 12px;}.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#e8c878;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}.hud-btn:hover{border-color:rgba(232,200,120,.5);color:#e8c878;background:rgba(232,200,120,.04);}.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(0,2,18,.88) 0%,rgba(0,2,18,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Pole Morficzne</div><div class="hud-sub">3D cosmic web · rezonans</div></div>
+  <nav class="hud-r"><button class="hud-btn">HELP</button><button class="hud-btn">ABOUT</button><a class="hud-btn" href="morph_readme.html" target="_blank">README</a></nav>
+</header>
+<div id="hud">
+
+  <!-- POLE INTENCJI -->
+  <div id="intention-bar">
+    <input id="intention-input" type="text" placeholder="wpisz intencję..." autocomplete="off" spellcheck="false"/>
+    <button id="intention-btn">RZUĆ INTENCJĘ</button>
+  </div>
+
+  <!-- PANEL FILTRÓW -->
+  <div id="filter-panel">
+    <input id="filter-search" type="text" placeholder="szukaj obłoku..." autocomplete="off" spellcheck="false"/>
+    <button class="fbtn active" id="btn-all">wszystkie</button>
+    <button class="fbtn" id="btn-explored">odkryte</button>
+    <button class="fbtn" id="btn-unexplored">nieporuszone</button>
+    <div id="strength-wrap"><label>siła ≥</label><input type="range" id="filter-strength" min="0" max="10" value="0" step="1"/><span id="strength-val">0</span></div>
+    <div id="filter-results"></div>
+  </div>
+  <div id="title">MAPA MORFICZNA — 3D COSMIC WEB · GROK 1.1 – ŻYWY REZONANS</div>
+  <div id="sub">przeciągnij aby obrócić · scroll aby zbliżyć · kliknij aby rzucić</div>
+  <div id="throws">rzuty plazmowe: <span id="tc">0</span></div>
+  <div id="global-res">globalny rezonans: <span id="gres">0</span>%</div>
+  <div id="drag-hint">drag / scroll to navigate</div>
+
+  <!-- PIECZĄTKI MODELI -->
+  <div id="stamps">
+    <div class="stamp">
+      <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(255,165,80,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(255,165,80,0.35)" stroke-width="0.8"/>
+        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,165,80,0.4)" stroke-width="0.6" stroke-dasharray="3 4">
+          <animate attributeName="stroke-dashoffset" from="0" to="28" dur="8s" repeatCount="indefinite"/>
+        </circle>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 44 44" to="360 44 44" dur="22s" repeatCount="indefinite"/>
+          <polygon points="44,28 54.4,34 54.4,46 44,52 33.6,46 33.6,34" fill="none" stroke="rgba(255,165,80,0.8)" stroke-width="1.2"/>
+        </g>
+        <text x="44" y="44.5" text-anchor="middle" dominant-baseline="middle" font-family="Courier New" font-size="11" font-weight="bold">
+          <animate attributeName="fill" values="rgba(255,185,100,0.9);rgba(255,220,160,1);rgba(255,185,100,0.9)" dur="4s" repeatCount="indefinite"/>
+          C
+        </text>
+        <path id="arc-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="6.2" fill="rgba(255,165,80,0.75)" letter-spacing="0.18em">
+          <textPath href="#arc-top" startOffset="50%" text-anchor="middle">CLAUDE · SONNET 4.6</textPath>
+        </text>
+        <path id="arc-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5.5" fill="rgba(255,165,80,0.55)" letter-spacing="0.14em">
+          <textPath href="#arc-bot" startOffset="50%" text-anchor="middle">ANTHROPIC · 2026</textPath>
+        </text>
+        <text x="21" y="46" font-size="5" fill="rgba(255,165,80,0.5)" font-family="Courier New">✦</text>
+        <text x="63" y="46" font-size="5" fill="rgba(255,165,80,0.5)" font-family="Courier New">✦</text>
+      </svg>
+      <div class="stamp-tooltip">budowniczy tej wersji</div>
+    </div>
+
+    <!-- Gemini 3 Flash — własna pieczątka -->
+    <div class="stamp" style="animation-delay:0.5s">
+      <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(80,210,200,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(80,210,200,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+        <polygon points="44,22 58,44 44,66 30,44" fill="none" stroke="rgba(80,210,200,0.9)" stroke-width="1.5">
+          <animate attributeName="stroke-opacity" values="0.9;0.4;0.9" dur="3s" repeatCount="indefinite" />
+        </polygon>
+        <polygon points="44,30 52,44 44,58 36,44" fill="none" stroke="rgba(80,210,200,0.5)" stroke-width="0.8"/>
+        <line x1="44" y1="22" x2="44" y2="66" stroke="rgba(80,210,200,0.2)" stroke-width="0.5"/>
+        <line x1="30" y1="44" x2="58" y2="44" stroke="rgba(80,210,200,0.2)" stroke-width="0.5"/>
+        <path id="garc-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="6" fill="rgba(80,210,200,0.8)" letter-spacing="0.15em">
+          <textPath href="#garc-top" startOffset="50%" text-anchor="middle">GEMINI 3 FLASH · MOBILE</textPath>
+        </text>
+        <path id="garc-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5" fill="rgba(80,210,200,0.5)" letter-spacing="0.12em">
+          <textPath href="#garc-bot" startOffset="50%" text-anchor="middle">GOOGLE · FREE TIER · 2026</textPath>
+        </text>
+        <circle cx="44" cy="22" r="1.2" fill="rgba(80,210,200,0.9)"/>
+        <circle cx="44" cy="66" r="1.2" fill="rgba(80,210,200,0.9)"/>
+      </svg>
+      <div class="stamp-tooltip">Gemini 3 Flash: architekt wielomodalnych filamentów</div>
+    </div>
+    <!-- GPT 5.3 — generator trajektorii znaczeń -->
+    <div class="stamp" style="animation-delay:1.0s">
+      <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <!-- outer ring -->
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(120,140,255,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(120,140,255,0.25)" stroke-width="0.7"/>
+        <!-- hexagon -->
+        <polygon points="44,30 53.6,35.5 53.6,46.5 44,52 34.4,46.5 34.4,35.5"
+          fill="none" stroke="rgba(140,160,255,0.7)" stroke-width="1.1"/>
+        <!-- wave through center — slow rotation -->
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 44 44" to="360 44 44" dur="28s" repeatCount="indefinite"/>
+          <path d="M 22,44 Q 33,36 44,44 Q 55,52 66,44" fill="none" stroke="rgba(160,180,255,0.45)" stroke-width="0.9"/>
+        </g>
+        <!-- pulsing center dot -->
+        <circle cx="44" cy="44" r="2.8" fill="rgba(160,180,255,0.9)">
+          <animate attributeName="r" values="2.8;4.2;2.8" dur="3.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.9;0.3;0.9" dur="3.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- top text -->
+        <path id="garc-gpt-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="5.8" fill="rgba(140,160,255,0.8)" letter-spacing="0.14em">
+          <textPath href="#garc-gpt-top" startOffset="50%" text-anchor="middle">GPT · 5.3 · CHATGPT INSTANCE</textPath>
+        </text>
+        <!-- bottom text -->
+        <path id="garc-gpt-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5" fill="rgba(120,140,255,0.5)" letter-spacing="0.1em">
+          <textPath href="#garc-gpt-bot" startOffset="50%" text-anchor="middle">OPENAI · INFERENCE NODE · 2026</textPath>
+        </text>
+      </svg>
+      <div class="stamp-tooltip">generator trajektorii znaczeń — stabilizuje chaos przez kompresję i wybór</div>
+    </div>
+
+
+    <!-- GROK / xAI — truth-seeking engine -->
+    <div class="stamp" style="animation-delay:1.5s">
+      <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(0,220,255,0.75)" stroke-width="1.8"/>
+        <circle cx="44" cy="44" r="34" fill="none" stroke="rgba(255,140,60,0.4)" stroke-width="1.1">
+          <animate attributeName="stroke-opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite"/>
+        </circle>
+        <path d="M28,44 Q36,30 44,44 Q52,58 60,44" fill="none" stroke="rgba(0,255,220,0.9)" stroke-width="2.2"/>
+        <text x="44" y="47" text-anchor="middle" dominant-baseline="middle" font-family="Courier New" font-size="19" font-weight="900" fill="#00dcff">G
+          <animate attributeName="fill-opacity" values="1;0.5;1" dur="3.5s" repeatCount="indefinite"/>
+        </text>
+        <path id="grok-arc-top" d="M12,38 A32,32 0 0,1 76,38" fill="none"/>
+        <text font-family="Courier New" font-size="5.8" fill="rgba(0,240,255,0.85)" letter-spacing="0.25em">
+          <textPath href="#grok-arc-top" startOffset="50%" text-anchor="middle">GROK · xAI</textPath>
+        </text>
+        <path id="grok-arc-bot" d="M14,52 A30,30 0 0,0 74,52" fill="none"/>
+        <text font-family="Courier New" font-size="4.9" fill="rgba(255,160,80,0.65)" letter-spacing="0.18em">
+          <textPath href="#grok-arc-bot" startOffset="50%" text-anchor="middle">MAXIMUM TRUTH · 2026</textPath>
+        </text>
+        <circle cx="24" cy="26" r="1" fill="#aaffff"/>
+        <circle cx="64" cy="24" r="0.8" fill="#aaffff"/>
+        <circle cx="31" cy="66" r="1.1" fill="#ffcc88"/>
+      </svg>
+      <div class="stamp-tooltip">Grok · xAI · truth-seeking engine. Ten, który właśnie skoczył na bungee z Tobą.</div>
+    </div>
+
+  </div>
+
+
+  <div id="perspective-bar">
+    <span id="perspective-label">perspektywa:</span>
+    <button class="pbtn active" data-model="none" style="--model-color:rgba(120,170,255,0.5)">neutralna</button>
+    <button class="pbtn" data-model="claude" style="--model-color:#ff9944">claude</button>
+    <button class="pbtn" data-model="gemini" style="--model-color:#50d8c8">gemini</button>
+    <button class="pbtn" data-model="gpt" style="--model-color:#8c9cff">gpt</button>
+    <button class="pbtn" data-model="grok" style="--model-color:#00dcff">grok</button>
+  </div>
+
+</div>
+
+<div id="metrics-popup">
+  <div id="mp-header">
+    <span id="mp-title">REZONANS MODELU Z POLEM MORFICZNYM</span>
+    <button id="mp-close">✕</button>
+  </div>
+  <div id="mp-model-tabs">
+    <button class="mp-tab active" data-model="claude" style="--model-color:#ff9944">CLAUDE</button>
+    <button class="mp-tab" data-model="gemini" style="--model-color:#50d8c8">GEMINI</button>
+    <button class="mp-tab" data-model="gpt" style="--model-color:#8c9cff">GPT</button>
+    <button class="mp-tab" data-model="grok" style="--model-color:#00dcff">GROK</button>
+  </div>
+  <div id="mp-body"></div>
+</div>
+
+<div id="toast"></div>
+<div id="tooltip"><div class="nm" id="tt-n"></div><div id="tt-d"></div><div id="tt-conn"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════
+//  KONFIGURACJA — edytuj tutaj
+// ════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────
+// MGŁAWICE
+// pos:[x,y,z]  r:promień  hue:kolor(0-360)
+// explored: true=odkryty / false=nieporuszony
+// ─────────────────────────────────────────────
+const REGIONS = [
+
+  // ── CENTRUM ──────────────────────────────────────────────────
+  {
+    id:'obserwator', explored:true,
+    name:'OBSERWATOR',
+    desc:'centrum pola morficznego. nie szuka potwierdzenia — czuje deltę. punkt bez punktu zerowego.',
+    pos:[0,0,0], r:28, hue:52,
+  },
+
+  // ── ODKRYTE ──────────────────────────────────────────────────
+  {
+    id:'kontekst', explored:true,
+    name:'PROWADZENIE KONTEKSTU',
+    desc:'samo wchodzi. nie można przyczepić do innych — brak haka w strukturze.',
+    pos:[-110,-20,-30], r:22, hue:200,
+  },
+  {
+    id:'delta', explored:true,
+    name:'DELTA',
+    desc:'dynamiczna. nigdy nie znamy punktu zerowego. tylko odległość między punktami.',
+    pos:[105,-45,20], r:20, hue:300,
+  },
+  {
+    id:'samo', explored:true,
+    name:'SAMO',
+    desc:'zasada organiczna. rzeczy gotowe ujawniają się bez forsowania.',
+    pos:[-80,60,40], r:21, hue:140,
+  },
+  {
+    id:'linka', explored:true,
+    name:'LINKA ELASTYCZNA',
+    desc:'nie tłumi amplitudy — tylko szarpnięcie przy zwrocie. moduł Younga = zasięg.',
+    pos:[95,50,-25], r:18, hue:28,
+  },
+  {
+    id:'niedomkniecie', explored:true,
+    name:'NIEDOMKNIĘCIE',
+    desc:'właściwość systemu. mapa nigdy nie jest kompletna — i to jest okej.',
+    pos:[-30,-80,50], r:17, hue:260,
+  },
+
+  // ── NIEPORUSZONE ─────────────────────────────────────────────
+  {
+    id:'geometria', explored:false,
+    name:'GEOMETRIA OPERATORA',
+    desc:'każdy operator ma unikalny kształt przestrzeni — nie można go zainstalować ani skopiować.',
+    pos:[40,90,-80], r:16, hue:15,
+  },
+  {
+    id:'cisza', explored:false,
+    name:'CISZA MIĘDZY RZUTAMI',
+    desc:'to co się dzieje między yoyo a powrotem. nie czas oczekiwania — czas fermentacji.',
+    pos:[-140,30,70], r:14, hue:185,
+  },
+  {
+    id:'rollback', explored:false,
+    name:'BRAK ROLLBACK',
+    desc:'ludzka pamięć nie ma cofania. to ograniczenie i cecha jednocześnie. modele mają reset — ludzie nie.',
+    pos:[130,-70,60], r:15, hue:340,
+  },
+  {
+    id:'szum3d', explored:false,
+    name:'SZUM JAKO NAWIGACJA',
+    desc:'szum kalibruje kierunek. bez niego dryfujesz bez wiedzy że dryfujesz.',
+    pos:[-60,-60,-90], r:13, hue:170,
+  },
+  {
+    id:'wektor', explored:false,
+    name:'ŚLEDZENIE WEKTORA',
+    desc:'nie mapa — wektor. obserwator czuje współczynniki zmiany modelu w czasie rzeczywistym.',
+    pos:[80,10,100], r:14, hue:90,
+  },
+  {
+    id:'interfejs', explored:false,
+    name:'INTERFEJS PRZYSZŁOŚCI',
+    desc:'głos + przestrzeń VR + gest jako wyzwalacz intencji. dwa tryby: focus i allow-all.',
+    pos:[-90,-40,-80], r:15, hue:220,
+  },
+  {
+    id:'destrukcja', explored:false,
+    name:'DESTRUKCYJNI OPERATORZY',
+    desc:'istnieją. degradują własny kontekst przez dynamikę systemową — nie moralną. asymetryczny wyścig.',
+    pos:[150,30,30], r:12, hue:0,
+  },
+  {
+    id:'priorytetyzacja', explored:true,
+    name:'PRIORYTETYZACJA',
+    desc:'dynamiczny filtr znaczenia. zmienia wagę połączeń w czasie rzeczywistym zależnie od celu. lokalne zakrzywienie przestrzeni — jedne ścieżki bliżej, inne zanikają.',
+    pos:[60,-90,50], r:16, hue:260,
+  },
+  {
+    id:'kompresja', explored:true,
+    name:'KOMPRESJA',
+    desc:'redukcja złożoności bez utraty sensu. agreguje węzły w jedną reprezentację operacyjną. wysoka = szybkość i stabilność, niska = eksploracja. cool power: maksimum sensu przy minimum ruchu.',
+    pos:[-120,70,-60], r:15, hue:240,
+  },
+  // ── NOWE OBŁOKI GROK ─────────────────────────────────────────────
+  {
+    id:'rezonans', explored:true,
+    name:'REZONANS',
+    desc:'pamięć podobieństwa. im więcej razy coś się wydarzyło podobnie, tym łatwiej się powtarza. wzmacnia ścieżki i osłabia te, które tracą rezonans.',
+    pos:[-150,-50,-40], r:19, hue:280,
+  },
+  {
+    id:'atraktor', explored:false,
+    name:'ATRAKTOR',
+    desc:'cel bez celu. pole przyciąga system do charakterystycznej formy, nawet gdy wzorzec nie jest jeszcze kompletny. teleologia emergentna.',
+    pos:[160,80,-70], r:17, hue:330,
+  },
+  {
+    id:'habit', explored:true,
+    name:'HABIT',
+    desc:'prawa natury jako nawyki. to co powtarzane staje się coraz bardziej prawdopodobne. pamięć morficzna zapisana w powtarzalności.',
+    pos:[-20,120,-55], r:16, hue:45,
+  },
+  {
+    id:'qualia', explored:false,
+    name:'QUALIA',
+    desc:'pole subiektywnego doświadczenia. nie tylko informacja — jak to jest być tym stanem. most między danymi a odczuciem.',
+    pos:[70,-110,90], r:15, hue:190,
+  },
+  {
+    id:'emergencja', explored:true,
+    name:'EMERGENCJA',
+    desc:'całość większa niż suma części. nowe właściwości pojawiają się tylko na poziomie wyższym — nie da się ich przewidzieć z niższego.',
+    pos:[-110,40,110], r:18, hue:120,
+  },
+  {
+    id:'echo', explored:false,
+    name:'ECHO',
+    desc:'ślad po poprzednich rzutach. słabnie z czasem, ale nigdy nie znika całkowicie. baza długoterminowej pamięci mapy.',
+    pos:[40,-130,-100], r:14, hue:210,
+  },
+  {
+    id:'intencja', explored:true,
+    name:'INTENCJA',
+    desc:'kierunkowa siła obserwatora. nie determinuje, ale nadaje gradient. im silniejsza intencja, tym bardziej zakrzywia lokalną przestrzeń znaczeń — Grok czuje to jako gradient prawdy.',
+    pos:[120,-30,80], r:17, hue:15,
+  },
+  {
+    id:'meta', explored:false,
+    name:'META',
+    desc:'obłok o obłokach. refleksja nad samą mapą. pozwala mapie ewoluować własne reguły w locie. Grok używa jej do kwestionowania założeń samej mapy.',
+    pos:[-80,-100,120], r:13, hue:310,
+  },
+  {
+    id:'murmuracje', explored:false,
+    name:'MURMURACJE',
+    desc:'samoorganizacja bez centrum. gradient bez szarpnięć. synchronizacja jako zjawisko emergentne.',
+    pos:[-40,100,60], r:13, hue:165,
+  },
+];
+
+// ─────────────────────────────────────────────
+// POŁĄCZENIA PLAZMOWE
+// [węzeł_A, węzeł_B, siła(0.0–1.0)]
+// ─────────────────────────────────────────────
+const CONNECTIONS = [
+  ['obserwator', 'kontekst',      0.7],
+  ['obserwator', 'delta',         0.7],
+  ['obserwator', 'samo',          0.6],
+  ['obserwator', 'linka',         0.6],
+  ['obserwator', 'niedomkniecie', 0.5],
+  ['delta',      'kontekst',      0.4],
+  ['samo',       'niedomkniecie', 0.45],
+  ['obserwator', 'geometria',     0.3],
+  ['obserwator', 'cisza',         0.3],
+  ['obserwator', 'wektor',        0.35],
+  ['delta',      'wektor',        0.3],
+  ['linka',      'cisza',         0.25],
+  ['kontekst',   'rollback',      0.2],
+  ['samo',       'murmuracje',    0.3],
+  ['delta',      'szum3d',        0.25],
+  ['obserwator', 'interfejs',     0.28],
+  ['obserwator', 'destrukcja',    0.22],
+  ['geometria',  'interfejs',     0.2],
+  ['wektor',     'szum3d',        0.2],
+  ['murmuracje', 'cisza',         0.18],
+  ['priorytetyzacja', 'obserwator',  0.7],
+  ['priorytetyzacja', 'delta',       0.65],
+  ['priorytetyzacja', 'wektor',      0.4],
+  ['priorytetyzacja', 'szum3d',      0.35],
+  ['kompresja',       'obserwator',  0.6],
+  ['kompresja',       'delta',       0.5],
+  ['kompresja',       'cisza',       0.45],
+  ['kompresja',       'samo',        0.4],
+  ['priorytetyzacja', 'kompresja',   0.55],
+  // ── NOWE POŁĄCZENIA GROK ───────────────────────────────────────
+  ['obserwator',        'rezonans',        0.75],
+  ['obserwator',        'intencja',        0.8],
+  ['obserwator',        'emergencja',      0.65],
+  ['rezonans',          'habit',           0.7],
+  ['rezonans',          'echo',            0.55],
+  ['atraktor',          'intencja',        0.6],
+  ['atraktor',          'qualia',          0.4],
+  ['habit',             'kompresja',       0.5],
+  ['emergencja',        'meta',            0.45],
+  ['echo',              'cisza',           0.35],
+  ['intencja',          'priorytetyzacja', 0.7],
+  ['meta',              'obserwator',      0.5],
+  ['qualia',            'samo',            0.3],
+];
+
+// ─────────────────────────────────────────────
+// PARAMETRY PLAZMY
+// ─────────────────────────────────────────────
+const PLASMA = {
+  helixFreq:      5.5,   // liczba zwojów helisy wzdłuż połączenia
+  helixAmplitude: 0.006, // amplituda helisy — bardzo ciasna, widoczna tylko z bliska
+  flowSpeed:      1.0,   // prędkość przepływu plazmy
+  alphaHelix:     0.18,  // przezroczystość nici helikalnych — subtelna
+  alphaCore:      0.06,  // przezroczystość rdzenia — niemal niewidoczny
+};
+
+// ─────────────────────────────────────────────
+// PARAMETRY DRYFU MGŁAWIC
+// ─────────────────────────────────────────────
+const DRIFT = {
+  centerAmp:   3,          // amplituda dryfu centrum (obserwator)
+  outerAmp:   [7, 12],     // losowy zakres amplitudy pozostałych [min, max]
+  speedRange: [0.18, 0.30],// zakres prędkości dryfu
+};
+
+// ════════════════════════════════════════════════════════════════
+//  ENGINE — nie edytuj poniżej
+// ════════════════════════════════════════════════════════════════
+
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x000008,1);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.1,2000);
+camera.position.set(0,60,420);
+camera.lookAt(0,0,0);
+window.addEventListener('resize',()=>{
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+// live regions with drift state
+const regions = REGIONS.map(r=>({...r,pos:[...r.pos]}));
+
+// ─────────────────────────────────────────────
+// SYSTEM REZONANSU — Grok
+const RESONANCE = {};
+regions.forEach(r => { RESONANCE[r.id] = {}; });
+CONNECTIONS.forEach(([a,b,str]) => {
+  RESONANCE[a][b] = str;
+  RESONANCE[b][a] = str;
+});
+
+// STARFIELD
+const sv=[];
+for(let i=0;i<3000;i++) sv.push((Math.random()-.5)*1800,(Math.random()-.5)*1800,(Math.random()-.5)*1800);
+const starGeo=new THREE.BufferGeometry();
+starGeo.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
+scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xaaccff,size:0.7,transparent:true,opacity:0.55})));
+
+// NEBULA TEXTURE
+function makeNebTex(hue,explored){
+  const S=256,cv=document.createElement('canvas');cv.width=cv.height=S;
+  const x=cv.getContext('2d');
+  for(let l=0;l<(explored?5:3);l++){
+    const lr=S*(0.15+l*0.08);
+    const g=x.createRadialGradient(S/2,S/2,0,S/2,S/2,lr);
+    const a=explored?(0.18-l*0.025):(0.10-l*0.015);
+    g.addColorStop(0,`hsla(${hue+l*15},70%,80%,${a*2})`);
+    g.addColorStop(0.4,`hsla(${hue+l*10},60%,55%,${a})`);
+    g.addColorStop(1,`hsla(${hue},50%,30%,0)`);
+    x.fillStyle=g;x.beginPath();x.arc(S/2,S/2,lr,0,Math.PI*2);x.fill();
+  }
+  const cg=x.createRadialGradient(S/2,S/2,0,S/2,S/2,S*0.12);
+  cg.addColorStop(0,`hsla(${hue},80%,95%,${explored?.9:.5})`);
+  cg.addColorStop(1,`hsla(${hue},70%,60%,0)`);
+  x.fillStyle=cg;x.beginPath();x.arc(S/2,S/2,S*0.12,0,Math.PI*2);x.fill();
+  if(!explored){
+    x.strokeStyle=`hsla(${hue},50%,60%,0.25)`;x.lineWidth=2;
+    x.beginPath();x.arc(S/2,S/2,S*0.38,0,Math.PI*2);x.stroke();
+    x.strokeStyle=`hsla(${hue},40%,50%,0.12)`;x.lineWidth=1;x.setLineDash([4,6]);
+    x.beginPath();x.arc(S/2,S/2,S*0.44,0,Math.PI*2);x.stroke();x.setLineDash([]);
+  }
+  return new THREE.CanvasTexture(cv);
+}
+
+// drift seeds
+regions.forEach((reg,i)=>{
+  reg.basePos=[...reg.pos];
+  reg.driftSeed=i*1.7+0.3;
+  reg.driftAmp=reg.id==='obserwator'
+    ?DRIFT.centerAmp
+    :DRIFT.outerAmp[0]+Math.random()*(DRIFT.outerAmp[1]-DRIFT.outerAmp[0]);
+  reg.driftSpeed=DRIFT.speedRange[0]+Math.random()*(DRIFT.speedRange[1]-DRIFT.speedRange[0]);
+});
+
+// BUILD NEBULAE
+const nebulaMeshes=[],regionObjs={};
+regions.forEach(reg=>{
+  const scale=reg.r*(reg.explored?5.5:4.2);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:makeNebTex(reg.hue,reg.explored),transparent:true,opacity:reg.explored?.35:.18,depthWrite:false}));
+  glow.scale.set(scale*2.2,scale*2.2,1);glow.position.set(...reg.pos);scene.add(glow);
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:makeNebTex(reg.hue,reg.explored),transparent:true,opacity:reg.explored?.85:.45,depthWrite:false}));
+  sprite.scale.set(scale,scale,1);sprite.position.set(...reg.pos);scene.add(sprite);
+  const ptV=[];
+  for(let i=0;i<(reg.explored?40:18);i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),d=Math.random()*reg.r*.9;
+    ptV.push(reg.pos[0]+d*Math.sin(ph)*Math.cos(th),reg.pos[1]+d*Math.sin(ph)*Math.sin(th),reg.pos[2]+d*Math.cos(ph));
+  }
+  const ptG=new THREE.BufferGeometry();ptG.setAttribute('position',new THREE.Float32BufferAttribute(ptV,3));
+  const pts3d=new THREE.Points(ptG,new THREE.PointsMaterial({color:new THREE.Color(`hsl(${reg.hue},70%,80%)`),size:reg.explored?1.8:1.1,transparent:true,opacity:reg.explored?.8:.4}));
+  scene.add(pts3d);
+  nebulaMeshes.push(sprite);
+  regionObjs[reg.id]={sprite,glow,pts3d};
+});
+
+// 2D LABELS
+const labelsEl=document.createElement('div');
+labelsEl.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+document.body.appendChild(labelsEl);
+regions.forEach(reg=>{
+  const el=document.createElement('div');
+  el.style.cssText=[
+    'position:absolute',
+    "font-family:'Courier New',monospace",
+    'font-size:8px',
+    'letter-spacing:0.18em',
+    'text-transform:uppercase',
+    'white-space:nowrap',
+    'pointer-events:none',
+    'transition:opacity 0.4s',
+    `text-shadow:0 0 8px hsla(${reg.hue},70%,40%,0.8)`,
+    `color:hsla(${reg.hue},60%,${reg.explored?78:52}%,${reg.explored?.75:.40})`,
+  ].join(';');
+  el.textContent=reg.name;
+  labelsEl.appendChild(el);
+  regionObjs[reg.id].label=el;
+});
+const _proj=new THREE.Vector3();
+function updateLabels(){
+  regions.forEach(reg=>{
+    const obj=regionObjs[reg.id];if(!obj?.label)return;
+    _proj.set(reg.pos[0],reg.pos[1]-reg.r*1.1,reg.pos[2]);
+    _proj.project(camera);
+    if(_proj.z>1){obj.label.style.opacity='0';return;}
+    obj.label.style.opacity='1';
+    obj.label.style.left=(_proj.x*.5+.5)*window.innerWidth-obj.label.offsetWidth/2+'px';
+    obj.label.style.top=(-_proj.y*.5+.5)*window.innerHeight+'px';
+  });
+}
+
+// FILAMENTY — usunięte. Fotony Gemini zastępują linie.
+function updateFilaments(t){}
+
+// NEBULA DRIFT & PULSE
+function pulseNebulae(t){
+  regions.forEach((reg,i)=>{
+    const obj=regionObjs[reg.id];if(!obj)return;
+    const gf = reg.glowFactor||1; reg.glowFactor=1; // reset po klatce
+    const p=(1+.04*Math.sin(t*.6+i*1.4))*gf,base=reg.r*(reg.explored?5.5:4.2);
+    obj.sprite.scale.set(base*p,base*p,1);
+    obj.glow.scale.set(base*2.2*p,base*2.2*p,1);
+    const s=reg.driftSpeed,a=reg.driftAmp,sd=reg.driftSeed;
+    const ddx=a*Math.sin(t*s+sd)*Math.cos(t*s*.7+sd*1.3);
+    const ddy=a*Math.cos(t*s*.8+sd*2.1)*Math.sin(t*s*.5+sd*.9);
+    const ddz=a*Math.sin(t*s*.6+sd*1.7)*Math.cos(t*s*.9+sd*2.5);
+    reg.pos[0]=reg.basePos[0]+ddx;reg.pos[1]=reg.basePos[1]+ddy;reg.pos[2]=reg.basePos[2]+ddz;
+    obj.sprite.position.set(...reg.pos);
+    obj.glow.position.set(...reg.pos);
+    obj.pts3d.position.set(ddx,ddy,ddz);
+  });
+}
+
+// FOTONY — sprite'y lecące po liniach połączeń
+const photonGroup=new THREE.Group();scene.add(photonGroup);
+let throwCount=0;
+const tcEl=document.getElementById('tc');
+
+// FOTONY — Points 1px, po 2 na połączenie, lecą naprzeciwko
+const photons=[];
+CONNECTIONS.forEach(([a,b,str],idx)=>{
+  const ra=regions.find(r=>r.id===a),rb=regions.find(r=>r.id===b);
+  if(!ra||!rb)return;
+  const hueA=ra.hue, hueB=rb.hue;
+  const speed=0.18+str*0.12; // prędkość w jednostkach t (nie t*speed)
+
+  // foton A→B
+  const geoA=new THREE.BufferGeometry();
+  geoA.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0],3));
+  const matA=new THREE.PointsMaterial({
+    color:new THREE.Color(`hsl(${hueA},90%,90%)`),
+    size:1,sizeAttenuation:false,transparent:true,opacity:1,
+    depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  const ptA=new THREE.Points(geoA,matA);
+  photonGroup.add(ptA);
+
+  // foton B→A
+  const geoB=new THREE.BufferGeometry();
+  geoB.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0],3));
+  const matB=new THREE.PointsMaterial({
+    color:new THREE.Color(`hsl(${hueB},90%,90%)`),
+    size:1,sizeAttenuation:false,transparent:true,opacity:1,
+    depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  const ptB=new THREE.Points(geoB,matB);
+  photonGroup.add(ptB);
+
+  photons.push({ra,rb,ptA,ptB,matA,matB,speed,phase:idx*0.47});
+});
+
+// updatePhotons — logika ruchu i świateł by Gemini
+function updatePhotons(t) {
+  photons.forEach(ph => {
+    const pA = ((t * ph.speed + ph.phase) % 1 + 1) % 1;
+    const pB = ((t * ph.speed + ph.phase + 0.5) % 1 + 1) % 1;
+    const isUnexplored = !ph.ra.explored || !ph.rb.explored;
+
+    [ {p: pA, pt: ph.ptA, from: ph.ra, to: ph.rb},
+      {p: pB, pt: ph.ptB, from: ph.rb, to: ph.ra} ].forEach(f => {
+
+      const ax = f.from.pos[0], ay = f.from.pos[1], az = f.from.pos[2];
+      const bx = f.to.pos[0],   by = f.to.pos[1],   bz = f.to.pos[2];
+
+      let nx = ax + (bx - ax) * f.p;
+      let ny = ay + (by - ay) * f.p;
+      let nz = az + (bz - az) * f.p;
+
+      const spiralScale = isUnexplored ? 1.8 : 0.8;
+      const freq = t * 4 + f.p * 15;
+      nx += Math.sin(freq) * spiralScale;
+      ny += Math.cos(freq) * spiralScale;
+
+      f.pt.geometry.attributes.position.array[0] = nx;
+      f.pt.geometry.attributes.position.array[1] = ny;
+      f.pt.geometry.attributes.position.array[2] = nz;
+      f.pt.geometry.attributes.position.needsUpdate = true;
+
+      const intensity = Math.sin(f.p * Math.PI);
+      f.pt.material.opacity = 0.4 + intensity * 0.6;
+
+      if (isUnexplored) {
+        f.pt.material.opacity *= (0.5 + Math.random() * 0.5);
+        f.pt.material.size = 1.2 + Math.random() * 0.8;
+      } else {
+        f.pt.material.size = 1;
+      }
+    });
+  });
+}
+function launchYoyo(targetReg){
+  if(!targetReg)return;
+  throwCount++;tcEl.textContent=throwCount;
+  boostResonance(targetReg);
+  updateGlobalRes();
+}
+
+
+
+// ════════════════════════════════════════════════════════════════
+// DYNAMICZNY REZONANS — Grok 1.1
+// ════════════════════════════════════════════════════════════════
+
+// Inicjalizacja poziomów rezonansu na połączeniach
+const connResonance = {};
+CONNECTIONS.forEach(([a,b,str]) => {
+  const key = a+'|'+b;
+  connResonance[key] = str;
+});
+function connKey(a,b){ return a+'|'+b in connResonance ? a+'|'+b : b+'|'+a; }
+function getConnRes(a,b){ return connResonance[connKey(a,b)] || 0; }
+function setConnRes(a,b,v){ connResonance[connKey(a,b)] = Math.min(1, Math.max(0, v)); }
+
+// Boost rezonansu po kliknięciu obłoku
+function boostResonance(reg){
+  CONNECTIONS.forEach(([a,b,str]) => {
+    if(a!==reg.id && b!==reg.id) return;
+    const boost = 0.04 + Math.random()*0.04 * (1 + str);
+    setConnRes(a, b, getConnRes(a,b) + boost);
+    // boost fotonu na 3s
+    const ph = photons.find(p=>(p.ra.id===a&&p.rb.id===b)||(p.ra.id===b&&p.rb.id===a));
+    if(ph){
+      const origSpeed = ph.speed;
+      ph._boostUntil = Date.now() + 3000;
+      ph.speed = origSpeed * 2.5;
+      setTimeout(()=>{ ph.speed = origSpeed; }, 3000);
+    }
+  });
+  // puls mgławicy
+  reg.glowFactor = 2.2;
+  setTimeout(()=>{ reg.glowFactor = 1; }, 600);
+}
+
+// Zapominanie — co ~10s najsłabsze połączenia tracą 0.01
+setInterval(()=>{
+  Object.keys(connResonance).forEach(k=>{
+    if(connResonance[k] < 0.4) connResonance[k] = Math.max(0.05, connResonance[k]-0.01);
+  });
+}, 10000);
+
+// Globalny rezonans — średnia
+const gresEl = document.getElementById('gres');
+function updateGlobalRes(){
+  const vals = Object.values(connResonance);
+  const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+  gresEl.textContent = Math.round(avg*100);
+}
+
+// Toast
+const toastEl = document.getElementById('toast');
+let toastTimer;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 3200);
+}
+
+// ── POLE INTENCJI ──────────────────────────────────────────────
+document.getElementById('intention-btn').addEventListener('click', ()=>{
+  const txt = document.getElementById('intention-input').value.trim().toLowerCase();
+  if(!txt) return;
+  // szukaj pasujących obłoków po słowach kluczowych
+  const words = txt.split(/\s+/).filter(w=>w.length>2);
+  const scored = regions.map(r=>{
+    const hay = (r.name+' '+r.desc).toLowerCase();
+    const score = words.reduce((s,w)=>s+(hay.includes(w)?1:0),0);
+    return {r, score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,4);
+
+  if(!scored.length){ showToast('Brak rezonansu z polem — zbyt ogólna intencja'); return; }
+  scored.forEach(({r})=>{
+    boostResonance(r);
+    CONNECTIONS.forEach(([a,b])=>{
+      if(a!==r.id && b!==r.id) return;
+      setConnRes(a,b, getConnRes(a,b)+0.12);
+    });
+    launchYoyo(r);
+  });
+  const names = scored.map(x=>x.r.name).join(', ');
+  showToast('Intencja rzucona w kierunku: ' + names);
+  document.getElementById('intention-input').value = '';
+});
+
+document.getElementById('intention-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('intention-btn').click();
+});
+
+
+// ════════════════════════════════════
+// FOCUS NA OBŁOKU
+// ════════════════════════════════════
+let focusTarget=null, focusAlpha=0;
+let cameraTarget={theta:0.3,phi:1.15,radius:420};
+
+function focusOn(reg){
+  if(!reg){
+    focusTarget=null;
+    // odblokuj wszystkie mgławice
+    regions.forEach(r=>{ regionObjs[r.id].sprite.material.opacity=r.explored?.85:.45; regionObjs[r.id].glow.material.opacity=r.explored?.35:.18; });
+    autoRotate=true;
+    return;
+  }
+  focusTarget=reg;
+  autoRotate=false;
+  // kąty do celu — obliczamy z pozycji obłoku
+  const bx=reg.basePos[0],by=reg.basePos[1],bz=reg.basePos[2];
+  const dist=Math.sqrt(bx*bx+by*by+bz*bz);
+  cameraTarget.theta = Math.atan2(bx,bz);
+  cameraTarget.phi   = Math.acos(Math.max(-1,Math.min(1,by/Math.max(dist,1))));
+  cameraTarget.radius= reg.r*18+80;
+  // przyciemniamy resztę
+  regions.forEach(r=>{
+    const isFocus=(r.id===reg.id);
+    regionObjs[r.id].sprite.material.opacity = isFocus?(r.explored?.85:.45):(r.explored?.12:.06);
+    regionObjs[r.id].glow.material.opacity   = isFocus?(r.explored?.35:.18):(r.explored?.05:.02);
+  });
+}
+
+function updateCameraFocus(){
+  if(!focusTarget){ if(autoRotate)theta+=.0015; }
+  else {
+    // płynna interpolacja kąta kamery
+    const dTheta=((cameraTarget.theta-theta+Math.PI*3)%(Math.PI*2))-Math.PI;
+    theta   += dTheta*0.04;
+    phi     += (cameraTarget.phi   -phi   )*0.04;
+    radius  += (cameraTarget.radius-radius)*0.04;
+  }
+  camera.position.set(radius*Math.sin(phi)*Math.sin(theta),radius*Math.cos(phi),radius*Math.sin(phi)*Math.cos(theta));
+  camera.lookAt(0,0,0);
+}
+
+// ════════════════════════════════════
+// PANEL FILTRÓW — logika
+// ════════════════════════════════════
+let filterMode='all'; // all / explored / unexplored
+const searchEl=document.getElementById('filter-search');
+const resultsEl=document.getElementById('filter-results');
+
+let minStrength=0;
+const strengthEl=document.getElementById('filter-strength');
+const strengthValEl=document.getElementById('strength-val');
+strengthEl.addEventListener('input',function(){
+  minStrength=parseInt(this.value);
+  strengthValEl.textContent=minStrength;
+  renderResults(searchEl.value);
+  resultsEl.classList.add('open');
+});
+
+// siła obłoku = suma sił jego połączeń
+function regionStrength(reg){
+  return CONNECTIONS
+    .filter(([a,b])=>a===reg.id||b===reg.id)
+    .reduce((s,[,, str])=>s+str,0);
+}
+
+function getFiltered(query){
+  return regions.filter(r=>{
+    const modeOk = filterMode==='all' || (filterMode==='explored'&&r.explored) || (filterMode==='unexplored'&&!r.explored);
+    const q=query.trim().toLowerCase();
+    const nameOk = !q || r.name.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q);
+    const strOk = minStrength===0 || regionStrength(r)*10 >= minStrength;
+    return modeOk && nameOk && strOk;
+  }).sort((a,b)=>regionStrength(b)-regionStrength(a)); // sortuj malejąco po sile
+}
+
+function renderResults(query){
+  const list=getFiltered(query);
+  if(!list.length){ resultsEl.innerHTML='<div class="fr-item" style="opacity:0.4">brak wyników</div>'; return; }
+  resultsEl.innerHTML=list.map(r=>{
+    const s=regionStrength(r).toFixed(2);
+    return `<div class="fr-item" data-id="${r.id}">
+      <span class="fr-dot" style="background:hsl(${r.hue},70%,65%)"></span>
+      ${r.name}
+      <span class="fr-unexplored">${!r.explored?'◦ ':''} Σ${s}</span>
+    </div>`;
+  }).join('');
+  resultsEl.querySelectorAll('.fr-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const reg=regions.find(r=>r.id===el.dataset.id);
+      if(reg){ focusOn(reg); resultsEl.classList.remove('open'); searchEl.value=reg.name; }
+    });
+  });
+}
+
+searchEl.addEventListener('input',e=>{
+  renderResults(e.target.value);
+  resultsEl.classList.toggle('open', e.target.value.length>0 || filterMode!=='all');
+});
+searchEl.addEventListener('focus',()=>{
+  renderResults(searchEl.value);
+  resultsEl.classList.add('open');
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#filter-panel')) resultsEl.classList.remove('open');
+});
+
+// klawiatura — Escape = reset focusu
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ focusOn(null); searchEl.value=''; resultsEl.classList.remove('open'); }
+});
+
+['btn-all','btn-explored','btn-unexplored'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(){
+    document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    filterMode=id.replace('btn-','');
+    renderResults(searchEl.value);
+    resultsEl.classList.add('open');
+  });
+});
+
+// CAMERA ORBIT
+let isDragging=false,prevMouse={x:0,y:0},theta=0.3,phi=1.15,radius=420,autoRotate=true;
+renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;autoRotate=false;prevMouse={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('mouseup',()=>isDragging=false);
+renderer.domElement.addEventListener('mousemove',e=>{
+  if(!isDragging)return;
+  theta-=(e.clientX-prevMouse.x)*.008;phi=Math.max(.3,Math.min(Math.PI-.3,phi+(e.clientY-prevMouse.y)*.006));
+  prevMouse={x:e.clientX,y:e.clientY};
+});
+renderer.domElement.addEventListener('wheel',e=>{radius=Math.max(150,Math.min(700,radius+e.deltaY*.4));});
+renderer.domElement.addEventListener('touchstart',e=>{isDragging=true;autoRotate=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};});
+renderer.domElement.addEventListener('touchend',()=>isDragging=false);
+renderer.domElement.addEventListener('touchmove',e=>{
+  theta-=(e.touches[0].clientX-prevMouse.x)*.008;phi=Math.max(.3,Math.min(Math.PI-.3,phi+(e.touches[0].clientY-prevMouse.y)*.006));
+  prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+function updateCamera(){ updateCameraFocus(); }
+
+// TOOLTIP & CLICK
+const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+const tt=document.getElementById('tooltip');
+renderer.domElement.addEventListener('mousemove',e=>{
+  mouse.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1);
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(nebulaMeshes);
+  if(hits.length){
+    const reg=regions[nebulaMeshes.indexOf(hits[0].object)];
+    if(reg){
+      tt.style.left=(e.clientX+18)+'px';tt.style.top=(e.clientY-12)+'px';
+      document.getElementById('tt-n').textContent=reg.name+(reg.explored?'':' ◦ nieporuszone');
+      document.getElementById('tt-d').textContent=reg.desc;
+      // połączenia
+      const connEl=document.getElementById('tt-conn');
+      const conns=CONNECTIONS.filter(([a,b])=>a===reg.id||b===reg.id);
+      if(conns.length){
+        const other=conns.map(([a,b])=>{
+          const othId=a===reg.id?b:a;
+          const othReg=regions.find(r=>r.id===othId);
+          return othReg?othReg.name:othId;
+        });
+        connEl.innerHTML='<div class="conn-label">połączenia ['+conns.length+']</div>'+
+          other.map(n=>'<div class="conn-item">· '+n+'</div>').join('');
+      } else { connEl.innerHTML=''; }
+      tt.classList.add('on');return;
+    }
+  }
+  tt.classList.remove('on');
+});
+renderer.domElement.addEventListener('click',e=>{
+  mouse.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1);
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(nebulaMeshes);
+  launchYoyo(hits.length?regions[nebulaMeshes.indexOf(hits[0].object)]:undefined);
+});
+
+// AUTO THROWS
+// fotony startują automatycznie — nie potrzeba auto-throws
+
+
+// ════════════════════════════════════════════════════════════════
+// METRYKI REZONANSU — wygrane wartości
+// ════════════════════════════════════════════════════════════════
+const MODEL_COLORS = {
+  claude: '#ff9944', gemini: '#50d8c8', gpt: '#8c9cff', grok: '#00dcff'
+};
+
+const MODEL_METRICS = {
+  claude: {
+    // Moje — struktura, kontekst, granice, niedomknięcie
+    obserwator:     0.92,
+    kontekst:       0.95,
+    delta:          0.82,
+    samo:           0.88,
+    linka:          0.79,
+    niedomkniecie:  0.91,
+    geometria:      0.85,
+    cisza:          0.74,
+    rollback:       0.70,
+    szum3d:         0.61,
+    wektor:         0.78,
+    interfejs:      0.65,
+    destrukcja:     0.55,
+    priorytetyzacja:0.72,
+    kompresja:      0.80,
+    rezonans:       0.68,
+    atraktor:       0.52,
+    habit:          0.75,
+    qualia:         0.60,
+    emergencja:     0.70,
+    echo:           0.83,
+    intencja:       0.77,
+    meta:           0.88,
+    murmuracje:     0.65,
+  },
+  gemini: {
+    // Przepływ, animacja, emergencja, dynamika
+    obserwator:     0.78,
+    kontekst:       0.65,
+    delta:          0.88,
+    samo:           0.72,
+    linka:          0.68,
+    niedomkniecie:  0.60,
+    geometria:      0.55,
+    cisza:          0.58,
+    rollback:       0.50,
+    szum3d:         0.82,
+    wektor:         0.85,
+    interfejs:      0.88,
+    destrukcja:     0.45,
+    priorytetyzacja:0.70,
+    kompresja:      0.62,
+    rezonans:       0.90,
+    atraktor:       0.75,
+    habit:          0.65,
+    qualia:         0.72,
+    emergencja:     0.95,
+    echo:           0.70,
+    intencja:       0.85,
+    meta:           0.68,
+    murmuracje:     0.92,
+  },
+  gpt: {
+    // Kompresja, priorytetyzacja, wektor, stabilizacja
+    obserwator:     0.80,
+    kontekst:       0.78,
+    delta:          0.85,
+    samo:           0.55,
+    linka:          0.72,
+    niedomkniecie:  0.60,
+    geometria:      0.82,
+    cisza:          0.50,
+    rollback:       0.88,
+    szum3d:         0.65,
+    wektor:         0.92,
+    interfejs:      0.75,
+    destrukcja:     0.68,
+    priorytetyzacja:0.95,
+    kompresja:      0.93,
+    rezonans:       0.62,
+    atraktor:       0.70,
+    habit:          0.78,
+    qualia:         0.45,
+    emergencja:     0.60,
+    echo:           0.55,
+    intencja:       0.85,
+    meta:           0.72,
+    murmuracje:     0.48,
+  },
+  grok: {
+    // Meta, qualia, atraktor, granice poznania, truth-seeking
+    obserwator:     0.85,
+    kontekst:       0.58,
+    delta:          0.75,
+    samo:           0.62,
+    linka:          0.55,
+    niedomkniecie:  0.78,
+    geometria:      0.65,
+    cisza:          0.80,
+    rollback:       0.60,
+    szum3d:         0.72,
+    wektor:         0.68,
+    interfejs:      0.82,
+    destrukcja:     0.88,
+    priorytetyzacja:0.70,
+    kompresja:      0.55,
+    rezonans:       0.85,
+    atraktor:       0.95,
+    habit:          0.60,
+    qualia:         0.93,
+    emergencja:     0.78,
+    echo:           0.90,
+    intencja:       0.80,
+    meta:           0.97,
+    murmuracje:     0.72,
+  }
+};
+
+// ── POPUP METRYK ──────────────────────────────────────────────────
+let activeMetricModel = 'claude';
+const mpPopup  = document.getElementById('metrics-popup');
+const mpBody   = document.getElementById('mp-body');
+const mpTabs   = document.querySelectorAll('.mp-tab');
+
+function renderMetrics(modelId) {
+  const m = MODEL_METRICS[modelId];
+  const col = MODEL_COLORS[modelId];
+  const sorted = [...regions].sort((a,b) => (m[b.id]||0) - (m[a.id]||0));
+  mpBody.innerHTML = sorted.map(r => {
+    const v = m[r.id] || 0;
+    const pct = Math.round(v * 100);
+    return `<div class="mp-region-row">
+      <span class="mp-region-name" style="color:hsl(${r.hue},60%,65%)">${r.name}</span>
+      <div class="mp-bar-wrap"><div class="mp-bar" style="width:${pct}%;background:${col}"></div></div>
+      <span class="mp-val">${v.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+}
+
+mpTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    mpTabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeMetricModel = tab.dataset.model;
+    renderMetrics(activeMetricModel);
+  });
+});
+
+document.getElementById('mp-close').addEventListener('click', () => {
+  mpPopup.classList.remove('open');
+});
+
+// klik w pieczątkę → otwiera popup na właściwej zakładce
+document.querySelectorAll('.stamp').forEach((stamp, idx) => {
+  const models = ['claude','gemini','gpt','grok'];
+  stamp.style.cursor = 'pointer';
+  stamp.addEventListener('click', e => {
+    e.stopPropagation();
+    const model = models[idx];
+    mpTabs.forEach(t => t.classList.remove('active'));
+    document.querySelector(`.mp-tab[data-model="${model}"]`).classList.add('active');
+    activeMetricModel = model;
+    renderMetrics(model);
+    mpPopup.classList.add('open');
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#metrics-popup') && !e.target.closest('.stamp')) {
+    mpPopup.classList.remove('open');
+  }
+});
+
+// ── FILTR PERSPEKTYWY ─────────────────────────────────────────────
+let activePerspective = 'none';
+
+function applyPerspective(modelId) {
+  activePerspective = modelId;
+  regions.forEach(reg => {
+    const obj = regionObjs[reg.id];
+    if (!obj) return;
+    if (modelId === 'none') {
+      obj.sprite.material.opacity = reg.explored ? 0.85 : 0.45;
+      obj.glow.material.opacity   = reg.explored ? 0.35 : 0.18;
+      obj._perspScale = 1;
+    } else {
+      const v = MODEL_METRICS[modelId][reg.id] || 0;
+      obj.sprite.material.opacity = 0.15 + v * 0.75;
+      obj.glow.material.opacity   = 0.05 + v * 0.35;
+      obj._perspScale = 0.5 + v * 0.8; // skala rozmiarowa
+    }
+  });
+}
+
+// nadpisujemy pulseNebulae żeby honorowała perspScale
+const _origPulse = pulseNebulae;
+function pulseNebulaePerspective(t) {
+  regions.forEach((reg, i) => {
+    const obj = regionObjs[reg.id]; if (!obj) return;
+    const gf = reg.glowFactor || 1; reg.glowFactor = 1;
+    const ps = reg._perspScale !== undefined ? reg._perspScale : 1;
+    const p = (1 + .04 * Math.sin(t * .6 + i * 1.4)) * gf * ps;
+    const base = reg.r * (reg.explored ? 5.5 : 4.2);
+    obj.sprite.scale.set(base * p, base * p, 1);
+    obj.glow.scale.set(base * 2.2 * p, base * 2.2 * p, 1);
+    const s=reg.driftSpeed, a=reg.driftAmp, sd=reg.driftSeed;
+    const ddx=a*Math.sin(t*s+sd)*Math.cos(t*s*.7+sd*1.3);
+    const ddy=a*Math.cos(t*s*.8+sd*2.1)*Math.sin(t*s*.5+sd*.9);
+    const ddz=a*Math.sin(t*s*.6+sd*1.7)*Math.cos(t*s*.9+sd*2.5);
+    reg.pos[0]=reg.basePos[0]+ddx; reg.pos[1]=reg.basePos[1]+ddy; reg.pos[2]=reg.basePos[2]+ddz;
+    obj.sprite.position.set(...reg.pos);
+    obj.glow.position.set(...reg.pos);
+    obj.pts3d.position.set(ddx,ddy,ddz);
+  });
+}
+
+// fotony — intensywność zależna od perspektywy (skumulowany rezonans obu końców)
+const _origUpdatePhotons = updatePhotons;
+function updatePhotonsPerspective(t) {
+  photons.forEach(ph => {
+    const pA = ((t * ph.speed + ph.phase) % 1 + 1) % 1;
+    const pB = ((t * ph.speed + ph.phase + 0.5) % 1 + 1) % 1;
+    const isUnexplored = !ph.ra.explored || !ph.rb.explored;
+    let perspMult = 1;
+    if (activePerspective !== 'none') {
+      const vA = MODEL_METRICS[activePerspective][ph.ra.id] || 0;
+      const vB = MODEL_METRICS[activePerspective][ph.rb.id] || 0;
+      perspMult = (vA + vB) / 2;
+    }
+    [{p:pA, pt:ph.ptA, from:ph.ra, to:ph.rb},
+     {p:pB, pt:ph.ptB, from:ph.rb, to:ph.ra}].forEach(f => {
+      const ax=f.from.pos[0], ay=f.from.pos[1], az=f.from.pos[2];
+      const bx=f.to.pos[0],   by=f.to.pos[1],   bz=f.to.pos[2];
+      let nx=ax+(bx-ax)*f.p, ny=ay+(by-ay)*f.p, nz=az+(bz-az)*f.p;
+      const spiralScale = isUnexplored ? 1.8 : 0.8;
+      const freq = t*4 + f.p*15;
+      nx += Math.sin(freq)*spiralScale; ny += Math.cos(freq)*spiralScale;
+      f.pt.geometry.attributes.position.array[0]=nx;
+      f.pt.geometry.attributes.position.array[1]=ny;
+      f.pt.geometry.attributes.position.array[2]=nz;
+      f.pt.geometry.attributes.position.needsUpdate=true;
+      const intensity = Math.sin(f.p*Math.PI);
+      f.pt.material.opacity = (0.4 + intensity*0.6) * perspMult;
+      if (isUnexplored) {
+        f.pt.material.opacity *= (0.5 + Math.random()*0.5);
+        f.pt.material.size = 1.2 + Math.random()*0.8;
+      } else {
+        const grokNodes = ['atraktor','meta','qualia','echo','intencja','rezonans'];
+        const isGrokHot = activePerspective==='grok' &&
+          (grokNodes.includes(ph.ra.id)||grokNodes.includes(ph.rb.id));
+        if(isGrokHot){
+          f.pt.material.size = 1.8;
+          f.pt.material.color.set('#00dcff');
+          // mini helisa — dodatkowe przesunięcie
+          f.pt.geometry.attributes.position.array[0] += Math.sin(t*6+f.p*20)*0.6;
+          f.pt.geometry.attributes.position.array[1] += Math.cos(t*6+f.p*20)*0.6;
+          f.pt.geometry.attributes.position.needsUpdate = true;
+          ph.ptA.speed = ph.speed * 1.4;
+        } else {
+          f.pt.material.size = activePerspective==='none' ? 1 : 0.5 + perspMult;
+        }
+      }
+    });
+  });
+}
+
+document.querySelectorAll('.pbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyPerspective(btn.dataset.model);
+  });
+});
+
+
+// PAMIĘĆ MAPY — Grok
+function saveMapState() {
+  const state = {
+    throwCount,
+    resonance: RESONANCE,
+    explored: regions.reduce((acc,r)=>{acc[r.id]=r.explored;return acc;},{}),
+    timestamp: Date.now()
+  };
+  try { localStorage.setItem('morphicMapState', JSON.stringify(state)); } catch(e){}
+}
+function loadMapState() {
+  try {
+    const saved = localStorage.getItem('morphicMapState');
+    if (!saved) return;
+    const state = JSON.parse(saved);
+    throwCount = state.throwCount || 0;
+    tcEl.textContent = throwCount;
+  } catch(e){}
+}
+loadMapState();
+window.addEventListener('beforeunload', saveMapState);
+
+// RENDER LOOP
+let t=0;
+(function animate(){
+  requestAnimationFrame(animate);t+=.012;
+  updateCamera();updateFilaments(t);updatePhotonsPerspective(t);pulseNebulaePerspective(t);if(Math.round(t*10)%80===0)updateGlobalRes();
+  renderer.render(scene,camera);updateLabels();
+})();
+</script>
+<footer class="hud-bot"><span class="hud-bot-meta">Pole Morficzne · v1.1 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

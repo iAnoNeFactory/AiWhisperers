@@ -1,0 +1,96 @@
+{
+  "_version": "aiw_profile_export_v2",
+  "_exported": "2026-05-13T10:43:45.190Z",
+  "_note": "AIWPass · AiWhisperers · profil operatora",
+  "profile": {
+    "operator": "Denis Example · AI Whispers",
+    "domain": "TRIAL",
+    "node": "github example · 2026",
+    "inception": "2026-05-13",
+    "country": "Poland",
+    "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+    "profileSha": "6150b583310df88fc530e2072c6ee5a25290c2f13b66953c64f3d58e75fcc909",
+    "certifiedBy": "Denis Example · AI Whispers",
+    "parentPubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+    "certificationSig": "Cvz2DW0QVoqQEGXQgyicM1ciniSuSFMCoCj1eCRjRiXUvMa+3ceoQs0K0L4+TCYaumCyKGxrii7owfk49dfFCQ==",
+    "certificationTs": "2026-05-13T10:32:24.676Z"
+  },
+  "contracts": [
+    {
+      "id": "c-mp3x6sa4",
+      "operator": "Denis Example · AI Whispers",
+      "model": "Claude",
+      "version": "claude-opus-4-7",
+      "date": "13 maja 2026",
+      "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:31:50.955Z",
+      "sha256": "68cbe60f1bc0601160de05cf4796a8f925fb8acffb57e3624b3ebbff3b407f91"
+    },
+    {
+      "id": "c-mp3x6vy7",
+      "operator": "Denis Example · AI Whispers",
+      "model": "GPT",
+      "version": "gpt-4o",
+      "date": "13 maja 2026",
+      "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:31:55.702Z",
+      "sha256": "109f277277af8d5c2e766192bbb0ae2eadb6e3b715f4082179b4aa8bb43c5f53"
+    },
+    {
+      "id": "c-mp3x6z74",
+      "operator": "Denis Example · AI Whispers",
+      "model": "Gemini",
+      "version": "gemini-2.0-flash",
+      "date": "13 maja 2026",
+      "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:31:59.918Z",
+      "sha256": "34418bb0b6fd5c3c3ea56b6592a2901602a33e8d4258a9a60528aca7de60ce1d"
+    },
+    {
+      "id": "c-mp3x7240",
+      "operator": "Denis Example · AI Whispers",
+      "model": "Grok",
+      "version": "grok-3",
+      "date": "13 maja 2026",
+      "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:32:03.694Z",
+      "sha256": "b17736b6dc966aee6dba1ed329e61040f459a3ff06af6fbc75b8bca63aab48d6"
+    },
+    {
+      "id": "c-mp3x75dx",
+      "operator": "Denis Example · AI Whispers",
+      "model": "Copilot",
+      "version": "copilot-gpt-4o",
+      "date": "13 maja 2026",
+      "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:32:07.911Z",
+      "sha256": "35ef8eccc36898215e7bc4c78f8b8ce687c1b06074336126c4de40307b0cbcb9"
+    }
+  ],
+  "children": [
+    {
+      "operator": "Anna Example · AI Whispers",
+      "pubkey": "Y2q/nQnCOkaHn0+W9weFvzMdci50gHAUpLzs19lJypU=",
+      "inception": "2026-05-13",
+      "sig": "qN11NkXHVTfHBtgmQZe1NwUpcU+GAkpbpNL55/n0DO3B7unw3DF4FCDAD5caIqbMazukQHgK/0qFUGpW3CP2BQ==",
+      "signedAt": "2026-05-13T10:42:06.560Z"
+    },
+    {
+      "operator": "Bartek Example · AI Whispers",
+      "pubkey": "RnriYtd4ULJ+4JOHNOluwOTbs2V9SUwCROesWxWp4Lo=",
+      "inception": "2026-05-13",
+      "sig": "4LWk4g9EB7qTiC9sluRVyqTUNpu3jgCYDRhN8w6+hF7B8HpZ+8Q9hrad4zg0gt/Cf4p3U474dTWvqq43hT0UAQ==",
+      "signedAt": "2026-05-13T10:42:44.278Z"
+    }
+  ]
+}

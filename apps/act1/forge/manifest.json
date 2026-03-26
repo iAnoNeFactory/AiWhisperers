@@ -1,0 +1,76 @@
+{
+  "id": "forge",
+  "name": "Kuźnia Paradoksów · Forge ⚒️",
+  "version": "0.4",
+  "date": "2026-04-18",
+  "description": "Arena pre-konsensusu w Horizon — zderzenie tez z progresywnym kosztem rewizji, chain historii tur z rozwijalnymi materiałami, horizon scoring z konsystencją werdyktu.",
+  "type": "pre-consensus-arena",
+  "status": "incubation",
+  "lineage": {
+    "seed_session": "Kuźnia Paradoksów ⚒️",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Gemini 1.5 Pro",
+        "role": "seed",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "refiner",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Opus 4.7",
+        "role": "architect",
+        "chat_id": "d019539c-7b15-41cd-88ed-a36904c862cb"
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "forge.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "8df10ef903f4c316de22ee1644ef47ea5fec82fc86b30ddc85064c26aad09bce",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "feeds",
+      "target": "horizon"
+    }
+  ],
+  "tags": [
+    "consensus",
+    "paradox",
+    "epistemology",
+    "horizon"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

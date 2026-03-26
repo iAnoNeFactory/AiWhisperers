@@ -1,0 +1,61 @@
+{
+  "id": "profile",
+  "name": "Profile · Profil Operatora",
+  "version": "0.1",
+  "date": "2026-04-26",
+  "description": "Profil operatora rozłożony na części pierwsze — wymiary, sygnatura Ed25519, tożsamość i historia w ekosystemie AiWhisperers.",
+  "type": "operator-profile",
+  "status": "incubation",
+  "lineage": {
+    "seed_session": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "consumes",
+      "target": "_pass"
+    }
+  ],
+  "tags": [
+    "profile",
+    "operator",
+    "identity",
+    "signature"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

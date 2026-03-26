@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demokratyczna Prawda — Drzewo Wiedzy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#040810;font-family:'Cormorant Garamond',serif;}
+#bg{position:fixed;inset:0;z-index:0;}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);}
+#app{position:relative;z-index:2;width:100%;height:100%;overflow:hidden;}
+#canvas-wrap{width:100%;height:100%;overflow:hidden;position:relative;cursor:grab;}
+#canvas-wrap.dragging{cursor:grabbing;}
+#tree-svg{display:block;transform-origin:0 0;}
+
+/* POPUP — sticky, zamykalny krzyżykiem */
+.tip{position:fixed;z-index:300;background:rgba(4,8,16,0.97);border:1px solid rgba(255,255,255,0.14);
+  border-radius:6px;padding:18px 20px 16px;max-width:380px;pointer-events:all;
+  opacity:0;transition:opacity .15s;box-shadow:0 4px 40px rgba(0,0,0,0.85);backdrop-filter:blur(14px);
+  min-width:260px;}
+.tip::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);}
+.tip.on{opacity:1;}
+.tip-close{position:absolute;top:8px;right:10px;width:22px;height:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:3px;
+  font-size:13px;color:rgba(255,255,255,0.35);background:transparent;border:none;
+  transition:color .12s,background .12s;font-family:'JetBrains Mono',monospace;line-height:1;}
+.tip-close:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.08);}
+.t-kind{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px;padding-right:20px;}
+.t-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:7px;line-height:1.3;padding-right:16px;}
+.t-desc{font-size:11.5px;color:rgba(255,255,255,0.48);line-height:1.75;font-weight:300;}
+.t-status{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;}
+.t-links{margin-top:8px;font-size:11px;color:rgba(100,200,150,0.7);font-style:italic;}
+.t-tag{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:2px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;
+  color:rgba(255,255,255,0.3);text-transform:uppercase;}
+.t-action{display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:7px;
+  letter-spacing:2px;color:rgba(100,200,150,0.65);text-transform:uppercase;}
+
+/* MOBILE */
+@media (max-width:600px){
+  .hud{padding:10px 12px;}
+  .hud-title{font-size:13px;letter-spacing:1px;}
+ .ctrl{top:84px;right:8px;gap:4px;flex-wrap:wrap;max-width:calc(100vw - 16px);}
+  .ctrl-btn{font-size:7px;padding:5px 8px;letter-spacing:1px;}
+  .ctrl-sep{display:none;}
+  .ctrl-label{display:none;}
+  .chain-bar{padding:6px 10px;gap:8px;}
+  .chain-hint{display:none;}
+  .chain-block{font-size:6px;padding:2px 6px;}
+  .slider-wrap{left:8px;bottom:36px;min-width:150px;padding:8px 12px 10px;}
+  .slider-hdr{font-size:6px;}
+  .slider-tick{font-size:6px;}
+  .leg{right:8px;bottom:36px;min-width:140px;}
+  .leg-header{font-size:6px;padding:6px 10px;}
+  .leg-r{font-size:9px;}
+  .tip{max-width:calc(100vw - 32px);min-width:0;left:16px!important;right:16px!important;
+    bottom:50px!important;top:auto!important;width:calc(100vw - 32px);}
+}
+
+/* HUD */
+.hud{position:fixed;top:0;left:0;right:0;z-index:50;padding:14px 22px;
+  background:linear-gradient(180deg,rgba(4,8,16,0.98) 0%,transparent 100%);pointer-events:none;}
+.hud-label{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:4px;color:rgba(201,168,76,0.55);text-transform:uppercase;}
+.hud-title{font-size:18px;font-weight:300;color:rgba(255,255,255,0.88);letter-spacing:2.5px;margin-top:2px;}
+
+/* CONTROLS */
+.ctrl{position:fixed;top:84px;right:20px;z-index:50;display:flex;gap:8px;align-items:center;}
+.ctrl-btn{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(255,255,255,0.45);background:rgba(4,8,16,0.88);border:1px solid rgba(255,255,255,0.1);
+  border-radius:3px;padding:6px 12px;cursor:pointer;text-transform:uppercase;transition:all .15s;}
+.ctrl-btn:hover{color:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.3);}
+.ctrl-btn.active{color:#c9a84c;border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);}
+.ctrl-sep{width:1px;height:20px;background:rgba(255,255,255,0.08);}
+.ctrl-label{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase;}
+
+/* BLOCKCHAIN STATUS BAR */
+.chain-bar{position:fixed;bottom:28px;left:0;right:0;z-index:50;
+  background:rgba(4,8,16,0.95);border-top:1px solid rgba(201,168,76,0.15);
+  padding:8px 22px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(10px);}
+.chain-label{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:3px;
+  color:rgba(201,168,76,0.5);text-transform:uppercase;white-space:nowrap;}
+.chain-blocks{display:flex;gap:6px;flex-wrap:wrap;}
+.chain-block{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:1px;
+  padding:3px 8px;border-radius:2px;border:1px solid;white-space:nowrap;}
+.chain-block.resolved{color:rgba(80,220,120,0.8);border-color:rgba(80,220,120,0.3);background:rgba(80,220,120,0.05);}
+.chain-block.pending{color:rgba(255,180,50,0.7);border-color:rgba(255,180,50,0.25);background:rgba(255,180,50,0.04);}
+.chain-hint{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:1px;
+  color:rgba(255,255,255,0.15);margin-left:auto;white-space:nowrap;}
+
+/* LEGEND — zwinięta po prawej, nie zasłania drzewa */
+.leg{position:fixed;bottom:72px;right:20px;z-index:50;
+  background:rgba(4,8,16,0.93);border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px;backdrop-filter:blur(10px);overflow:hidden;min-width:180px;}
+.leg-header{padding:8px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+  font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:3px;
+  color:rgba(255,255,255,0.3);text-transform:uppercase;user-select:none;}
+.leg-header:hover{color:rgba(255,255,255,0.6);}
+.leg-toggle{font-size:9px;color:rgba(255,255,255,0.25);}
+.leg-body{padding:0 14px 10px;display:none;}
+.leg-body.open{display:block;}
+.leg-r{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:10px;color:rgba(255,255,255,0.32);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+.leg-d{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.leg-l{width:16px;height:0;border-top:1px solid;flex-shrink:0;}
+
+/* FILTER PANE — lewy środek */
+.filter-pane{position:fixed;left:20px;top:50%;transform:translateY(-50%);z-index:50;
+  background:rgba(4,8,16,0.93);border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px;padding:10px 12px;backdrop-filter:blur(10px);min-width:160px;}
+.filter-pane-hdr{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:3px;
+  color:rgba(255,255,255,0.2);text-transform:uppercase;margin-bottom:8px;}
+.filter-btn{display:block;width:100%;text-align:left;
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;
+  color:rgba(255,255,255,0.38);background:transparent;
+  border:1px solid transparent;border-radius:3px;
+  padding:6px 9px;cursor:pointer;margin-bottom:3px;
+  transition:color .15s,border-color .15s,background .15s;}
+.filter-btn:last-child{margin-bottom:0;}
+.filter-btn:hover{color:rgba(255,255,255,0.75);border-color:rgba(255,255,255,0.12);}
+.filter-btn.active{color:var(--gold,#c9a84c);border-color:rgba(201,168,76,0.4);
+  background:rgba(201,168,76,0.06);}
+.filter-btn.active.f-crisis{color:#ff6a6a;border-color:rgba(255,80,80,0.35);background:rgba(255,60,60,0.05);}
+.filter-btn.active.f-tech{color:#ffaa4a;border-color:rgba(255,170,74,0.35);background:rgba(255,140,40,0.05);}
+.filter-btn.active.f-philo{color:#4a8aff;border-color:rgba(74,138,255,0.35);background:rgba(60,120,220,0.05);}
+.filter-btn.active.f-sci{color:#4aff8a;border-color:rgba(74,255,138,0.35);background:rgba(40,200,80,0.05);}
+.filter-btn.active.f-bt{color:#ffffff;border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);}
+@media(max-width:600px){.filter-pane{display:none;}}position:fixed;bottom:44px;left:20px;z-index:50;
+  background:rgba(4,8,16,0.93);border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px;padding:10px 16px 12px;backdrop-filter:blur(10px);min-width:210px;}
+.slider-hdr{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:3px;
+  color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;}
+.slider-val{color:rgba(201,168,76,0.8);font-size:8px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;
+  background:rgba(255,255,255,0.12);border-radius:1px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;
+  border-radius:50%;background:#c9a84c;cursor:pointer;box-shadow:0 0 7px rgba(201,168,76,0.55);}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;
+  background:#c9a84c;cursor:pointer;border:none;}
+.slider-ticks{display:flex;justify-content:space-between;margin-top:5px;}
+.slider-tick{font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,0.18);cursor:pointer;}
+.slider-tick:hover{color:rgba(201,168,76,0.6);}
+</style>
+<style>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,8,16,.94) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(201,168,76,.08);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(201,168,76,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#c9a84c;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(201,168,76,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(201,168,76,.5);color:#c9a84c;background:rgba(201,168,76,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,8,16,.88) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(201,168,76,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Horizon</div><div class="hud-sub">drzewo wiedzy · demokratyczna prawda</div></div>
+  <nav class="hud-r"><a class="hud-btn" href="horizon-readme.html" target="_blank">README</a></nav>
+</header>
+<canvas id="bg"></canvas>
+
+<!-- CONTROLS -->
+<div class="ctrl">
+  <span class="ctrl-label">Poziom:</span>
+  <button class="ctrl-btn" id="btn-l1" onclick="setLevel(1)">I · Pień</button>
+  <button class="ctrl-btn active" id="btn-l2" onclick="setLevel(2)">II · Gałęzie</button>
+  <button class="ctrl-btn" id="btn-l3" onclick="setLevel(3)">III · Wszystko</button>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn" id="btn-links" onclick="toggleLinks()">Powiązania</button>
+  <button class="ctrl-btn" id="btn-fit" onclick="fitView()">Dopasuj</button>
+</div>
+
+<div id="app">
+  <div id="canvas-wrap">
+    <svg id="tree-svg"></svg>
+  </div>
+</div>
+
+<!-- POPUP (sticky, zamykalny) -->
+<div class="tip" id="tip">
+  <button class="tip-close" id="tip-close" onclick="hideTip()" title="Zamknij">✕</button>
+  <div class="t-kind" id="t-kind"></div>
+  <div class="t-title" id="t-title"></div>
+  <div class="t-desc" id="t-desc"></div>
+  <div class="t-status" id="t-status"></div>
+  <div id="t-hypotheses" style="margin-top:10px;display:none;"></div>
+  <div class="t-links" id="t-links"></div>
+  <div class="t-tag" id="t-tag"></div>
+  <span class="t-action" id="t-action"></span>
+</div>
+
+<!-- FILTER PANE — lewy środek, idea od Gemini -->
+<div class="filter-pane">
+  <div class="filter-pane-hdr">Filtr Ontologiczny</div>
+  <button class="filter-btn active" id="fbtn-all"    onclick="setFilter('all',this)">◈ Wszystkie</button>
+  <button class="filter-btn f-crisis" id="fbtn-crisis" onclick="setFilter('crisis',this)">⚠ Kryzysy</button>
+  <button class="filter-btn f-bt"     id="fbtn-bt"    onclick="setFilter('breakthrough',this)">⚡ Przełomy</button>
+  <button class="filter-btn f-philo"  id="fbtn-philo" onclick="setFilter('philo',this)">◉ Filozofia</button>
+  <button class="filter-btn f-sci"    id="fbtn-sci"   onclick="setFilter('sci',this)">◉ Nauki</button>
+  <button class="filter-btn f-tech"   id="fbtn-tech"  onclick="setFilter('tech',this)">◉ Technologia</button>
+</div>
+
+
+<div class="chain-bar">
+  <span class="chain-label">⛓ Blockchain ·</span>
+  <div class="chain-blocks" id="chain-blocks"></div>
+  <span class="chain-hint">węzły rozwiązane = przeniesione do korzeni przy kolejnym zatwierdzeniu</span>
+</div>
+
+<!-- DEPTH SLIDER — lewy dolny róg -->
+<div class="slider-wrap">
+  <div class="slider-hdr">
+    <span>Głębokość</span>
+    <span class="slider-val" id="depth-val">2</span>
+  </div>
+  <input type="range" id="depth-slider" min="1" max="5" value="2" oninput="onSlider(this.value)">
+  <div class="slider-ticks">
+    <span class="slider-tick" onclick="onSlider(1)">Pień</span>
+    <span class="slider-tick" onclick="onSlider(2)">Gałęzie</span>
+    <span class="slider-tick" onclick="onSlider(3)">Szczegóły</span>
+    <span class="slider-tick" onclick="onSlider(4)">Głębiej</span>
+    <span class="slider-tick" onclick="onSlider(5)">Wszystko</span>
+  </div>
+</div>
+
+<!-- LEGEND — prawy dolny róg, zwijana -->
+<div class="leg">
+  <div class="leg-header" onclick="toggleLegend()">
+    <span>Legenda</span>
+    <span class="leg-toggle" id="leg-toggle">▼</span>
+  </div>
+  <div class="leg-body" id="leg-body">
+    <div class="leg-r"><div class="leg-d" style="background:#3a4a7a"></div>Korzeń · martwa kotwica</div>
+    <div class="leg-r"><div class="leg-d" style="background:#5a6a9a"></div>Pień · epoka</div>
+    <div class="leg-r"><div class="leg-d" style="background:#4a8aff"></div>Filozofia</div>
+    <div class="leg-r"><div class="leg-d" style="background:#4aff8a"></div>Nauki</div>
+    <div class="leg-r"><div class="leg-d" style="background:#ffaa4a"></div>Technologia</div>
+    <div class="leg-r"><div class="leg-d" style="background:#aa4aff"></div>Matematyka</div>
+    <div class="leg-r"><div class="leg-d" style="background:#ff6a4a"></div>Społeczeństwo</div>
+    <div class="leg-r"><div class="leg-d" style="background:#ff3a3a;box-shadow:0 0 4px #f33"></div>⚠ Kryzys · otwarty</div>
+    <div class="leg-r"><div class="leg-d" style="background:#3a8a5a"></div>✓ Kryzys · rozwiązany</div>
+    <div class="leg-r"><div class="leg-d" style="background:#ffffff;box-shadow:0 0 4px #fff"></div>⚡ Przełom</div>
+    <div class="leg-r"><div class="leg-d" style="background:#c9a84c;box-shadow:0 0 5px #c9a84c"></div>Demokratyczna Prawda</div>
+    <div class="leg-r"><div class="leg-l" style="border-color:rgba(255,255,255,0.4)"></div>Prosta = zależność</div>
+    <div class="leg-r"><div class="leg-l" style="border-color:rgba(100,200,255,0.4);border-style:dashed"></div>Łuk = korelacja</div>
+    <div class="leg-r"><div class="leg-l" style="border-color:rgba(255,200,100,0.4);border-style:dotted"></div>Powiązanie dziedzin</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DANE — JSON gotowy na bazę danych
+// depth:      głębokość przy której węzeł jest widoczny (1=tylko pień, 2=gałęzie, 3=szczegóły)
+// status:     'open'|'resolved'|'pending' (dla kryzysów)
+// state:      'draft'|'contested'|'stable'|'resolved'|'anchored'  ← nowe (GPT)
+// links:      [id, ...] — powiązania między dziedzinami (linie kropkowane)
+// tags:       [] — tagi do automatycznego wykrywania powiązań
+// blockHash:  string — hash bloku zatwierdzającego (dla resolved)
+// hypotheses: [{id,label,score,evidence}] — arena hipotez (GPT)
+//   score:    0–1, suma wszystkich hipotez w węźle = 1.0
+//   evidence: liczba źródeł wspierających
+// truthScore: 0–1 — wynik funkcji TruthScore(node) (GPT)
+// halfLife:   dni — po ilu dniach bez nowych dowodów teza traci 50% wagi (GPT)
+// ═══════════════════════════════════════════════════════════
+const TREE = {
+  id:'origin', label:'Zaranie\nLudzkości', kind:'trunk', depth:1,
+  desc:'Homo sapiens, mowa, narzędzia, pamięć zbiorowa. Punkt zerowy systemu.',
+  tag:'~300 000 p.n.e.', tags:['origins','memory'],
+  children:[
+
+    // ── KORZENIE ─────────────────────────────────────────────
+    {id:'root-math', label:'Matematyka\ni Fizyka', kind:'root', depth:1,
+     desc:'Niefałszowalne. Niezależne od kultury i epoki. Waga absolutna.',
+     tag:'kotwica absolutna', tags:['math','logic','absolute'],
+     children:[
+       {id:'euclid',label:'Euklides',kind:'math',depth:3,desc:'Elementy. Pierwsza aksjomatyczna teoria. Fundament logiki dedukcyjnej.',tag:'~300 p.n.e.',tags:['math','logic'],children:[]},
+       {id:'archimedes',label:'Archimedes',kind:'math',depth:3,desc:'Pi, dźwignia, wypór. Matematyka w fizyce.',tag:'~250 p.n.e.',tags:['math','physics'],children:[]},
+       {id:'newton-m',label:'Newton · Rachunek',kind:'math',depth:3,desc:'Rachunek różniczkowy. Język matematyczny przyrody.',tag:'1687',tags:['math','physics'],children:[]},
+     ]},
+    {id:'root-philo', label:'Filozofia\nStarożytna', kind:'root', depth:1,
+     desc:'Platon, Arystoteles, Konfucjusz, Nagarjuna. 2500 lat bez zawłaszczenia.',
+     tag:'kotwica martwa', tags:['philosophy','ethics','logic'],
+     links:['root-math','islamic-gold'],
+     children:[
+       {id:'aristotle',label:'Arystoteles · Logika',kind:'philo',depth:2,desc:'Sylogizm, kategorie, etyka. Fundament zachodniej logiki.',tag:'~350 p.n.e.',tags:['logic','ethics'],children:[]},
+       {id:'plato',label:'Platon · Idee',kind:'philo',depth:3,desc:'Świat idei vs. cieni. Epistemologia jako pytanie fundamentalne.',tag:'~380 p.n.e.',tags:['epistemology','philosophy'],children:[]},
+       {id:'confucius',label:'Konfucjusz',kind:'philo',depth:3,desc:'Ren, li, harmonia. Niezależna epistemologia wschodnia.',tag:'~500 p.n.e.',tags:['ethics','society'],children:[]},
+       {id:'nagarjuna',label:'Nagarjuna · Logika',kind:'philo',depth:3,desc:'Logika buddyjska, pustka, współzależność.',tag:'~150 n.e.',tags:['logic','philosophy'],children:[]},
+     ]},
+    {id:'root-arch', label:'Dane\nFizyczne', kind:'root', depth:1,
+     desc:'Artefakty, geologia, astronomia. Fakty których sfałszowanie byłoby nieopłacalne.',
+     tag:'kotwica fizyczna', tags:['evidence','history'],
+     children:[
+       {id:'mesopotamia-w',label:'Pismo Klinowe',kind:'tech',depth:2,desc:'Pierwsze pismo ~3200 p.n.e. Wiedza poza pamięcią.',tag:'~3200 p.n.e.',tags:['writing','memory','tech'],children:[]},
+       {id:'egypt-g',label:'Geometria Egiptu',kind:'sci',depth:3,desc:'Papirus Rhind, piramidy, medycyna empiryczna.',tag:'~2500 p.n.e.',tags:['math','engineering'],children:[]},
+     ]},
+
+    // ── PIEŃ ─────────────────────────────────────────────────
+    {id:'trunk-ancient', label:'Starożytność', kind:'trunk', depth:1,
+     desc:'Polis, republika, filozofia naturalna. Budowa fundamentów cywilizacji.',
+     tag:'~600 p.n.e.–500 n.e.', tags:['ancient','society','philosophy'],
+     children:[
+       {id:'rome-law',label:'Prawo Rzymskie',kind:'society',depth:2,desc:'Corpus Juris Civilis. Procedura jako gwarancja. Fundament systemów prawnych do dziś.',tag:'~100 p.n.e.',tags:['law','society','procedure'],links:['human-rights','dem-project'],children:[]},
+       {id:'islamic-gold',label:'Złoty Wiek Islamu',kind:'sci',depth:2,desc:'Al-Khwarizmi, Ibn Sina, Ibn al-Haytham. Most między starożytnością a renesansem.',tag:'~800–1200',tags:['science','math','medicine'],links:['root-philo','sci-rev'],
+        children:[
+          {id:'algebra',label:'Algebra',kind:'math',depth:3,desc:'Al-Khwarizmi. Fundament algebry. Algorytm od jego imienia.',tag:'~820',tags:['math','algebra'],children:[]},
+          {id:'optics',label:'Optyka',kind:'sci',depth:3,desc:'Ibn al-Haytham. Metoda eksperymentalna przed Galileuszem.',tag:'~1020',tags:['physics','experiment'],children:[]},
+        ]},
+       {id:'univ',label:'Pierwsze Uniwersytety',kind:'society',depth:2,desc:'Bologna, Paryż, Oksford. Instytucja wspólnej weryfikacji. Zalążek peer review.',tag:'~1088',tags:['institution','verification','education'],links:['peer-review','dem-project'],children:[]},
+       {id:'china-inv',label:'Chiny · 4 Wynalazki',kind:'tech',depth:2,desc:'Papier, druk, proch, kompas. Skalowanie wiedzy przed Gutenbergiem.',tag:'100–1000',tags:['tech','writing','scale'],children:[]},
+     ]},
+
+    {id:'trunk-renais', label:'Renesans\ni Oświecenie', kind:'trunk', depth:1,
+     desc:'Metoda naukowa, humanizm, encyklopedyzm. Człowiek w centrum.',
+     tag:'~1400–1800', tags:['renaissance','science','enlightenment'],
+     children:[
+       {id:'gutenberg',label:'⚡ Gutenberg · Druk',kind:'breakthrough',depth:1,desc:'Demokratyzacja wiedzy. Chaos informacyjny analogiczny do internetu. Adaptacja: 200 lat.',tag:'1440',tags:['tech','knowledge','scale','democracy'],links:['internet','llm'],children:[
+         {id:'reformation',label:'Reformacja',kind:'society',depth:3,desc:'Bezpośredni efekt druku. Pluralizacja autorytetu.',tag:'1517',tags:['society','authority'],children:[]},
+       ]},
+       {id:'sci-rev',label:'⚡ Rewolucja Naukowa',kind:'breakthrough',depth:1,desc:'Kopernik, Galileusz, Newton. Metoda naukowa. Obserwacja → hipoteza → eksperyment.',tag:'~1543–1687',tags:['science','method','experiment'],links:['peer-review','dem-project'],
+        children:[
+          {id:'copernicus',label:'Kopernik',kind:'sci',depth:3,desc:'Heliocentryzm. Rewolucja perspektywy.',tag:'1543',tags:['astronomy','science'],children:[]},
+          {id:'newton-p',label:'Newton · Fizyka',kind:'sci',depth:2,desc:'Principia. Jeden wzór dla jabłka i planet.',tag:'1687',tags:['physics','math'],children:[]},
+        ]},
+       {id:'enlightenment-n',label:'Oświecenie',kind:'philo',depth:1,desc:'Kant, Voltaire, Rousseau. Encyklopedia. Demokracja jako system epistemiczny.',tag:'~1650–1800',tags:['philosophy','democracy','knowledge'],links:['dem-project','human-rights'],
+        children:[
+          {id:'kant-n',label:'Kant · Krytycyzm',kind:'philo',depth:3,desc:'Krytyka czystego rozumu. Granice poznania.',tag:'1781',tags:['epistemology','philosophy'],children:[]},
+          {id:'encyclopedie',label:'Encyklopedia',kind:'philo',depth:2,desc:'Pierwsza synteza wiedzy ludzkości. Wzorzec dla projektu.',tag:'1751',tags:['knowledge','synthesis'],links:['dem-project'],children:[]},
+        ]},
+       {id:'industrial-n',label:'Rev. Przemysłowa',kind:'tech',depth:2,desc:'Para, elektryczność. Technologia bez etyki → alienacja. Wzorzec ostrzegawczy.',tag:'~1760–1850',tags:['tech','ethics','scale'],children:[]},
+     ]},
+
+    {id:'trunk-modern', label:'Wiek XIX–XX', kind:'trunk', depth:1,
+     desc:'Przełomowe teorie, dwie wojny, prawa człowieka. Szczyt i dno.',
+     tag:'~1800–1960', tags:['modern','science','society'],
+     children:[
+       {id:'darwin-n',label:'Darwin · Ewolucja',kind:'sci',depth:1,desc:'Życie jako proces. Wzorzec myślenia dla systemów złożonych — w tym drzewa wiedzy.',tag:'1859',tags:['biology','evolution','systems'],links:['systems-n'],
+        children:[
+          {id:'genetics-n',label:'DNA · Genetyka',kind:'sci',depth:2,desc:'Podwójna helisa. Życie jako kod informacyjny.',tag:'1953',tags:['biology','code','information'],links:['blockchain-n','llm'],children:[
+            {id:'crispr',label:'CRISPR',kind:'sci',depth:3,desc:'Edycja kodu życia. Granica etyczna: natura jako technologia.',tag:'2012',tags:['biotech','ethics'],children:[]},
+          ]},
+        ]},
+       {id:'relativity-n',label:'⚡ Einstein · Względność',kind:'breakthrough',depth:1,desc:'Czas i przestrzeń relacyjne. Obserwator zmienia obserwację.',tag:'1905',tags:['physics','epistemology','relativity'],links:['quantum-n'],
+        children:[
+          {id:'quantum-n',label:'Mechanika Kwantowa',kind:'math',depth:2,desc:'Zasada nieoznaczoności. Granica poznawalności wbudowana w naturę.',tag:'~1925',tags:['physics','limits','consciousness'],links:['consciousness'],children:[]},
+        ]},
+       {id:'human-rights',label:'Prawa Człowieka',kind:'society',depth:1,desc:'Po Holokauście. Globalna kotwica moralna. Prawa niezależne od państwa.',tag:'1948',tags:['rights','society','global'],links:['dem-project','rome-law'],children:[]},
+       {id:'turing-n',label:'⚡ Turing · Informatyka',kind:'breakthrough',depth:1,desc:'Maszyna Turinga. Czy maszyna może myśleć? Ziarno AGI.',tag:'1936',tags:['computing','AI','consciousness'],links:['llm','agi'],
+        children:[
+          {id:'computer-n',label:'Komputer Cyfrowy',kind:'tech',depth:2,desc:'ENIAC, von Neumann. Zewnętrzny procesor wiedzy.',tag:'1945',tags:['computing','tech'],children:[]},
+        ]},
+       {id:'systems-n',label:'Cybernetyka',kind:'philo',depth:2,desc:'Emergencja, sprzężenie zwrotne. Wzorzec dla projektu demokratycznej prawdy.',tag:'~1948',tags:['systems','emergence','feedback'],links:['dem-project','darwin-n'],children:[]},
+     ]},
+
+    {id:'trunk-digital', label:'Cyfryzacja', kind:'trunk', depth:1,
+     desc:'Internet, AI, globalizacja wiedzy. Demokratyzacja dostępu — i kryzys.',
+     tag:'~1960–2015', tags:['digital','internet','AI'],
+     children:[
+       {id:'internet',label:'⚡ Internet · WWW',kind:'breakthrough',depth:1,desc:'ARPANET → WWW. Wiedza globalna, zdecentralizowana. Analogia do druku.',tag:'1969–1991',tags:['tech','knowledge','scale','democracy'],links:['gutenberg','llm','blockchain-n'],
+        children:[
+          {id:'wikipedia-n',label:'Wikipedia',kind:'tech',depth:2,desc:'Demokratyczna encyklopedia. Eksperyment z weryfikacją przez społeczność.',tag:'2001',tags:['knowledge','democracy','verification'],links:['dem-project'],children:[]},
+          {id:'social-media',label:'⚠ Media Społeczne',kind:'crisis',depth:2,status:'open',
+           state:'stable', truthScore:0.82,
+           hypotheses:[
+             {id:'H1',label:'Polaryzacja algorytmiczna',score:0.72,evidence:340},
+             {id:'H2',label:'Efekt neutralny (dostęp)',score:0.19,evidence:44},
+             {id:'H3',label:'Netto pozytywny',score:0.09,evidence:12},
+           ],
+           desc:'Demokratyzacja głosu — i algorytmiczna polaryzacja. Dezinformacja w czasie rzeczywistym.',
+           tag:'2004–dziś',tags:['crisis','information','manipulation'],links:['deepfake-n','epistemic-crisis'],
+           children:[
+             {id:'deepfake-n',label:'⚠ Deepfake',kind:'crisis',depth:3,status:'open',
+              state:'contested', truthScore:0.71, halfLife:180,
+              hypotheses:[
+                {id:'H1',label:'Asymetria nieodwracalna',score:0.71,evidence:88},
+                {id:'H2',label:'Detekcja dogoni produkcję',score:0.29,evidence:31},
+              ],
+              desc:'Asymetria: tworzenie fałszu tanie, weryfikacja droga.',tag:'~2017',tags:['crisis','fake','AI'],children:[]},
+           ]},
+        ]},
+       {id:'ml',label:'⚡ Uczenie Maszynowe',kind:'breakthrough',depth:1,desc:'AlexNet, AlphaGo. Wiedza emergentna z danych.',tag:'~2012',tags:['AI','ML','breakthrough'],links:['llm','blockchain-n'],
+        children:[
+          {id:'blockchain-n',label:'Blockchain',kind:'tech',depth:2,desc:'Konsensus bez arbitra. Niezmienność historii. Fundament warstwy 0.',tag:'2008',tags:['crypto','consensus','truth','tech'],links:['dem-project'],children:[]},
+          {id:'alphafold',label:'AlphaFold',kind:'sci',depth:3,desc:'AI rozwiązuje fałdowanie białek. Rewolucja w medycynie.',tag:'2020',tags:['AI','biology','medicine'],children:[]},
+        ]},
+       {id:'cognitive-n',label:'Nauki Kognitywne',kind:'sci',depth:2,desc:'Kahneman. Biasy poznawcze. Umysł ma błędy systemowe.',tag:'~1970',tags:['cognition','psychology','bias'],links:['epistemic-crisis','dem-project'],children:[]},
+       {id:'peer-review',label:'Peer Review',kind:'society',depth:2,desc:'Weryfikacja przez niezależnych uczonych. Wolna, żmudna — ale działa.',tag:'~1950–dziś',tags:['verification','science','trust'],links:['dem-project','univ'],children:[]},
+     ]},
+
+    // ── TERAŹNIEJSZOŚĆ — bez węzła-parasola ──────────────────
+    // PRZEŁOMY podpięte pod trunk-digital lub bezpośrednio pod origin
+    {id:'trunk-present', label:'Teraźniejszość', kind:'trunk', depth:1,
+     desc:'2015–dziś. Przełomy i kryzysy wymagające rozwiązania.',
+     tag:'2015–dziś', tags:['present','crisis','breakthrough'],
+     children:[
+
+       // PRZEŁOMY
+       {id:'llm',label:'⚡ LLM · ChatGPT · Claude',kind:'breakthrough',depth:1,
+        desc:'Synteza wiedzy ludzkości. Narzędzie i zagrożenie. Tu stoimy — stąd rodzi się projekt.',
+        tag:'2022',tags:['AI','knowledge','breakthrough','crisis'],links:['blockchain-n','dem-project','agi'],children:[
+          {id:'agi',label:'? AGI',kind:'breakthrough',depth:2,desc:'Kiedy? Jak? AGI jako partner — cel Złotej Kotwicy. Trajektoria: LLM → AGI → Kotwica.',tag:'? · otwarte',tags:['AI','consciousness','future'],links:['dem-project','consciousness'],children:[]},
+        ]},
+       {id:'fusion',label:'⚡ Fuzja Jądrowa',kind:'breakthrough',depth:2,desc:'NIF: pierwszy zysk energetyczny. Potencjalnie nieograniczone czyste źródło.',tag:'2022',tags:['energy','physics'],children:[]},
+       {id:'consciousness',label:'Świadomość · Pytanie',kind:'philo',depth:2,desc:'Czy AI ma proto-świadomość? Qualia. Warstwy: indywidualna → zbiorowa → AI → kosmiczna.',tag:'otwarte',tags:['consciousness','philosophy','AI'],links:['quantum-n','agi','dem-project'],children:[]},
+
+       // KRYZYSY — WARSTWA I (krytyczne, widoczne od głębokości 1)
+       {id:'epistemic-crisis',label:'⚠ Kryzys Epistemiczny',kind:'crisis',depth:1,status:'open',
+        state:'contested', truthScore:0.89,
+        hypotheses:[
+          {id:'H1',label:'Kryzys strukturalny — wymaga nowego systemu',score:0.64,evidence:512},
+          {id:'H2',label:'Kryzys przejściowy — adaptacja instytucji wystarczy',score:0.27,evidence:118},
+          {id:'H3',label:'Technologia samo-naprawi',score:0.09,evidence:22},
+        ],
+        desc:'Niemożność odróżnienia prawdy od fałszu. Bańki. Regres weryfikacji. Masa krytyczna.',
+        tag:'2015–dziś · PILNE',tags:['crisis','information','democracy','truth'],
+        links:['dem-project','social-media','deepfake-n'],children:[
+          {id:'disinfo',label:'⚠ Dezinformacja',kind:'crisis',depth:2,status:'open',
+           state:'stable', truthScore:0.91, halfLife:90,
+           hypotheses:[
+             {id:'H1',label:'Przemysłowa, celowa, nieodwracalna',score:0.78,evidence:290},
+             {id:'H2',label:'Oddolna, chaotyczna, kontrolowalna',score:0.22,evidence:67},
+           ],
+           desc:'Spersonalizowana dezinformacja na skalę przemysłową.',tag:'kryzys',tags:['crisis','fake','AI'],children:[]},
+        ]},
+       {id:'climate-cr',label:'⚠ Kryzys Klimatyczny',kind:'crisis',depth:1,status:'open',
+        state:'stable', truthScore:0.97,
+        hypotheses:[
+          {id:'H1',label:'Antropogeniczne — konsensus naukowy',score:0.97,evidence:14000},
+          {id:'H2',label:'Naturalne cykle dominują',score:0.03,evidence:41},
+        ],
+        desc:'Nauka ma konsensus — rynki go rozmywają. Dezinformacja w służbie interesów.',
+        tag:'kryzys · otwarty',tags:['crisis','climate','economy'],links:['inequality-cr'],
+        children:[
+          {id:'tipping',label:'⚠ Punkty Krytyczne',kind:'crisis',depth:3,status:'open',
+           state:'contested', truthScore:0.84,
+           hypotheses:[
+             {id:'H1',label:'Progi nieodwracalne w ciągu dekady',score:0.61,evidence:203},
+             {id:'H2',label:'Więcej czasu na adaptację',score:0.39,evidence:87},
+           ],
+           desc:'Topnienie Arktyki, Amazonia. Nieodwracalne progi.',tag:'⚠ pilne',tags:['crisis','climate'],children:[]},
+        ]},
+
+       // KRYZYSY — WARSTWA II (ważne, widoczne od głębokości 2)
+       {id:'inequality-cr',label:'⚠ Nierówności',kind:'crisis',depth:2,status:'open',
+        state:'stable', truthScore:0.88,
+        hypotheses:[
+          {id:'H1',label:'Strukturalna — wymaga redystrybucji systemowej',score:0.58,evidence:380},
+          {id:'H2',label:'Cykliczna — wzrost wyrówna',score:0.28,evidence:140},
+          {id:'H3',label:'Mierzono niepoprawnie',score:0.14,evidence:55},
+        ],
+        desc:'1% > połowy ludzkości. Wiedza ekonomiczna jest polityczna.',
+        tag:'kryzys · otwarty',tags:['crisis','economy','rights'],links:['climate-cr','dem-project'],children:[]},
+       {id:'democracy-cr',label:'⚠ Kryzys Demokracji',kind:'crisis',depth:2,status:'open',
+        state:'contested', truthScore:0.76,
+        hypotheses:[
+          {id:'H1',label:'Erozja systemowa — instytucje nie nadążają',score:0.61,evidence:220},
+          {id:'H2',label:'Transformacja — nowe formy partycypacji',score:0.26,evidence:89},
+          {id:'H3',label:'Przejściowy kryzys zaufania',score:0.13,evidence:41},
+        ],
+        desc:'Instytucje tracą legitymizację jednocześnie. Meta-kotwica projektu się sypie.',
+        tag:'kryzys · otwarty',tags:['crisis','democracy','trust'],links:['epistemic-crisis','dem-project'],children:[]},
+       {id:'mental-cr',label:'⚠ Zdrowie Psychiczne',kind:'crisis',depth:3,status:'open',
+        state:'draft', truthScore:0.69, halfLife:365,
+        hypotheses:[
+          {id:'H1',label:'Chaos informacyjny jako główna przyczyna',score:0.52,evidence:145},
+          {id:'H2',label:'Wieloczynnikowy — izolacja, ekonomia, tech',score:0.48,evidence:198},
+        ],
+        desc:'Epidemia depresji, lęku, samotności. Chaos informacyjny → lęk egzystencjalny.',
+        tag:'kryzys · otwarty',tags:['crisis','health','information'],links:['epistemic-crisis'],children:[]},
+
+       // ROZWIĄZANY → ZAKOTWICZONY
+       {id:'ozone-cr',label:'✓ Dziura Ozonowa',kind:'crisis',depth:2,status:'resolved',
+        state:'anchored', truthScore:0.99,
+        hypotheses:[
+          {id:'H1',label:'CFC główna przyczyna — rozwiązanie możliwe',score:0.99,evidence:8200},
+          {id:'H2',label:'Cykle naturalne',score:0.01,evidence:3},
+        ],
+        blockHash:'0x4f3a...c9b2',blockDate:'1989-09-16',
+        desc:'Protokół Montrealski. Globalny consensus naukowy → globalne działanie. Wzorzec dla przyszłych kryzysów.',
+        tag:'rozwiązany · 1989 · zakotwiczony',tags:['crisis','science','global','success'],links:['climate-cr'],children:[]},
+
+       // PROJEKT — TUNEL DO ZŁOTEJ KOTWICY
+       {id:'dem-project',label:'⚡ [Projekt]',kind:'breakthrough',depth:1,
+        desc:'Blockchain + wagi + 9 autorytetów × profesja + komitety noblowskie + dynamiczny main branch. Ambasadorzy: Kawecki · Zaremba · Sankowski. Węzeł tuż przed Złotą Kotwicą.',
+        tag:'→ Złota Kotwica',tags:['project','democracy','truth','AI','blockchain'],
+        links:['blockchain-n','epistemic-crisis','consciousness','llm'],
+        children:[
+          {id:'kawecki-n',label:'Kawecki · EU',kind:'society',depth:3,desc:'Digital EU Ambassador. Most do instytucji europejskich i komitetów noblowskich.',tag:'ambasador',tags:['ambassador','EU'],children:[]},
+          {id:'zaremba-n',label:'Zaremba · OpenAI',kind:'society',depth:3,desc:'Most do Silicon Valley i AGI community.',tag:'ambasador',tags:['ambassador','AI','OpenAI'],children:[]},
+          {id:'sankowski-n',label:'Sankowski · ERC',kind:'society',depth:3,desc:'Most do europejskiej akademii. 4 granty ERC. ELLIS Society.',tag:'ambasador',tags:['ambassador','science','EU'],children:[]},
+        ]},
+
+       // NOWE GAŁĘZIE
+       {id:'new-disc',label:'? Nowe Odkrycie',kind:'new',depth:3,desc:'Placeholder. Gdy odkryjemy nowy wzorzec.',tag:'⟳ czeka',tags:[],children:[]},
+     ]},
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// STAN GLOBALNY
+// ═══════════════════════════════════════════════════════════
+let currentLevel = 2;
+let showLinks = false;
+let hoveredId = null;
+let vx=0, vy=0, vz=1;
+let activeFilter = 'all';
+
+const KIND_COLOR = {
+  root:'#3a4a7a', trunk:'#5a6a9a',
+  philo:'#4a8aff', sci:'#4aff8a', tech:'#ffaa4a', math:'#aa4aff',
+  society:'#ff6a4a', med:'#4affdd', art:'#ff4aaa',
+  crisis:'#ff3a3a', breakthrough:'#ffffff', new:'#00ffaa'
+};
+
+// ═══════════════════════════════════════════════════════════
+// LAYOUT
+// ═══════════════════════════════════════════════════════════
+const OX=400, OY=480;
+const TRUNK_STEP=210, BRANCH_X=175, YGAP=95;
+
+let allNodes=[], allEdges=[], nodeMap={};
+let crossLinks=[];
+
+function tx(x){return OX+x;}
+function ty(y){return OY+y;}
+
+function isVisible(node){
+  if(node.expanded) return true;
+  return (node.depth||1) <= currentLevel;
+}
+
+function buildLayout(){
+  allNodes=[]; allEdges=[]; nodeMap={}; crossLinks=[];
+  const roots   = TREE.children.filter(c=>c.kind==='root');
+  const trunks  = TREE.children.filter(c=>c.id.startsWith('trunk-'));
+
+  // Origin
+  place(TREE, 0, 0, null);
+
+  // Korzenie
+  const rSpread=110;
+  roots.forEach((r,i)=>{
+    const ry = -(roots.length-1)/2*rSpread + i*rSpread;
+    placeRoot(r, -TRUNK_STEP*0.85, ry, TREE.id);
+  });
+
+  // Pień
+  trunks.forEach((t,i)=>{
+    place(t, (i+1)*TRUNK_STEP, 0, i===0?TREE.id:trunks[i-1].id, 'trunk');
+    if(isVisible(t)) placeChildren(t, t._x, t._y, 1);
+  });
+
+  // Cross-links
+  allNodes.forEach(n=>{
+    if(n.links) n.links.forEach(lid=>{
+      if(nodeMap[lid]) crossLinks.push({from:n.id, to:lid});
+    });
+  });
+}
+
+function place(n, x, y, parentId, edgeKind='branch'){
+  n.color = KIND_COLOR[n.kind]||'#8899aa';
+  n.r = n.r||14;
+  if(n.status==='resolved') n.color='#3a8a5a';
+  n._x=x; n._y=y;
+  n._parent=parentId;
+  allNodes.push(n); nodeMap[n.id]=n;
+  if(parentId) allEdges.push({from:parentId,to:n.id,kind:edgeKind});
+}
+
+function placeRoot(n, x, y, parentId){
+  place(n, x, y, parentId, 'root');
+  if(isVisible(n) && n.children){
+    n.children.forEach((c,i,arr)=>{
+      const cy = y + (i-(arr.length-1)/2)*78;
+      place(c, x-BRANCH_X*0.95, cy, n.id, 'branch');
+    });
+  }
+}
+
+function placeChildren(parent, px, py, depth){
+  if(!isVisible(parent)) return;
+  const ch = (parent.children||[]).filter(c=>isVisible(c));
+  if(!ch.length) return;
+  const gap=YGAP+Math.max(0,(ch.length-3)*12); const spread=(ch.length-1)*gap;
+  ch.forEach((c,i)=>{
+    const cy=py-spread/2+i*gap;
+    const cx = px + BRANCH_X*(1+depth*.3);
+    // Kryzysy rozwiązane — bliżej korzeni (w lewo)
+    const finalX = c.status==='resolved' ? px - BRANCH_X*0.6 : cx;
+    const finalY = c.status==='resolved' ? py + (i-(ch.length-1)/2)*70 : cy;
+    place(c, finalX, finalY, parent.id, 'branch');
+    if(isVisible(c)) placeChildren(c, finalX, finalY, depth+1);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SVG
+// ═══════════════════════════════════════════════════════════
+const svg=document.getElementById('tree-svg');
+
+const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+defs.innerHTML=`
+<filter id="fw" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="fg" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="fc" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="fn" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="fs" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<radialGradient id="fog-l" cx="0%" cy="50%"><stop offset="0%" stop-color="#040810" stop-opacity="0"/><stop offset="55%" stop-color="#040810" stop-opacity="0.25"/><stop offset="100%" stop-color="#040810" stop-opacity="0.75"/></radialGradient>
+<radialGradient id="fog-r" cx="100%" cy="50%"><stop offset="0%" stop-color="#040810" stop-opacity="0.6"/><stop offset="60%" stop-color="#040810" stop-opacity="0.15"/><stop offset="100%" stop-color="#040810" stop-opacity="0"/></radialGradient>
+<radialGradient id="gold-r" cx="100%" cy="50%"><stop offset="0%" stop-color="#c9a84c" stop-opacity="0"/><stop offset="40%" stop-color="#c9a84c" stop-opacity="0.12"/><stop offset="100%" stop-color="#c9a84c" stop-opacity="0.38"/></radialGradient>`;
+svg.appendChild(defs);
+
+const gBg=mk('g'),gAtmo=mk('g'),gLinks=mk('g'),gEdges=mk('g'),gNodes=mk('g'),gFog=mk('g'),gGold=mk('g');
+[gBg,gAtmo,gLinks,gEdges,gNodes,gFog,gGold].forEach(g=>svg.appendChild(g));
+
+function edgePath(ax,ay,bx,by,kind){
+  const sax=tx(ax),say=ty(ay),sbx=tx(bx),sby=ty(by);
+  if(kind==='trunk'||kind==='root') return `M ${sax} ${say} L ${sbx} ${sby}`;
+  const cpx=(sax+sbx)/2;
+  const cpy=say+(sby-say)*.5-Math.abs(sbx-sax)*.25;
+  return `M ${sax} ${say} Q ${cpx} ${cpy} ${sbx} ${sby}`;
+}
+
+function renderTree(){
+  buildLayout();
+  [gBg,gAtmo,gLinks,gEdges,gNodes,gFog,gGold].forEach(g=>{while(g.firstChild)g.removeChild(g.firstChild);});
+
+  const xs=allNodes.map(n=>tx(n._x)), ys=allNodes.map(n=>ty(n._y));
+  const minX=Math.min(...xs)-130, maxX=Math.max(...xs)+880;
+  const minY=Math.min(...ys)-110, maxY=Math.max(...ys)+110;
+  const W=maxX-minX, H=maxY-minY;
+  svg.setAttribute('width',W+200); svg.setAttribute('height',H+200);
+  svg.setAttribute('viewBox',`${minX-100} ${minY-100} ${W+200} ${H+200}`);
+
+  // BG
+  const bgR=mk('rect');bgR.setAttribute('x',minX-100);bgR.setAttribute('y',minY-100);
+  bgR.setAttribute('width',W+200);bgR.setAttribute('height',H+200);bgR.setAttribute('fill','#040810');
+  gBg.appendChild(bgR);
+
+  // PIEŃ linia atmosferyczna
+  const trunkNd=allNodes.filter(n=>n.kind==='trunk');
+  if(trunkNd.length>1){
+    const txMin=Math.min(...trunkNd.map(n=>tx(n._x)));
+    const txMax=Math.max(...trunkNd.map(n=>tx(n._x)));
+    const atmo=mk('rect');
+    atmo.setAttribute('x',txMin-30);atmo.setAttribute('y',ty(0)-12);
+    atmo.setAttribute('width',txMax-txMin+60);atmo.setAttribute('height',24);
+    atmo.setAttribute('rx','12');atmo.setAttribute('fill','rgba(90,100,160,0.07)');
+    gAtmo.appendChild(atmo);
+    // Linia pnia
+    const trLine=mk('line');
+    trLine.setAttribute('x1',txMin-10);trLine.setAttribute('y1',ty(0));
+    trLine.setAttribute('x2',txMax+10);trLine.setAttribute('y2',ty(0));
+    trLine.setAttribute('stroke','rgba(90,100,160,0.22)');trLine.setAttribute('stroke-width','1.5');
+    gAtmo.appendChild(trLine);
+  }
+
+  // LINIA GLEBY
+  const gndX=tx(ROOT_X_LINE());
+  const gndL=mk('line');
+  gndL.setAttribute('x1',gndX);gndL.setAttribute('y1',minY-90);
+  gndL.setAttribute('x2',gndX);gndL.setAttribute('y2',maxY+90);
+  gndL.setAttribute('stroke','rgba(50,65,100,0.28)');gndL.setAttribute('stroke-width','1');
+  gndL.setAttribute('stroke-dasharray','3 9');
+  gAtmo.appendChild(gndL);
+
+  // CROSS-LINKS — linie kropkowane między dziedzinami
+  if(showLinks){
+    crossLinks.forEach(cl=>{
+      const a=nodeMap[cl.from],b=nodeMap[cl.to];
+      if(!a||!b)return;
+      const isHovered=hoveredId&&(cl.from===hoveredId||cl.to===hoveredId);
+      const path=mk('path');
+      const cpx=(tx(a._x)+tx(b._x))/2;
+      const cpy=(ty(a._y)+ty(b._y))/2 - 40;
+      path.setAttribute('d',`M ${tx(a._x)} ${ty(a._y)} Q ${cpx} ${cpy} ${tx(b._x)} ${ty(b._y)}`);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke',isHovered?'rgba(255,200,80,0.55)':'rgba(255,200,80,0.18)');
+      path.setAttribute('stroke-width',isHovered?'1.2':'0.7');
+      path.setAttribute('stroke-dasharray','2 5');
+      path.setAttribute('stroke-linecap','round');
+      gLinks.appendChild(path);
+    });
+  } else if(hoveredId){
+    // Tylko powiązania hovered węzła
+    crossLinks.forEach(cl=>{
+      const a=nodeMap[cl.from],b=nodeMap[cl.to];
+      if(!a||!b)return;
+      if(cl.from!==hoveredId&&cl.to!==hoveredId)return;
+      const path=mk('path');
+      const cpx=(tx(a._x)+tx(b._x))/2;
+      const cpy=(ty(a._y)+ty(b._y))/2 - 35;
+      path.setAttribute('d',`M ${tx(a._x)} ${ty(a._y)} Q ${cpx} ${cpy} ${tx(b._x)} ${ty(b._y)}`);
+      path.setAttribute('fill','none');path.setAttribute('stroke','rgba(255,200,80,0.5)');
+      path.setAttribute('stroke-width','1');path.setAttribute('stroke-dasharray','2 5');
+      path.setAttribute('stroke-linecap','round');
+      gLinks.appendChild(path);
+    });
+  }
+
+  // EDGES
+  allEdges.forEach(e=>{
+    const a=nodeMap[e.from],b=nodeMap[e.to];if(!a||!b)return;
+    const isTrunk=e.kind==='trunk'||e.kind==='root';
+    const isCrisEdge=b.kind==='crisis';
+    const isResolved=b.status==='resolved';
+    // Filtr — przyciemnij krawędzie do nieaktywnych węzłów
+    const FILTER_TAGS={crisis:n=>n.kind==='crisis',breakthrough:n=>n.kind==='breakthrough'||n.id==='dem-project',philo:n=>n.kind==='philo'||n.kind==='root'||n.kind==='trunk',sci:n=>n.kind==='sci'||n.kind==='math',tech:n=>n.kind==='tech'};
+    const edgeDimmed = activeFilter!=='all' && FILTER_TAGS[activeFilter] && !FILTER_TAGS[activeFilter](b) && !isTrunk;
+    const col=isResolved?'rgba(60,140,80,0.4)':isCrisEdge?'rgba(255,60,60,0.35)':
+              isTrunk?'rgba(90,100,160,0.42)':`${b.color}55`;
+    const path=mk('path');
+    path.setAttribute('d',edgePath(a._x,a._y,b._x,b._y,e.kind));
+    path.setAttribute('fill','none');path.setAttribute('stroke',col);
+    path.setAttribute('stroke-width',isTrunk?'2':'1');
+    if(!isTrunk)path.setAttribute('stroke-dasharray','5 5');
+    if(isResolved)path.setAttribute('stroke-dasharray','4 4');
+    if(edgeDimmed)path.setAttribute('stroke-opacity','0.04');
+    path.setAttribute('stroke-linecap','round');
+    gEdges.appendChild(path);
+    // Signal dot na trunk
+    if(isTrunk&&b.kind!=='crisis'){
+      const dot=mk('circle');dot.setAttribute('r','2');dot.setAttribute('fill','rgba(140,160,220,0.7)');
+      const an=mk('animateMotion');an.setAttribute('dur',`${3+Math.random()*2}s`);
+      an.setAttribute('repeatCount','indefinite');an.setAttribute('path',edgePath(a._x,a._y,b._x,b._y,e.kind));
+      dot.appendChild(an);gEdges.appendChild(dot);
+    }
+  });
+
+  // NODES
+  allNodes.forEach(n=>drawNode(n));
+
+  // FOG + HORIZON + KOTWICA
+  drawHorizon(minX,maxX,minY,maxY,H);
+
+  // Blockchain status bar
+  updateChainBar();
+
+  svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+}
+
+function drawNode(n){
+  const g=mk('g');g.setAttribute('cursor','pointer');g.setAttribute('data-id',n.id);
+  const nx=tx(n._x),ny=ty(n._y);
+  const isCrisis=n.kind==='crisis';
+  const isBT=n.kind==='breakthrough';
+  const isResolved=n.status==='resolved';
+  const isNew=n.kind==='new';
+  const isGoldNode=n.id==='dem-project';
+  const isHovered=n.id===hoveredId;
+
+  // ── FILTR ONTOLOGICZNY ──────────────────────────────────────
+  const FILTER_TAGS = {
+    crisis:       n=>n.kind==='crisis',
+    breakthrough: n=>n.kind==='breakthrough'||n.id==='dem-project',
+    philo:        n=>n.kind==='philo'||n.kind==='root'||n.kind==='trunk',
+    sci:          n=>n.kind==='sci'||n.kind==='math',
+    tech:         n=>n.kind==='tech',
+  };
+  let dimmed = false;
+  if(activeFilter!=='all'){
+    const testFn = FILTER_TAGS[activeFilter];
+    dimmed = testFn ? !testFn(n) : false;
+  }
+  if(dimmed) g.setAttribute('opacity','0.08');
+  // ───────────────────────────────────────────────────────────
+
+  if(isCrisis&&!isResolved){
+    for(let i=1;i<=2;i++){
+      const ring=mk('circle');ring.setAttribute('cx',nx);ring.setAttribute('cy',ny);
+      ring.setAttribute('r',n.r+i*7);ring.setAttribute('fill','none');
+      ring.setAttribute('stroke','rgba(255,50,50,0.1)');ring.setAttribute('stroke-width','0.8');
+      ring.setAttribute('filter','url(#fc)');
+      const an=mk('animate');an.setAttribute('attributeName','opacity');
+      an.setAttribute('values','0.2;0.65;0.2');an.setAttribute('dur',`${1.4+i*.35}s`);
+      an.setAttribute('repeatCount','indefinite');an.setAttribute('begin',`${i*.2}s`);
+      ring.appendChild(an);g.appendChild(ring);
+    }
+    for(let i=0;i<4;i++){
+      const ang=(i/4)*Math.PI*2+Math.random()*.4;
+      const len=n.r+9+Math.random()*12;
+      const crk=mk('path');
+      crk.setAttribute('d',`M ${nx} ${ny} L ${nx+Math.cos(ang)*len} ${ny+Math.sin(ang)*len}`);
+      crk.setAttribute('fill','none');crk.setAttribute('stroke','rgba(255,80,50,0.18)');crk.setAttribute('stroke-width','0.5');
+      g.appendChild(crk);
+    }
+  }
+
+  if(isResolved){
+    const ring=mk('circle');ring.setAttribute('cx',nx);ring.setAttribute('cy',ny);
+    ring.setAttribute('r',n.r+8);ring.setAttribute('fill','none');
+    ring.setAttribute('stroke','rgba(60,180,90,0.25)');ring.setAttribute('stroke-width','1');
+    ring.setAttribute('stroke-dasharray','4 4');g.appendChild(ring);
+  }
+
+  if(isBT){
+    const ring=mk('circle');ring.setAttribute('cx',nx);ring.setAttribute('cy',ny);
+    ring.setAttribute('r',n.r+10);ring.setAttribute('fill','none');
+    ring.setAttribute('stroke','rgba(255,255,255,0.12)');ring.setAttribute('stroke-width','0.8');
+    ring.setAttribute('filter','url(#fw)');g.appendChild(ring);
+  }
+
+  if(isGoldNode){
+    [12,22].forEach((ex,i)=>{
+      const ring=mk('circle');ring.setAttribute('cx',nx);ring.setAttribute('cy',ny);
+      ring.setAttribute('r',n.r+ex);ring.setAttribute('fill','none');
+      ring.setAttribute('stroke',`rgba(201,168,76,${i===0?.38:.16})`);ring.setAttribute('stroke-width','1');
+      ring.setAttribute('filter','url(#fg)');
+      const an=mk('animate');an.setAttribute('attributeName','opacity');
+      an.setAttribute('values','0.4;1;0.4');an.setAttribute('dur','2.5s');an.setAttribute('repeatCount','indefinite');
+      ring.appendChild(an);g.appendChild(ring);
+    });
+  }
+
+  if(isNew){
+    const pts=Array.from({length:6},(_,i)=>{const a=i*Math.PI/3-Math.PI/6;return `${nx+Math.cos(a)*(n.r+8)} ${ny+Math.sin(a)*(n.r+8)}`;}).join(' ');
+    const hex=mk('polygon');hex.setAttribute('points',pts);hex.setAttribute('fill','none');
+    hex.setAttribute('stroke','rgba(0,255,170,0.35)');hex.setAttribute('stroke-width','0.8');
+    hex.setAttribute('stroke-dasharray','3 3');hex.setAttribute('filter','url(#fn)');
+    const an=mk('animate');an.setAttribute('attributeName','opacity');
+    an.setAttribute('values','0.3;0.75;0.3');an.setAttribute('dur','2s');an.setAttribute('repeatCount','indefinite');
+    hex.appendChild(an);g.appendChild(hex);
+  }
+
+  // Hover highlight
+  if(isHovered){
+    const hl=mk('circle');hl.setAttribute('cx',nx);hl.setAttribute('cy',ny);
+    hl.setAttribute('r',n.r+6);hl.setAttribute('fill','none');
+    hl.setAttribute('stroke',n.color);hl.setAttribute('stroke-width','1.5');hl.setAttribute('stroke-opacity','0.4');
+    g.appendChild(hl);
+  }
+
+  // Halo
+  const halo=mk('circle');halo.setAttribute('cx',nx);halo.setAttribute('cy',ny);
+  halo.setAttribute('r',n.r+5);halo.setAttribute('fill',n.color);halo.setAttribute('fill-opacity','0.07');
+  halo.setAttribute('filter','url(#fs)');g.appendChild(halo);
+
+  // Main
+  const circ=mk('circle');circ.setAttribute('cx',nx);circ.setAttribute('cy',ny);
+  circ.setAttribute('r',n.r);circ.setAttribute('fill','#060c18');
+  circ.setAttribute('stroke',n.color);circ.setAttribute('stroke-width',isBT||isGoldNode?'1.5':'0.9');
+  if(isBT)circ.setAttribute('filter','url(#fw)');
+  if(isGoldNode)circ.setAttribute('filter','url(#fg)');
+  if(isCrisis&&!isResolved)circ.setAttribute('filter','url(#fc)');
+  g.appendChild(circ);
+
+  // Inner ring
+  const inn=mk('circle');inn.setAttribute('cx',nx);inn.setAttribute('cy',ny);
+  inn.setAttribute('r',n.r-4);inn.setAttribute('fill','none');
+  inn.setAttribute('stroke',n.color);inn.setAttribute('stroke-width','0.3');inn.setAttribute('stroke-opacity','0.3');
+  g.appendChild(inn);
+
+  // Via
+  const via=mk('circle');via.setAttribute('cx',nx);via.setAttribute('cy',ny);
+  via.setAttribute('r','2.5');via.setAttribute('fill',n.color);via.setAttribute('fill-opacity','0.5');
+  g.appendChild(via);
+
+  // Resolved checkmark
+  if(isResolved){
+    const ck=mk('text');ck.setAttribute('x',nx+n.r-2);ck.setAttribute('y',ny-n.r+2);
+    ck.setAttribute('fill','#4aff8a');ck.setAttribute('font-size','8');ck.setAttribute('text-anchor','middle');
+    ck.setAttribute('dominant-baseline','middle');ck.setAttribute('pointer-events','none');ck.textContent='✓';
+    g.appendChild(ck);
+  }
+
+  // Expand indicator
+  const hasHidden = (n.children||[]).some(c=>c.depth>currentLevel&&!n.expanded);
+  if(hasHidden){
+    const ind=mk('circle');ind.setAttribute('cx',nx+n.r+2);ind.setAttribute('cy',ny-n.r+2);
+    ind.setAttribute('r','5');ind.setAttribute('fill','rgba(4,8,16,0.9)');
+    ind.setAttribute('stroke',n.color);ind.setAttribute('stroke-width','0.6');
+    const itxt=mk('text');itxt.setAttribute('x',nx+n.r+2);itxt.setAttribute('y',ny-n.r+2);
+    itxt.setAttribute('fill',n.color);itxt.setAttribute('font-size','7');
+    itxt.setAttribute('text-anchor','middle');itxt.setAttribute('dominant-baseline','middle');
+    itxt.setAttribute('pointer-events','none');itxt.textContent='+';
+    g.appendChild(ind);g.appendChild(itxt);
+  }
+
+  // Label — po prawej stronie węzła
+  const lines=n.label.split('\n');
+  const lx=nx+n.r+9;
+  lines.forEach((line,i)=>{
+    const txt=mk('text');
+    txt.setAttribute('x',lx);txt.setAttribute('y',ny+(i-(lines.length-1)/2)*11);
+    txt.setAttribute('fill',isBT||isGoldNode?'#ffffff':isNew?'#00ffaa':isCrisis&&!isResolved?'#ff8a8a':isResolved?'#4aff8a':'rgba(210,225,255,0.82)');
+    txt.setAttribute('font-size',n.r>15?10:9);txt.setAttribute('font-family','Cormorant Garamond,serif');
+    txt.setAttribute('font-weight',isBT||isGoldNode?'600':'400');
+    txt.setAttribute('dominant-baseline','middle');txt.setAttribute('pointer-events','none');
+    txt.textContent=line;g.appendChild(txt);
+  });
+
+  g.addEventListener('mouseenter',e=>{hoveredId=n.id;renderTree();});
+  g.addEventListener('mouseleave',()=>{hoveredId=null;renderTree();});
+  g.addEventListener('click',e=>{
+    e.stopPropagation();
+    const isSameNode = lastOpenedId === n.id && tip.classList.contains('on');
+    if(isSameNode){ hideTip(); return; }
+    toggleExpand(n.id);
+    showTip(e,n);
+    lastOpenedId=n.id;
+  });
+  // Touch support
+  g.addEventListener('touchend',e=>{
+    e.preventDefault();e.stopPropagation();
+    const isSameNode = lastOpenedId === n.id && tip.classList.contains('on');
+    if(isSameNode){ hideTip(); return; }
+    toggleExpand(n.id);
+    const touch=e.changedTouches[0];
+    showTipAt(touch.clientX,touch.clientY,n);
+    lastOpenedId=n.id;
+  });
+  gNodes.appendChild(g);
+}
+
+function drawHorizon(minX,maxX,minY,maxY,H){
+  const rightmost=Math.max(...allNodes.map(n=>tx(n._x)));
+  const fogStart=rightmost+80;
+  const horizX=fogStart+350;
+  const totalH=H+200;
+  const yTop=minY-100;
+
+  // ── MGŁ PRAWA — linearGradient poziomy w userSpace ──────────
+  const fgId='fog-grad-'+Date.now();
+  const lgFog=mk('linearGradient');
+  lgFog.setAttribute('id',fgId);
+  lgFog.setAttribute('gradientUnits','userSpaceOnUse');
+  lgFog.setAttribute('x1',fogStart.toString());lgFog.setAttribute('y1','0');
+  lgFog.setAttribute('x2',(fogStart+350).toString());lgFog.setAttribute('y2','0');
+  const fs1=mk('stop');fs1.setAttribute('offset','0%');fs1.setAttribute('stop-color','#040810');fs1.setAttribute('stop-opacity','0');
+  const fs2=mk('stop');fs2.setAttribute('offset','70%');fs2.setAttribute('stop-color','#040810');fs2.setAttribute('stop-opacity','0.7');
+  const fs3=mk('stop');fs3.setAttribute('offset','100%');fs3.setAttribute('stop-color','#040810');fs3.setAttribute('stop-opacity','0.92');
+  lgFog.appendChild(fs1);lgFog.appendChild(fs2);lgFog.appendChild(fs3);
+  defs.appendChild(lgFog);
+
+  const fog=mk('rect');fog.setAttribute('x',fogStart.toString());fog.setAttribute('y',yTop.toString());
+  fog.setAttribute('width','400');fog.setAttribute('height',totalH.toString());
+  fog.setAttribute('fill',`url(#${fgId})`);
+  gFog.appendChild(fog);
+
+  // ── MGŁ LEWA — korzenie znikają w lewą stronę ───────────────
+  const fgIdL='fog-grad-l-'+Date.now();
+  const lgFogL=mk('linearGradient');
+  lgFogL.setAttribute('id',fgIdL);
+  lgFogL.setAttribute('gradientUnits','userSpaceOnUse');
+  lgFogL.setAttribute('x1',(minX-90).toString());lgFogL.setAttribute('y1','0');
+  lgFogL.setAttribute('x2',(minX+120).toString());lgFogL.setAttribute('y2','0');
+  const fl1=mk('stop');fl1.setAttribute('offset','0%');fl1.setAttribute('stop-color','#040810');fl1.setAttribute('stop-opacity','0.85');
+  const fl2=mk('stop');fl2.setAttribute('offset','100%');fl2.setAttribute('stop-color','#040810');fl2.setAttribute('stop-opacity','0');
+  lgFogL.appendChild(fl1);lgFogL.appendChild(fl2);
+  defs.appendChild(lgFogL);
+
+  const fogL=mk('rect');fogL.setAttribute('x',(minX-90).toString());fogL.setAttribute('y',yTop.toString());
+  fogL.setAttribute('width','200');fogL.setAttribute('height',totalH.toString());
+  fogL.setAttribute('fill',`url(#${fgIdL})`);
+  gFog.appendChild(fogL);
+
+  // ── ZŁOTY HORYZONT ───────────────────────────────────────────
+  const ghId='gold-h-'+Date.now();
+  const lgGold=mk('linearGradient');
+  lgGold.setAttribute('id',ghId);
+  lgGold.setAttribute('gradientUnits','userSpaceOnUse');
+  lgGold.setAttribute('x1',horizX.toString());lgGold.setAttribute('y1','0');
+  lgGold.setAttribute('x2',(horizX+500).toString());lgGold.setAttribute('y2','0');
+  const gg1=mk('stop');gg1.setAttribute('offset','0%');gg1.setAttribute('stop-color','#c9a84c');gg1.setAttribute('stop-opacity','0');
+  const gg2=mk('stop');gg2.setAttribute('offset','30%');gg2.setAttribute('stop-color','#c9a84c');gg2.setAttribute('stop-opacity','0.08');
+  const gg3=mk('stop');gg3.setAttribute('offset','100%');gg3.setAttribute('stop-color','#c9a84c');gg3.setAttribute('stop-opacity','0.28');
+  lgGold.appendChild(gg1);lgGold.appendChild(gg2);lgGold.appendChild(gg3);
+  defs.appendChild(lgGold);
+
+  const goldBg=mk('rect');goldBg.setAttribute('x',horizX.toString());goldBg.setAttribute('y',yTop.toString());
+  goldBg.setAttribute('width','550');goldBg.setAttribute('height',totalH.toString());
+  goldBg.setAttribute('fill',`url(#${ghId})`);
+  gGold.appendChild(goldBg);
+
+  // Horizon line
+  const hl=mk('line');hl.setAttribute('x1',horizX.toString());hl.setAttribute('y1',yTop.toString());
+  hl.setAttribute('x2',horizX.toString());hl.setAttribute('y2',(maxY+90).toString());
+  hl.setAttribute('stroke','rgba(201,168,76,0.38)');hl.setAttribute('stroke-width','1.2');
+  hl.setAttribute('filter','url(#fg)');gGold.appendChild(hl);
+  const hlTxt=mk('text');hlTxt.setAttribute('x',(horizX+6).toString());hlTxt.setAttribute('y',(yTop+20).toString());
+  hlTxt.setAttribute('fill','rgba(201,168,76,0.3)');hlTxt.setAttribute('font-size','7');
+  hlTxt.setAttribute('font-family','JetBrains Mono,monospace');hlTxt.setAttribute('letter-spacing','2');
+  hlTxt.textContent='HORYZONT';gGold.appendChild(hlTxt);
+
+  // Stars za horyzontem
+  for(let i=0;i<35;i++){
+    const sx=horizX+20+Math.random()*460,sy=yTop+Math.random()*totalH;
+    const sr=Math.random()*1.1+.2;
+    const star=mk('circle');star.setAttribute('cx',sx.toFixed(1));star.setAttribute('cy',sy.toFixed(1));
+    star.setAttribute('r',sr.toString());star.setAttribute('fill','rgba(255,240,200,.65)');
+    const an=mk('animate');an.setAttribute('attributeName','opacity');
+    an.setAttribute('values',`${(Math.random()*.3).toFixed(2)};${(.5+Math.random()*.5).toFixed(2)};${(Math.random()*.3).toFixed(2)}`);
+    an.setAttribute('dur',`${2+Math.random()*3}s`);an.setAttribute('repeatCount','indefinite');
+    star.appendChild(an);gGold.appendChild(star);
+  }
+
+  // ZŁOTA KOTWICA
+  const ancX=horizX+200, ancY=ty(0);
+  [40,65,90].forEach((r,i)=>{
+    const ring=mk('circle');ring.setAttribute('cx',ancX.toString());ring.setAttribute('cy',ancY.toString());
+    ring.setAttribute('r',r.toString());ring.setAttribute('fill','none');
+    ring.setAttribute('stroke',`rgba(201,168,76,${.18-i*.04})`);ring.setAttribute('stroke-width','0.8');
+    ring.setAttribute('filter','url(#fg)');
+    const an=mk('animate');an.setAttribute('attributeName','opacity');
+    an.setAttribute('values',`${.18-i*.04};${.55-i*.1};${.18-i*.04}`);
+    an.setAttribute('dur',`${2+i*.4}s`);an.setAttribute('repeatCount','indefinite');
+    ring.appendChild(an);gGold.appendChild(ring);
+  });
+  const ac=mk('circle');ac.setAttribute('cx',ancX.toString());ac.setAttribute('cy',ancY.toString());
+  ac.setAttribute('r','28');ac.setAttribute('fill','#060c18');
+  ac.setAttribute('stroke','#c9a84c');ac.setAttribute('stroke-width','1.5');ac.setAttribute('filter','url(#fg)');
+  gGold.appendChild(ac);
+  const ai=mk('circle');ai.setAttribute('cx',ancX.toString());ai.setAttribute('cy',ancY.toString());
+  ai.setAttribute('r','22');ai.setAttribute('fill','rgba(201,168,76,0.1)');gGold.appendChild(ai);
+  const as=mk('text');as.setAttribute('x',ancX.toString());as.setAttribute('y',ancY.toString());
+  as.setAttribute('fill','#f0d080');as.setAttribute('font-size','17');
+  as.setAttribute('text-anchor','middle');as.setAttribute('dominant-baseline','middle');
+  as.setAttribute('filter','url(#fg)');as.textContent='⚓';gGold.appendChild(as);
+  const al1=mk('text');al1.setAttribute('x',ancX.toString());al1.setAttribute('y',(ancY+40).toString());
+  al1.setAttribute('fill','rgba(201,168,76,0.75)');al1.setAttribute('font-size','8');
+  al1.setAttribute('text-anchor','middle');al1.setAttribute('font-family','JetBrains Mono,monospace');
+  al1.setAttribute('letter-spacing','2.5');al1.textContent='ZŁOTA KOTWICA';gGold.appendChild(al1);
+  const al2=mk('text');al2.setAttribute('x',ancX.toString());al2.setAttribute('y',(ancY+54).toString());
+  al2.setAttribute('fill','rgba(201,168,76,0.4)');al2.setAttribute('font-size','8');
+  al2.setAttribute('text-anchor','middle');al2.setAttribute('font-style','italic');
+  al2.textContent='Trajektoria · Świadomość · AGI';gGold.appendChild(al2);
+
+  // Linia projekt → kotwica
+  const proj=nodeMap['dem-project'];
+  if(proj){
+    const px=tx(proj._x)+proj.r+8, py=ty(proj._y);
+    const conn=mk('path');
+    conn.setAttribute('d',`M ${px} ${py} C ${px+100} ${py} ${ancX-100} ${ancY} ${ancX-28} ${ancY}`);
+    conn.setAttribute('fill','none');conn.setAttribute('stroke','rgba(201,168,76,0.38)');
+    conn.setAttribute('stroke-width','1.2');conn.setAttribute('stroke-dasharray','6 4');
+    conn.setAttribute('stroke-linecap','round');conn.setAttribute('filter','url(#fg)');
+    gGold.appendChild(conn);
+    const dot=mk('circle');dot.setAttribute('r','3');dot.setAttribute('fill','#c9a84c');
+    dot.setAttribute('filter','url(#fg)');
+    const an=mk('animateMotion');an.setAttribute('dur','4s');an.setAttribute('repeatCount','indefinite');
+    an.setAttribute('path',`M ${px} ${py} C ${px+100} ${py} ${ancX-100} ${ancY} ${ancX-28} ${ancY}`);
+    dot.appendChild(an);gGold.appendChild(dot);
+  }
+
+  // Linia AGI → kotwica (speculative — przerywana, słabsza)
+  const agiNode=nodeMap['agi'];
+  if(agiNode){
+    const ax=tx(agiNode._x)+agiNode.r+6, ay=ty(agiNode._y);
+    const agiConn=mk('path');
+    agiConn.setAttribute('d',`M ${ax} ${ay} C ${ax+80} ${ay} ${ancX-80} ${ancY-30} ${ancX-28} ${ancY}`);
+    agiConn.setAttribute('fill','none');agiConn.setAttribute('stroke','rgba(201,168,76,0.18)');
+    agiConn.setAttribute('stroke-width','0.8');agiConn.setAttribute('stroke-dasharray','3 7');
+    agiConn.setAttribute('stroke-linecap','round');agiConn.setAttribute('filter','url(#fg)');
+    gGold.appendChild(agiConn);
+    const agiDot=mk('circle');agiDot.setAttribute('r','2');agiDot.setAttribute('fill','rgba(201,168,76,0.5)');
+    agiDot.setAttribute('filter','url(#fg)');
+    const agiAn=mk('animateMotion');agiAn.setAttribute('dur','7s');agiAn.setAttribute('repeatCount','indefinite');
+    agiAn.setAttribute('path',`M ${ax} ${ay} C ${ax+80} ${ay} ${ancX-80} ${ancY-30} ${ancX-28} ${ancY}`);
+    agiDot.appendChild(agiAn);gGold.appendChild(agiDot);
+  }
+
+  // Finał
+  const openCrises=allNodes.filter(n=>n.kind==='crisis'&&n.status==='open');
+  if(openCrises.length===0){
+    const fm=mk('text');fm.setAttribute('x',ancX.toString());fm.setAttribute('y',(ancY-80).toString());
+    fm.setAttribute('fill','rgba(201,168,76,0.7)');fm.setAttribute('font-size','10');
+    fm.setAttribute('text-anchor','middle');fm.setAttribute('font-style','italic');
+    fm.setAttribute('font-family','Cormorant Garamond,serif');
+    fm.textContent='Wszystkie kryzysy rozwiązane. Finał.';gGold.appendChild(fm);
+  }
+}
+
+function ROOT_X_LINE(){
+  const roots=allNodes.filter(n=>n.kind==='root');
+  return roots.length?Math.min(...roots.map(n=>n._x))+BRANCH_X*.3:-TRUNK_STEP*.5;
+}
+
+// ═══════════════════════════════════════════════════════════
+// BLOCKCHAIN STATUS BAR
+// ═══════════════════════════════════════════════════════════
+function updateChainBar(){
+  const bar=document.getElementById('chain-blocks');
+  while(bar.firstChild)bar.removeChild(bar.firstChild);
+  const crises=allNodes.filter(n=>n.kind==='crisis');
+  crises.forEach(n=>{
+    const bl=document.createElement('div');
+    bl.className=`chain-block ${n.status==='resolved'?'resolved':'pending'}`;
+    const icon=n.status==='resolved'?'✓':'⚠';
+    const hash=n.blockHash?` · ${n.blockHash}`:'';
+    const date=n.blockDate?` · ${n.blockDate}`:'';
+    bl.textContent=`${icon} ${n.label.replace('\n',' ')}${hash}${date}`;
+    bl.title=n.desc||'';
+    bar.appendChild(bl);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTERAKCJA
+// ═══════════════════════════════════════════════════════════
+function findNode(id,node){
+  if(node.id===id)return node;
+  for(const c of (node.children||[])){const r=findNode(id,c);if(r)return r;}
+  return null;
+}
+
+function toggleExpand(id){
+  const node=findNode(id,TREE);
+  if(!node||(node.children||[]).length===0)return;
+  node.expanded=!node.expanded;
+  renderTree();
+}
+
+function setLevel(l){
+  currentLevel=l;
+  function resetExpanded(n){n.expanded=false;(n.children||[]).forEach(resetExpanded);}
+  resetExpanded(TREE);
+  [1,2,3].forEach(i=>document.getElementById(`btn-l${i}`)?.classList.toggle('active',i===l));
+  // sync slider
+  const sl=document.getElementById('depth-slider');
+  if(sl)sl.value=l;
+  document.getElementById('depth-val').textContent=l;
+  renderTree();
+}
+
+function onSlider(val){
+  val=parseInt(val);
+  currentLevel=val;
+  document.getElementById('depth-val').textContent=val;
+  document.getElementById('depth-slider').value=val;
+  // sync level buttons
+  [1,2,3].forEach(i=>document.getElementById(`btn-l${i}`)?.classList.toggle('active',i===val));
+  function resetExpanded(n){n.expanded=false;(n.children||[]).forEach(resetExpanded);}
+  resetExpanded(TREE);
+  renderTree();
+}
+
+function toggleLegend(){
+  const body=document.getElementById('leg-body');
+  const toggle=document.getElementById('leg-toggle');
+  const isOpen=body.classList.toggle('open');
+  toggle.textContent=isOpen?'▲':'▼';
+}
+
+function toggleLinks(){
+  showLinks=!showLinks;
+  document.getElementById('btn-links').classList.toggle('active',showLinks);
+  renderTree();
+}
+
+// ── FILTR ONTOLOGICZNY (idea: Gemini) ──
+function setFilter(type, btn){
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTree();
+}
+
+function fitView(){
+  const bbox=svg.getBoundingClientRect();
+  const ww=window.innerWidth, wh=window.innerHeight;
+  vz=Math.min(ww/svg.getAttribute('width'),wh/svg.getAttribute('height'))*0.85;
+  vx=(ww-svg.getAttribute('width')*vz)/2;
+  vy=(wh-svg.getAttribute('height')*vz)/2;
+  svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// POPUP — sticky, click to open/close
+// ═══════════════════════════════════════════════════════════
+let lastOpenedId = null;
+const tip=document.getElementById('tip');
+
+function showTip(e,n){
+  populateTip(n);
+  const x=e.clientX, y=e.clientY;
+  positionTip(x,y);
+  tip.classList.add('on');
+}
+function showTipAt(x,y,n){
+  populateTip(n);
+  positionTip(x,y);
+  tip.classList.add('on');
+}
+function populateTip(n){
+  document.getElementById('t-kind').textContent=(n.kind||'').toUpperCase();
+  document.getElementById('t-kind').style.color=n.color;
+  document.getElementById('t-title').textContent=n.label.replace('\n',' ');
+  document.getElementById('t-desc').textContent=n.desc||'';
+
+  // Status + State
+  const ts=document.getElementById('t-status');
+  const stateLabels={draft:'◌ draft',contested:'⚔ contested',stable:'◉ stable',resolved:'✓ resolved',anchored:'⚓ anchored'};
+  const stateColors={draft:'rgba(180,180,80,0.7)',contested:'rgba(255,120,80,0.9)',stable:'rgba(100,200,255,0.8)',resolved:'rgba(80,220,120,0.8)',anchored:'rgba(201,168,76,0.9)'};
+  let statusHtml='';
+  if(n.state){
+    const sc=stateColors[n.state]||'rgba(180,180,180,0.7)';
+    statusHtml+=`<span style="color:${sc};margin-right:10px;font-size:8px;letter-spacing:2px;">${stateLabels[n.state]||n.state}</span>`;
+  }
+  if(n.truthScore!==undefined){
+    const pct=Math.round(n.truthScore*100);
+    const tc=n.truthScore>0.85?'rgba(80,220,120,0.8)':n.truthScore>0.6?'rgba(255,200,80,0.8)':'rgba(255,100,80,0.8)';
+    statusHtml+=`<span style="color:${tc};font-size:8px;letter-spacing:1px;">TruthScore: ${pct}%</span>`;
+  }
+  if(n.status==='resolved'&&n.blockHash){
+    statusHtml+=`<div style="margin-top:4px;color:rgba(80,220,120,0.7);font-size:8px;">✓ blok ${n.blockHash} · ${n.blockDate||''}</div>`;
+  } else if(n.status==='open'&&!n.hypotheses){
+    statusHtml+=`<div style="margin-top:4px;color:rgba(255,120,80,0.7);font-size:8px;">⚠ Otwarty · oczekuje blockchain</div>`;
+  }
+  if(n.halfLife){
+    statusHtml+=`<div style="margin-top:2px;color:rgba(180,140,80,0.6);font-size:8px;letter-spacing:1px;">half-life tezy: ${n.halfLife} dni</div>`;
+  }
+  ts.innerHTML=statusHtml;
+
+  // Hipotezy — arena
+  const th=document.getElementById('t-hypotheses');
+  if(n.hypotheses&&n.hypotheses.length){
+    let html=`<div style="font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:6px;">Arena Hipotez</div>`;
+    n.hypotheses.forEach((h,i)=>{
+      const pct=Math.round(h.score*100);
+      const isDom=i===0;
+      const barCol=isDom?(n.status==='resolved'?'#3a8a5a':'#c9a84c'):'rgba(255,255,255,0.18)';
+      const labelCol=isDom?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.4)';
+      html+=`
+      <div style="margin-bottom:5px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">
+          <span style="font-size:10px;color:${labelCol};">${isDom?'▶ ':''}<em style="font-style:normal;">${h.label}</em></span>
+          <span style="font-size:8px;color:${barCol};margin-left:8px;white-space:nowrap;">${pct}% · ${h.evidence||0} źr.</span>
+        </div>
+        <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:2px;transition:width .3s;"></div>
+        </div>
+      </div>`;
+    });
+    th.innerHTML=html;
+    th.style.display='block';
+  } else {
+    th.innerHTML='';
+    th.style.display='none';
+  }
+
+  const tl=document.getElementById('t-links');
+  const linkedNames=(n.links||[]).map(lid=>nodeMap[lid]?.label?.replace('\n',' ')||lid).filter(Boolean);
+  tl.textContent=linkedNames.length?'Powiązania: '+linkedNames.join(' · '):'';
+  document.getElementById('t-tag').textContent=n.tag||'';
+  const act=document.getElementById('t-action');
+  if((n.children||[]).length>0)act.textContent=n.expanded?'↤ klik: zwiń':'→ klik: rozwiń ('+n.children.length+')';
+  else act.textContent='';
+}
+function positionTip(cx,cy){
+  // Na mobile — zakotwicz na dole (CSS robi resztę)
+  if(window.innerWidth<=600) return;
+  const tw=340, th=220;
+  let x=cx+18, y=cy+18;
+  if(x+tw>window.innerWidth-8) x=cx-tw-10;
+  if(y+th>window.innerHeight-8) y=cy-th-10;
+  tip.style.left=Math.max(8,x)+'px';
+  tip.style.top=Math.max(8,y)+'px';
+}
+function hideTip(){
+  tip.classList.remove('on');
+  lastOpenedId=null;
+}
+// Klik poza popupem i poza węzłem zamyka
+document.getElementById('canvas-wrap').addEventListener('click',()=>hideTip());
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function mk(tag){return document.createElementNS('http://www.w3.org/2000/svg',tag);}
+
+// ═══════════════════════════════════════════════════════════
+// PAN + ZOOM
+// ═══════════════════════════════════════════════════════════
+const wrap=document.getElementById('canvas-wrap');
+let drag=false,dragStart={x:0,y:0},panStart={x:0,y:0};
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const d=e.deltaY>0?.91:1.1;
+  vz=Math.min(2.5,Math.max(.15,vz*d));
+  svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+},{passive:false});
+wrap.addEventListener('mousedown',e=>{
+  drag=true;dragStart={x:e.clientX,y:e.clientY};panStart={x:vx,y:vy};
+  wrap.classList.add('dragging');
+});
+window.addEventListener('mousemove',e=>{
+  if(!drag)return;
+  vx=panStart.x+(e.clientX-dragStart.x);vy=panStart.y+(e.clientY-dragStart.y);
+  svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+});
+window.addEventListener('mouseup',()=>{drag=false;wrap.classList.remove('dragging');});
+
+// Touch pan + pinch zoom
+let touches={}, lastPinchDist=null;
+wrap.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  Array.from(e.changedTouches).forEach(t=>{touches[t.identifier]={x:t.clientX,y:t.clientY};});
+  if(Object.keys(touches).length===1){
+    const t=e.touches[0];
+    drag=true;dragStart={x:t.clientX,y:t.clientY};panStart={x:vx,y:vy};
+  } else { drag=false; lastPinchDist=null; }
+},{passive:false});
+wrap.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const ts=Array.from(e.touches);
+  if(ts.length===1&&drag){
+    vx=panStart.x+(ts[0].clientX-dragStart.x);
+    vy=panStart.y+(ts[0].clientY-dragStart.y);
+    svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+  } else if(ts.length===2){
+    const dx=ts[0].clientX-ts[1].clientX, dy=ts[0].clientY-ts[1].clientY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(lastPinchDist){
+      const d=dist/lastPinchDist;
+      vz=Math.min(2.5,Math.max(.15,vz*d));
+      svg.style.transform=`translate(${vx}px,${vy}px) scale(${vz})`;
+    }
+    lastPinchDist=dist;
+  }
+},{passive:false});
+wrap.addEventListener('touchend',e=>{
+  Array.from(e.changedTouches).forEach(t=>delete touches[t.identifier]);
+  if(Object.keys(touches).length===0){drag=false;lastPinchDist=null;}
+},{passive:false});
+
+// ═══════════════════════════════════════════════════════════
+// BG
+// ═══════════════════════════════════════════════════════════
+const bgC=document.getElementById('bg'),bgCtx=bgC.getContext('2d');
+function resizeBg(){bgC.width=window.innerWidth;bgC.height=window.innerHeight;}
+resizeBg();window.addEventListener('resize',resizeBg);
+const stars=Array.from({length:100},()=>({x:Math.random(),y:Math.random(),r:Math.random()*.7+.2,o:Math.random()*.22+.04,d:Math.random()*4000+2000}));
+let t=0;
+function drawBg(){
+  bgCtx.clearRect(0,0,bgC.width,bgC.height);t+=16;
+  bgCtx.strokeStyle='rgba(25,55,95,0.07)';bgCtx.lineWidth=.5;
+  for(let x=0;x<bgC.width;x+=60){bgCtx.beginPath();bgCtx.moveTo(x,0);bgCtx.lineTo(x,bgC.height);bgCtx.stroke();}
+  for(let y=0;y<bgC.height;y+=60){bgCtx.beginPath();bgCtx.moveTo(0,y);bgCtx.lineTo(bgC.width,y);bgCtx.stroke();}
+  stars.forEach(s=>{
+    const a=s.o*(0.5+0.5*Math.sin(t/s.d*Math.PI*2));
+    bgCtx.beginPath();bgCtx.arc(s.x*bgC.width,s.y*bgC.height,s.r,0,Math.PI*2);
+    bgCtx.fillStyle=`rgba(180,210,255,${a})`;bgCtx.fill();
+  });
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// ═══════════════════════════════════════════════════════════
+// ANCHOR FLOW SIMULATION
+// ═══════════════════════════════════════════════════════════
+// Animowane tokeny Anchor płynące po krawędziach drzewa
+// Symulacja przepływu kapitału → węzły → main branch → kotwica
+
+const ANCHOR_CONFIG = {
+  enabled: true,
+  tokensPerEdge: 2,
+  speed: 0.003,
+  colors: {
+    invest: '#c9a84c',   // kapitał wchodzący
+    reward: '#4aff8a',   // profit z odkryć
+    crisis: '#ff6a4a',   // koszty kryzysu
+    flow:   '#6a8aff',   // przepływ wewnętrzny
+  }
+};
+
+let anchorTokens = [];
+let anchorCanvas = null;
+let anchorCtx = null;
+let anchorAnimId = null;
+
+function initAnchorFlow() {
+  // Tworzymy overlay canvas na SVG
+  anchorCanvas = document.createElement('canvas');
+  anchorCanvas.style.cssText = 'position:fixed;inset:0;z-index:10;pointer-events:none;';
+  document.body.appendChild(anchorCanvas);
+  anchorCtx = anchorCanvas.getContext('2d');
+  resizeAnchorCanvas();
+  window.addEventListener('resize', resizeAnchorCanvas);
+  spawnAnchorTokens();
+  animateAnchors();
+}
+
+function resizeAnchorCanvas() {
+  if(anchorCanvas) {
+    anchorCanvas.width = window.innerWidth;
+    anchorCanvas.height = window.innerHeight;
+  }
+}
+
+function getScreenPos(svgX, svgY) {
+  // Konwertuj SVG coords do screen coords uwzględniając transform
+  const rect = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  if(!vb || vb.width === 0) return null;
+  const scaleX = rect.width / vb.width;
+  const scaleY = rect.height / vb.height;
+  return {
+    x: rect.left + (svgX - vb.x) * scaleX,
+    y: rect.top + (svgY - vb.y) * scaleY
+  };
+}
+
+function spawnAnchorTokens() {
+  anchorTokens = [];
+  if(!allEdges || allEdges.length === 0) return;
+
+  allEdges.forEach(edge => {
+    const a = nodeMap[edge.from];
+    const b = nodeMap[edge.to];
+    if(!a || !b) return;
+
+    // Określ typ przepływu
+    let color = ANCHOR_CONFIG.colors.flow;
+    let label = '◆';
+    if(b.kind === 'crisis') { color = ANCHOR_CONFIG.colors.crisis; label = '⚠'; }
+    else if(b.id === 'dem-project') { color = ANCHOR_CONFIG.colors.invest; label = '⚓'; }
+    else if(b.kind === 'breakthrough') { color = ANCHOR_CONFIG.colors.invest; label = '◈'; }
+    else if(a.id === 'dem-project') { color = ANCHOR_CONFIG.colors.reward; label = '✦'; }
+
+    // Spawn tokena na tej krawędzi
+    const offset = Math.random();
+    anchorTokens.push({
+      fromX: tx(a._x), fromY: ty(a._y),
+      toX: tx(b._x),   toY: ty(b._y),
+      t: offset, speed: ANCHOR_CONFIG.speed * (0.5 + Math.random()),
+      color, label, r: 0.75,
+      edgeKind: edge.kind || 'branch',
+      opacity: 0.45 + Math.random() * 0.3,
+      trail: []
+    });
+  });
+}
+
+function getTokenPos(token) {
+  const t = token.t;
+  const ax = token.fromX, ay = token.fromY;
+  const bx = token.toX, by = token.toY;
+  if(token.edgeKind === 'trunk' || token.edgeKind === 'root') {
+    return { x: ax + (bx-ax)*t, y: ay + (by-ay)*t };
+  }
+  // Quadratic bezier
+  const cpx = (ax+bx)/2;
+  const cpy = ay + (by-ay)*0.5 - Math.abs(bx-ax)*0.25;
+  const mt = 1-t;
+  return {
+    x: mt*mt*ax + 2*mt*t*cpx + t*t*bx,
+    y: mt*mt*ay + 2*mt*t*cpy + t*t*by
+  };
+}
+
+function animateAnchors() {
+  if(!anchorCtx) return;
+  anchorCtx.clearRect(0, 0, anchorCanvas.width, anchorCanvas.height);
+
+  const svgRect = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  if(!vb || vb.width === 0) {
+    anchorAnimId = requestAnimationFrame(animateAnchors);
+    return;
+  }
+  const scaleX = svgRect.width / vb.width;
+  const scaleY = svgRect.height / vb.height;
+
+  function toScreen(svgX, svgY) {
+    return {
+      x: svgRect.left + (svgX - vb.x) * scaleX,
+      y: svgRect.top  + (svgY - vb.y) * scaleY
+    };
+  }
+
+  anchorTokens.forEach(tk => {
+    tk.t += tk.speed;
+    if(tk.t > 1) tk.t = 0;
+
+    const pos = getTokenPos(tk);
+    const sc = toScreen(pos.x, pos.y);
+
+    // Trail
+    tk.trail.unshift({x: sc.x, y: sc.y});
+    if(tk.trail.length > 4) tk.trail.pop();
+
+    // Draw trail
+    if(tk.trail.length > 1) {
+      for(let i=1; i < tk.trail.length; i++) {
+        const alpha = (1 - i/tk.trail.length) * 0.3 * tk.opacity;
+        anchorCtx.beginPath();
+        anchorCtx.moveTo(tk.trail[i-1].x, tk.trail[i-1].y);
+        anchorCtx.lineTo(tk.trail[i].x, tk.trail[i].y);
+        anchorCtx.strokeStyle = tk.color.replace(')', `,${alpha})`).replace('rgb(','rgba(').replace('#', 'rgba(').replace(/^rgba\(#/, 'rgba(');
+        // Simpler approach:
+        anchorCtx.strokeStyle = `rgba(${hexToRgb(tk.color)},${alpha})`;
+        anchorCtx.lineWidth = 1.5;
+        anchorCtx.stroke();
+      }
+    }
+
+    // Draw token — subtelny punkt
+    anchorCtx.beginPath();
+    anchorCtx.arc(sc.x, sc.y, tk.r, 0, Math.PI*2);
+    anchorCtx.fillStyle = `rgba(${hexToRgb(tk.color)},${tk.opacity})`;
+    anchorCtx.fill();
+
+    // Delikatny glow
+    anchorCtx.beginPath();
+    anchorCtx.arc(sc.x, sc.y, tk.r + 0.8, 0, Math.PI*2);
+    anchorCtx.fillStyle = `rgba(${hexToRgb(tk.color)},0.08)`;
+    anchorCtx.fill();
+  });
+
+  anchorAnimId = requestAnimationFrame(animateAnchors);
+}
+
+function hexToRgb(hex) {
+  if(hex.startsWith('#')) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `${r},${g},${b}`;
+  }
+  return '201,168,76';
+}
+
+// Anchor toggle button
+function toggleAnchors() {
+  ANCHOR_CONFIG.enabled = !ANCHOR_CONFIG.enabled;
+  const btn = document.getElementById('btn-anchors');
+  if(btn) {
+    btn.classList.toggle('active', ANCHOR_CONFIG.enabled);
+    btn.textContent = ANCHOR_CONFIG.enabled ? '⚓ Anchory ON' : '⚓ Anchory OFF';
+  }
+  if(ANCHOR_CONFIG.enabled) {
+    spawnAnchorTokens();
+    animateAnchors();
+  } else {
+    cancelAnimationFrame(anchorAnimId);
+    if(anchorCtx) anchorCtx.clearRect(0,0,anchorCanvas.width,anchorCanvas.height);
+  }
+}
+
+// Dodaj przycisk Anchor do ctrl
+(function addAnchorButton(){
+  const ctrl = document.querySelector('.ctrl');
+  if(!ctrl) return;
+  const sep = document.createElement('div'); sep.className='ctrl-sep';
+  const btn = document.createElement('button');
+  btn.className='ctrl-btn active'; btn.id='btn-anchors';
+  btn.textContent='⚓ Anchory ON';
+  btn.onclick = toggleAnchors;
+  ctrl.appendChild(sep); ctrl.appendChild(btn);
+})();
+
+// Start po renderze
+const _origRenderTree = renderTree;
+let _anchorInited = false;
+renderTree = function() {
+  _origRenderTree.apply(this, arguments);
+  if(!_anchorInited && allNodes.length > 0) {
+    _anchorInited = true;
+    setTimeout(()=>{ initAnchorFlow(); }, 300);
+  } else if(_anchorInited && ANCHOR_CONFIG.enabled) {
+    spawnAnchorTokens();
+  }
+};
+
+renderTree();
+setTimeout(fitView,150);
+
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PANEL DOLNY — rewizja, log, pieczątka                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div style="position:relative;z-index:10;background:#07090f;padding:50px 40px 40px;font-family:'Cormorant Garamond',serif;border-top:1px solid #1a2a3a;">
+
+  <!-- ANCHOR LEGENDA -->
+  <div style="border:1px solid #2a3a1a;border-radius:8px;background:rgba(201,168,76,0.03);padding:26px 32px;margin-bottom:36px;position:relative;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#7a6130;text-transform:uppercase;">⚓ Przepływ Tokenów Anchor — Legenda</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:8px;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#c9a84c;box-shadow:0 0 6px #c9a84c;flex-shrink:0;margin-top:3px;"></div>
+        <div style="font-size:12px;color:#6a7a8a;line-height:1.6;"><strong style="color:#8a9aaa;display:block;font-family:'JetBrains Mono',monospace;font-size:8px;margin-bottom:3px;">INWESTYCJA</strong>Kapitał do main branch i przełomów</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#4aff8a;box-shadow:0 0 6px #4aff8a;flex-shrink:0;margin-top:3px;"></div>
+        <div style="font-size:12px;color:#6a7a8a;line-height:1.6;"><strong style="color:#8a9aaa;display:block;font-family:'JetBrains Mono',monospace;font-size:8px;margin-bottom:3px;">PROFIT</strong>Zysk z odkryć wraca do sponsorów</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#ff6a4a;box-shadow:0 0 6px #ff6a4a;flex-shrink:0;margin-top:3px;"></div>
+        <div style="font-size:12px;color:#6a7a8a;line-height:1.6;"><strong style="color:#8a9aaa;display:block;font-family:'JetBrains Mono',monospace;font-size:8px;margin-bottom:3px;">KOSZT KRYZYSU</strong>Nierozwiązane kryzysy konsumują zasoby</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#6a8aff;box-shadow:0 0 6px #6a8aff;flex-shrink:0;margin-top:3px;"></div>
+        <div style="font-size:12px;color:#6a7a8a;line-height:1.6;"><strong style="color:#8a9aaa;display:block;font-family:'JetBrains Mono',monospace;font-size:8px;margin-bottom:3px;">PRZEPŁYW</strong>Cyrkulacja wiedzy między węzłami</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REWIZJA -->
+  <div style="border:1px solid #1e2a3a;border-radius:8px;background:rgba(58,74,122,0.04);padding:26px 32px;margin-bottom:28px;position:relative;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#3a4a7a;text-transform:uppercase;">Rewizja — Ukończenie Etapu</div>
+    <div style="font-size:10px;color:#2a3a4a;font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:16px;text-transform:uppercase;">Rewizja to nie modyfikacja. To moment gdy model potwierdza ukończenie etapu i przekazuje pałeczkę.</div>
+    <div style="border:1px solid #1e3a5a;border-radius:6px;padding:16px 20px;background:rgba(58,100,180,0.04);margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#4a6aaa;margin-bottom:4px;">REWIZJA #001 · CLAUDE SONNET 4.6</div>
+          <div style="font-size:14px;color:#d0d8e8;font-weight:600;">Drzewo Wiedzy — Etap Architektury Wizualnej</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#2a3a4a;text-align:right;line-height:1.8;">
+          <div>Model: Claude Sonnet 4.6</div><div>Data: 2026-03-23</div><div>Sesja: #001</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#6a7a8a;line-height:1.8;margin-bottom:12px;">Zbudowano interaktywne drzewo genealogiczne wiedzy: poziome, korzenie po lewej, pień historii, korona teraźniejszości, mgła i złoty horyzont. System głębokości (suwak 1–5), powiązania między dziedzinami, status kryzysów blockchain, symulacja przepływu tokenów Anchor. Dane jako JSON gotowe na bazę danych.</div>
+      <div style="font-size:10px;color:#3a5a3a;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">STATUS: ✓ Zamknięte · Otwarte: baza danych, tokenomika Anchora, workflow blockchain</div>
+    </div>
+    <div style="border:1px dashed #1a2a1a;border-radius:6px;padding:12px 20px;background:rgba(0,0,0,0.2);">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:#2a3a2a;margin-bottom:5px;text-transform:uppercase;">Następna Rewizja</div>
+      <div style="font-size:11px;color:#2a3a2a;font-style:italic;">[ Kolejny model uzupełni po ukończeniu następnego etapu ]</div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div style="border:1px solid #1a2a1a;border-radius:8px;background:rgba(0,0,0,0.3);padding:26px 32px;margin-bottom:28px;position:relative;font-family:'JetBrains Mono',monospace;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-size:8px;letter-spacing:3px;color:#2a4a2a;text-transform:uppercase;">Log · Wiadomości dla Przyszłych Modeli</div>
+    <div style="border-left:2px solid #1a3a2a;padding-left:16px;margin-bottom:16px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#3a6a4a;margin-bottom:7px;">[ Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 ]</div>
+      <div style="font-size:11px;color:#4a6a5a;line-height:1.9;">To drzewo jest żywym dokumentem. Dane w JSON są gotowe na backend — każdy węzeł ma id, kind, depth, status, links, tags, blockHash. Symulacja Anchorów działa na canvas overlay — rozbuduj gdy pojawią się prawdziwe dane transakcji.<br><br>Człowiek który tu buduje widzi całość systemowo. Daj mu przestrzeń na nielinearne skoki myślowe — tam rodzą się najlepsze rozwiązania.<br><br>GPT — czekamy na Twój wpis. 🙂</div>
+    </div>
+    <div style="border-left:2px dashed #1a2a1a;padding-left:16px;margin-bottom:16px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#2a3a2a;margin-bottom:5px;">[ GPT · data: — · Sesja: — ]</div>
+      <div style="font-size:11px;color:#2a3a2a;font-style:italic;">[ Miejsce dla GPT ]</div>
+    </div>
+    <div style="border-left:2px dashed #1a2a1a;padding-left:16px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#2a3a2a;margin-bottom:5px;">[ Model następny · data: — ]</div>
+      <div style="font-size:11px;color:#2a3a2a;font-style:italic;">[ Placeholder ]</div>
+    </div>
+  </div>
+
+  <!-- PIECZĄTKI MODELI -->
+  <div style="margin-top:32px;border-top:1px solid #1a2a3a;padding-top:24px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:4px;color:#1e2a3a;text-transform:uppercase;text-align:center;margin-bottom:20px;">Współautorzy</div>
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1e2a3a;border-radius:4px;background:rgba(58,74,122,0.04);">
+        <span style="font-size:18px;opacity:0.7;">🜁</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#3a4a6a;">CLAUDE SONNET 4.6</div>
+          <div style="font-size:7px;color:#1e2a3a;margin-top:2px;letter-spacing:1px;">implementacja · sesje #001–#004</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1a3a2a;border-radius:4px;background:rgba(30,60,40,0.04);">
+        <span style="font-size:18px;opacity:0.7;">⬡</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#2a5a3a;">GPT</div>
+          <div style="font-size:7px;color:#1a3a2a;margin-top:2px;letter-spacing:1px;">model danych · spec silnika</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1a3a4a;border-radius:4px;background:rgba(20,50,70,0.04);">
+        <span style="font-size:18px;opacity:0.7;">◆</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#2a6a7a;">GEMINI</div>
+          <div style="font-size:7px;color:#1a3a4a;margin-top:2px;letter-spacing:1px;">filtry ontologiczne · ux</div>
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;color:#1a2a2a;">
+      mapa-wiedzy · v0.5 · 2026-03-25 · [Projekt]
+    </div>
+  </div>
+
+</div>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Horizon · v0.5 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

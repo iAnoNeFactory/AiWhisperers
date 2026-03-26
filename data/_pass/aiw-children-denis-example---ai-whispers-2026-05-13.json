@@ -1,0 +1,25 @@
+{
+  "_type": "aiw_children_v1",
+  "_exported": "2026-05-13T10:44:10.662Z",
+  "certifier": {
+    "operator": "Denis Example · AI Whispers",
+    "pubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+    "parentPubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w="
+  },
+  "children": [
+    {
+      "operator": "Anna Example · AI Whispers",
+      "pubkey": "Y2q/nQnCOkaHn0+W9weFvzMdci50gHAUpLzs19lJypU=",
+      "inception": "2026-05-13",
+      "sig": "qN11NkXHVTfHBtgmQZe1NwUpcU+GAkpbpNL55/n0DO3B7unw3DF4FCDAD5caIqbMazukQHgK/0qFUGpW3CP2BQ==",
+      "signedAt": "2026-05-13T10:42:06.560Z"
+    },
+    {
+      "operator": "Bartek Example · AI Whispers",
+      "pubkey": "RnriYtd4ULJ+4JOHNOluwOTbs2V9SUwCROesWxWp4Lo=",
+      "inception": "2026-05-13",
+      "sig": "4LWk4g9EB7qTiC9sluRVyqTUNpu3jgCYDRhN8w6+hF7B8HpZ+8Q9hrad4zg0gt/Cf4p3U474dTWvqq43hT0UAQ==",
+      "signedAt": "2026-05-13T10:42:44.278Z"
+    }
+  ]
+}

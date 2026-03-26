@@ -1,0 +1,27 @@
+{
+  "id": "workspace",
+  "name": "Workspace · Hub Projektów 🏭",
+  "version": "0.1",
+  "date": "2026-04-17",
+  "description": "Hub aplikacji sandbox — MyCakes, GardenOS. Nexus runtime, puzzle system, lifecycle management projektów.",
+  "type": "sandbox-hub",
+  "status": "active",
+  "lineage": {
+    "seed_session": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {"actor": "Denis", "role": "operator", "chat_id": ""}
+    ]
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "",
+    "components": [],
+    "backend": {"path": "", "port": 0}
+  },
+  "relations": [
+    {"type": "hosts", "target": "mycakes"},
+    {"type": "hosts", "target": "gardenOS"}
+  ],
+  "tags": ["sandbox", "hub", "projects"]
+}

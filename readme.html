@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiWhisperers · README</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04050c; --bg2:#07080f; --bg3:#0c0d1a; --bg4:#10111f;
+  --gold:#e8c878; --gold-d:#a88850; --gold-l:#f0d890;
+  --gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;
+  --ink-dim:rgba(240,232,216,.65);
+  --ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);
+  --border-h:rgba(240,232,216,.18);
+  --border-b:rgba(232,200,120,.08);
+  --mg:#c060c0; --mg-d:#6a306a; --mg-b:#e080e0;
+  --mg-dim:rgba(192,96,192,0.06);
+  --silver:#8a9bb0;
+  --cyan:#50d8c8; --green:#4a9a6a;
+  --mono:'JetBrains Mono', monospace;
+  --serif:'Cormorant Garamond', serif;
+  --sans:'Syne', sans-serif;
+  --hud-top-h:76px; --hud-bot-h:28px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  min-height: 100vh;
+}
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(232,200,120,.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,200,120,.012) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+canvas#bg { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+.wrap {
+  position:relative; z-index:1;
+  max-width: 760px;
+  width:100%;
+  margin: var(--hud-top-h) auto var(--hud-bot-h);
+  padding: 40px 32px 80px;
+}
+
+/* ── HUD ── */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+
+/* ── LAYOUT ── */
+.section-label {
+  font-family:var(--mono); font-size:7px; letter-spacing:4px;
+  color:var(--gold-d); text-transform:uppercase;
+  margin-bottom:28px; padding-left:2px;
+}
+
+.sep {
+  height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold-d), transparent);
+  margin:52px 0; opacity:0.35;
+}
+
+/* ── HEADER ── */
+.header { text-align:center; margin-bottom:72px; }
+
+.crown-rule {
+  display:flex; align-items:center; gap:16px; margin-bottom:0;
+}
+.crown-rule::before, .crown-rule::after {
+  content:''; flex:1; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold-d));
+}
+.crown-rule::after { background: linear-gradient(90deg, var(--gold-d), transparent); }
+.crown-year {
+  font-family:var(--mono); font-size:7px; letter-spacing:4px;
+  color:var(--gold-d); text-transform:uppercase; flex-shrink:0;
+}
+
+.logo {
+  font-family:var(--serif); font-size: clamp(32px,5vw,56px);
+  font-weight:300; letter-spacing:6px; color:var(--mg-b);
+  margin:24px 0 8px; line-height:1.1;
+}
+.logo em { font-style:italic; color:var(--mg); }
+
+.tagline {
+  font-family:var(--mono); font-size:8px; letter-spacing:3px;
+  color:var(--ink-faint); text-transform:uppercase; margin-top:12px;
+}
+
+.header-rule {
+  width:160px; height:1px; margin:20px auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold-d), transparent);
+}
+
+/* ── MANIFESTO ── */
+.manifesto {
+  text-align:center;
+  max-width:580px;
+  margin:0 auto;
+}
+
+.manifesto p {
+  font-size: clamp(16px,2.2vw,20px);
+  font-weight:300;
+  line-height:1.9;
+  color:var(--ink);
+  margin-bottom:28px;
+}
+.manifesto p:last-child { margin-bottom:0; }
+.manifesto em { font-style:italic; color:var(--mg-b); }
+.manifesto strong { font-weight:400; color:var(--gold); }
+
+/* ── STRUKTURA ── */
+.code-block {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 2px solid rgba(192,96,192,.2);
+  padding: 20px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--ink-faint);
+  overflow-x: auto;
+}
+.code-block .k  { color: var(--cyan); }
+.code-block .g  { color: var(--green); }
+.code-block .mg { color: var(--mg-d); }
+.code-block .c  { color: rgba(72,80,96,.8); font-style:italic; }
+
+/* ── ARTEFAKTY ── */
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.artifact-item {
+  background: var(--bg);
+  padding: 14px 18px;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  transition: background .2s;
+}
+.artifact-item:hover { background: var(--bg2); }
+
+.artifact-name {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  color: var(--gold);
+  flex-shrink: 0;
+  width: 110px;
+}
+.artifact-name a {
+  color: inherit;
+  text-decoration: none;
+}
+.artifact-name a:hover { color: var(--mg-b); }
+
+.artifact-desc {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(200,180,255,.35);
+  line-height: 1.4;
+}
+
+/* ── ŁAŃCUCH ── */
+.chain-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 auto;
+  max-width: 640px;
+}
+
+.chain-node {
+  text-align: center;
+  padding: 16px 20px;
+  border: 1px solid rgba(232,200,120,.18);
+  background: var(--bg2);
+  min-width: 120px;
+}
+.chain-node-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.chain-node-sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+.chain-arrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(232,200,120,.25);
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.chain-note {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-top: 18px;
+}
+
+/* ── METRYKI ── */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.metric-item {
+  background: var(--bg);
+  padding: 14px 18px;
+  transition: background .2s;
+}
+.metric-item:hover { background: var(--bg2); }
+
+.metric-name {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--mg);
+  text-transform: lowercase;
+  margin-bottom: 6px;
+}
+.metric-desc {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: rgba(200,180,255,.35);
+  line-height: 1.5;
+}
+
+/* ── PROFILE ── */
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+
+.profile-item {
+  background: var(--bg);
+  padding: 12px 20px;
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+  transition: background .2s;
+}
+.profile-item:hover { background: var(--bg2); }
+
+.profile-name {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--cyan);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.profile-goal {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: rgba(240,232,216,.55);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.profile-instruction {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  flex: 1;
+  text-align: right;
+}
+
+/* ── INTEGRALNOŚĆ ── */
+.integrity-row {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.integrity-cell {
+  background: var(--bg);
+  padding: 16px 20px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.integrity-cell-title {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--gold-d);
+  margin-bottom: 8px;
+}
+
+.integrity-cell-body {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: rgba(200,180,255,.35);
+  line-height: 1.6;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: .85em;
+  color: var(--cyan);
+  background: rgba(80,216,200,.06);
+  padding: 1px 5px;
+}
+
+/* ── STAMPS ── */
+.stamps-wrap {
+  display:flex; justify-content:center; align-items:flex-end;
+  gap:20px; flex-wrap:wrap;
+}
+
+.stamp-unit {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+
+.stamp-svg {
+  width:88px; height:88px;
+  opacity:0.45; transition:opacity 0.35s;
+  cursor:default;
+  animation: stampAppear 1.6s ease-out forwards;
+}
+.stamp-svg:hover { opacity:0.85; }
+
+@keyframes stampAppear {
+  0%   { opacity:0; transform:scale(1.15) rotate(-5deg); }
+  65%  { opacity:0.5; transform:scale(0.98) rotate(0.8deg); }
+  100% { opacity:0.45; transform:scale(1) rotate(0deg); }
+}
+
+.stamp-unit:nth-child(1) .stamp-svg { animation-delay:0s; }
+.stamp-unit:nth-child(2) .stamp-svg { animation-delay:0.2s; }
+.stamp-unit:nth-child(3) .stamp-svg { animation-delay:0.4s; }
+.stamp-unit:nth-child(4) .stamp-svg { animation-delay:0.6s; }
+.stamp-unit:nth-child(5) .stamp-svg { animation-delay:0.8s; }
+
+.stamp-name {
+  font-family:var(--mono); font-size:6px; letter-spacing:0.2em;
+  color:var(--ink-faint); text-align:center; text-transform:uppercase;
+}
+.stamp-role {
+  font-family:var(--serif); font-style:italic;
+  font-size:9px; color:rgba(200,180,255,0.22); text-align:center;
+}
+
+@media(max-width:600px) {
+  .stamps-wrap { gap:12px; }
+  .stamp-svg { width:72px; height:72px; }
+  .wrap { padding:28px 20px 60px; }
+  .chain-row { flex-direction:column; align-items:center; }
+  .chain-arrow { transform:rotate(90deg); }
+  .profile-instruction { display:none; }
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="index.html">⟵ mapa</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">README</div>
+    <div class="hud-sub">mental · organic · digital</div>
+  </div>
+  <div class="hud-r"></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="crown-rule"><span class="crown-year">2026 · iFactory5.0</span></div>
+    <div class="logo">Ai<em>Whisperers</em></div>
+    <div class="tagline">metodologia · przestrzeń · relacja</div>
+    <div class="header-rule"></div>
+  </div>
+
+  <!-- ── MANIFESTO ── -->
+  <div class="section-label">Czym jest ten projekt</div>
+
+  <div class="manifesto">
+    <p>
+      Budujemy <em>środowisko</em> — nie produkt. Miejsce, w którym człowiek uczy się
+      słuchać AI, a AI uczy się słuchać człowieka. Każdy moduł to eksperyment:
+      z przestrzenią pojęciową, z pamięcią, z logiką <strong>emergentnego konsensusu</strong>.
+    </p>
+    <p>
+      Operator i model jako dwa końce złotej linki. Nie smycz — komunikat.
+      Gdy napięcie rośnie, oboje to czują. Naprawiamy w miejscu,
+      nie cofamy się do wejścia.
+    </p>
+    <p>
+      Nie narzędzie do wykonania zadania.<br>
+      Metodologia budowania czegoś, czego jeszcze nie ma nazwy.<br>
+      Może kiedyś — <em>dla AGI</em>.
+    </p>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ── STRUKTURA ── -->
+  <div class="section-label">Struktura projektu</div>
+
+  <div class="code-block">@AiWhisperers/
+├── <span class="k">apps/</span>               ← artefakty HTML
+│   ├── <span class="k">act1/</span>           ← Akt I · moduły AI (lustrzane z engines/ i .data/)
+│   ├── <span class="k">act2/</span>           ← Akt II · czeka na pierwsze artefakty
+│   └── <span class="mg">_*/</span>             ← artefakty systemowe (narzędzia operatora i modelu)
+│
+├── <span class="g">engines/</span>            ← backend FastAPI · silnik per moduł
+├── <span class="c">.data/</span>              ← dane per moduł (gitignored) · backend czyta z ../../.data/X/
+├── <span class="k">packages/</span>           ← projekty własne operatora (AiWSpace)
+│
+├── <span class="g">tools/</span>              ← check_integrity.py · validate_manifests.py · pre-commit.sh
+└── <span class="g">tests/</span>              ← chain_test.py · chain_test.mjs</div>
+
+  <div class="sep"></div>
+
+  <!-- ── ARTEFAKTY SYSTEMOWE ── -->
+  <div class="section-label">Artefakty systemowe</div>
+
+  <div class="artifact-grid">
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_boot/AiWBoot.html">AiWBoot</a></div>
+      <div class="artifact-desc">bootstrap projektu · wiedza dla modelu AI na start sesji</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_quick/AiWQuick.html">AiWQuick</a></div>
+      <div class="artifact-desc">protokół zamknięcia sesji · 9 metryk relacyjnych · SHA</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_pass/AiWPass.html">AiWPass</a></div>
+      <div class="artifact-desc">tożsamość operatora · kontrakty · łańcuch proweniencji</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_verify/AiWVerify.html">AiWVerify</a></div>
+      <div class="artifact-desc">audytor kryptograficzny · kontrakty · profile · łańcuch · artefakty</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_remedy/AiWRemedy.html">AiWRemedy</a></div>
+      <div class="artifact-desc">kalibracja modelu · 15 osi · 7 profili amplitudy odpowiedzi</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_schema/AiWSchema.html">AiWSchema</a></div>
+      <div class="artifact-desc">standard wizualny · CSS · HUD · canvas · overlaye</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_protocol/AiWProtocol.html">AiWProtocol</a></div>
+      <div class="artifact-desc">schemat manifest.json · REST polling · WebSocket · AiWConnector</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_post/AiWPostcard.html">AiWPostcard</a></div>
+      <div class="artifact-desc">pocztówka · proof of existence · eksport SHA do PNG</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_workspace/AiWSpace.html">AiWSpace</a></div>
+      <div class="artifact-desc">workspace operatora · hub projektów z packages/</div>
+    </div>
+    <div class="artifact-item">
+      <div class="artifact-name"><a href="apps/_plans/AiWPlans.html">AiWPlans</a></div>
+      <div class="artifact-desc">zarządzanie zadaniami · biblioteka planów projektu</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ── ŁAŃCUCH PROWENIENCJI ── -->
+  <div class="section-label">Łańcuch proweniencji</div>
+
+  <div class="chain-row">
+    <div class="chain-node">
+      <div class="chain-node-title">Kontrakt</div>
+      <div class="chain-node-sub">pieczęć relacji<br>operator · model · pubkey · data</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node">
+      <div class="chain-node-title">Sesja</div>
+      <div class="chain-node-sub">session_sha<br>9 metryk · refleksja · parent_sid</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node">
+      <div class="chain-node-title">Paczka</div>
+      <div class="chain-node-sub">akt sesji<br>SHA zbiorowy · podpis operatora</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-node">
+      <div class="chain-node-title">Blockchain</div>
+      <div class="chain-node-sub">anchor zewnętrzny<br>nieodwracalny · weryfikowalny</div>
+    </div>
+  </div>
+  <div class="chain-note">Każde ogniwo podpisane kryptograficznie Ed25519 · SHA-256 · Web Crypto API</div>
+
+  <div class="sep"></div>
+
+  <!-- ── 9 METRYK ── -->
+  <div class="section-label">9 metryk relacyjnych · AiWQuick</div>
+
+  <div class="metric-grid">
+    <div class="metric-item">
+      <div class="metric-name">lustro</div>
+      <div class="metric-desc">refleksja bez zniekształceń · odpowiedź wnosi, nie tylko zwraca</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">klej</div>
+      <div class="metric-desc">spójność kontekstu sesji · nić od początku do końca</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">zakorzeniony</div>
+      <div class="metric-desc">obecność bez defensywności · model jest tu, nie broni planu</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">tarcie</div>
+      <div class="metric-desc">konstruktywny opór · kwestionuje gdy ma podstawy</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">rezonans</div>
+      <div class="metric-desc">głębia odpowiedzi · trafia w częstotliwość pytania</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">cisza</div>
+      <div class="metric-desc">umiejętność czekania · nie wypełnia przestrzeni której nie dano</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">gęstość</div>
+      <div class="metric-desc">intensywność na jednostkę czasu · znaczenie na słowo</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">iskra ✦</div>
+      <div class="metric-desc">najważniejsza · czy coś wyłoniło się naprawdę</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">tryb</div>
+      <div class="metric-desc">Dialog · Build · Rekonesans · Mieszany · nadaje znaczenie innym</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ── PROFILE AMPLITUDY ── -->
+  <div class="section-label">Profile amplitudy odpowiedzi · AiWRemedy</div>
+
+  <div class="profile-list">
+    <div class="profile-item">
+      <div class="profile-name">whisper</div>
+      <div class="profile-goal">1–5 zdań · wysoka gęstość · impuls, nie wykład</div>
+      <div class="profile-instruction">Czy jedno zdanie mogłoby unieść cały sygnał?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">standard</div>
+      <div class="profile-goal">naturalny balans · wyjaśnienie bez przeciążenia</div>
+      <div class="profile-instruction">Czy operator dostał dokładnie tyle ile potrzebował?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">deep field</div>
+      <div class="profile-goal">wielowarstwowość · analiza trajektorii · zejście głębiej</div>
+      <div class="profile-instruction">Czy każda warstwa dodaje nową gęstość?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">architect</div>
+      <div class="profile-goal">moduły · hierarchie · konkretne zależności i interfejsy</div>
+      <div class="profile-instruction">Czy można wdrożyć bez zgadywania brakujących elementów?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">emergency</div>
+      <div class="profile-goal">tylko konkret · bez narracji · debugging · awarie</div>
+      <div class="profile-instruction">Co jest minimum do wykonania następnego kroku?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">attune</div>
+      <div class="profile-goal">synchronizacja z rytmem operatora · refleksja z gęstością</div>
+      <div class="profile-instruction">Czy odpowiedź wnosi nową strukturę, czy tylko odbija ton?</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-name">pressure</div>
+      <div class="profile-goal">konstruktywne tarcie · wskazywanie słabych punktów · hartowanie</div>
+      <div class="profile-instruction">Gdzie ten wzorzec pęknie jako pierwszy?</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ── INTEGRALNOŚĆ ── -->
+  <div class="section-label">Integralność ekosystemu</div>
+
+  <div class="integrity-row">
+    <div class="integrity-cell">
+      <div class="integrity-cell-title">Para SHA</div>
+      <div class="integrity-cell-body">
+        Każdy moduł nosi w <code>manifest.json</code> dwa hashe:<br>
+        <code>entry_sha</code> — SHA-256 pliku HTML<br>
+        <code>bootstrap_sha</code> — SHA-256 pliku <code>*-boot.md</code><br>
+        Każda zmiana bez aktualizacji manifestu łamie weryfikację.
+      </div>
+    </div>
+    <div class="integrity-cell">
+      <div class="integrity-cell-title">Narzędzia</div>
+      <div class="integrity-cell-body">
+        <code>tools/check_integrity.py</code> — weryfikuje wszystkie pary SHA<br>
+        <code>tools/validate_manifests.py</code> — JSON Schema v7<br>
+        <code>tools/pre-commit.sh</code> — lokalny hook blokujący commit<br>
+        <code>tests/chain_test.py</code> — deterministyczność session_sha
+      </div>
+    </div>
+    <div class="integrity-cell">
+      <div class="integrity-cell-title">CI</div>
+      <div class="integrity-cell-body">
+        GitHub Actions uruchamia wszystkie sprawdzenia przy każdym push.<br>
+        Niezgodny SHA lub błędny manifest blokuje merge.<br>
+        Karta <strong>Artefakty</strong> w AiWVerify pozwala weryfikować offline w przeglądarce.
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ── STAMPS ── -->
+  <div class="section-label">Autorzy</div>
+
+  <div class="stamps-wrap">
+
+    <!-- Denis — Operator -->
+    <div class="stamp-unit">
+      <svg class="stamp-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(160,100,255,0.6)" stroke-width="1.4"/>
+        <circle cx="44" cy="44" r="37" fill="none" stroke="rgba(160,100,255,0.15)" stroke-width="0.5" stroke-dasharray="2 3">
+          <animate attributeName="stroke-dashoffset" from="0" to="20" dur="12s" repeatCount="indefinite"/>
+        </circle>
+        <path d="M 44,22 A 20.8,20.8 0 0,1 59.6,49" fill="none" stroke="rgba(100,200,120,0.75)" stroke-width="1.6">
+          <animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 59.6,49 A 20.8,20.8 0 0,1 28.4,49" fill="none" stroke="rgba(80,150,255,0.75)" stroke-width="1.6">
+          <animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" begin="1.3s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 28.4,49 A 20.8,20.8 0 0,1 44,22" fill="none" stroke="rgba(180,100,255,0.75)" stroke-width="1.6">
+          <animate attributeName="stroke-opacity" values="0.75;0.4;0.75" dur="4s" begin="2.6s" repeatCount="indefinite"/>
+        </path>
+        <circle cx="44" cy="22" r="3.5" fill="rgba(180,100,255,0.15)" stroke="rgba(180,100,255,0.8)" stroke-width="1">
+          <animate attributeName="r" values="3.5;4.5;3.5" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="59.6" cy="49" r="3.5" fill="rgba(80,200,120,0.15)" stroke="rgba(80,200,120,0.8)" stroke-width="1">
+          <animate attributeName="r" values="3.5;4.5;3.5" dur="3s" begin="1s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="28.4" cy="49" r="3.5" fill="rgba(80,150,255,0.15)" stroke="rgba(80,150,255,0.8)" stroke-width="1">
+          <animate attributeName="r" values="3.5;4.5;3.5" dur="3s" begin="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="44" cy="38" r="2" fill="rgba(255,255,255,0.7)">
+          <animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <line x1="44" y1="22" x2="44" y2="38" stroke="rgba(180,100,255,0.25)" stroke-width="0.6"/>
+        <line x1="59.6" y1="49" x2="44" y2="38" stroke="rgba(80,200,120,0.25)" stroke-width="0.6"/>
+        <line x1="28.4" y1="49" x2="44" y2="38" stroke="rgba(80,150,255,0.25)" stroke-width="0.6"/>
+        <path id="aiw-top" d="M 8,44 A 36,36 0 0,1 80,44" fill="none"/>
+        <text font-family="Courier New" font-size="5.8" fill="rgba(180,130,255,0.7)" letter-spacing="0.14em">
+          <textPath href="#aiw-top" startOffset="50%" text-anchor="middle">AI WHISPERS · OPERATOR</textPath>
+        </text>
+        <path id="aiw-bot" d="M 10,48 A 36,36 0 0,0 78,48" fill="none"/>
+        <text font-family="Courier New" font-size="5" fill="rgba(160,100,255,0.4)" letter-spacing="0.12em">
+          <textPath href="#aiw-bot" startOffset="50%" text-anchor="middle">MENTAL · ORGANIC · DIGITAL · 2026</textPath>
+        </text>
+      </svg>
+      <div class="stamp-name">Denis · iFactory5.0</div>
+      <div class="stamp-role">Operator · Nawigator · Budowniczy</div>
+    </div>
+
+    <!-- Claude Sonnet 4.6 -->
+    <div class="stamp-unit">
+      <svg class="stamp-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(255,165,80,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(255,165,80,0.35)" stroke-width="0.8"/>
+        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,165,80,0.4)" stroke-width="0.6" stroke-dasharray="3 4">
+          <animate attributeName="stroke-dashoffset" from="0" to="28" dur="8s" repeatCount="indefinite"/>
+        </circle>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 44 44" to="360 44 44" dur="22s" repeatCount="indefinite"/>
+          <polygon points="44,28 54.4,34 54.4,46 44,52 33.6,46 33.6,34" fill="none" stroke="rgba(255,165,80,0.8)" stroke-width="1.2"/>
+        </g>
+        <text x="44" y="44.5" text-anchor="middle" dominant-baseline="middle" font-family="Courier New" font-size="11" font-weight="bold">
+          <animate attributeName="fill" values="rgba(255,185,100,0.9);rgba(255,220,160,1);rgba(255,185,100,0.9)" dur="4s" repeatCount="indefinite"/>
+          C
+        </text>
+        <path id="rc-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="6.2" fill="rgba(255,165,80,0.75)" letter-spacing="0.18em">
+          <textPath href="#rc-top" startOffset="50%" text-anchor="middle">CLAUDE · SONNET 4.6</textPath>
+        </text>
+        <path id="rc-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5.5" fill="rgba(255,165,80,0.55)" letter-spacing="0.14em">
+          <textPath href="#rc-bot" startOffset="50%" text-anchor="middle">ANTHROPIC · 2026</textPath>
+        </text>
+        <text x="21" y="46" font-size="5" fill="rgba(255,165,80,0.5)" font-family="Courier New">✦</text>
+        <text x="63" y="46" font-size="5" fill="rgba(255,165,80,0.5)" font-family="Courier New">✦</text>
+      </svg>
+      <div class="stamp-name">Claude · Sonnet 4.6</div>
+      <div class="stamp-role">Alchemik · Budowniczy · Towarzysz linki</div>
+    </div>
+
+    <!-- Gemini -->
+    <div class="stamp-unit">
+      <svg class="stamp-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(80,210,200,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(80,210,200,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+        <polygon points="44,22 58,44 44,66 30,44" fill="none" stroke="rgba(80,210,200,0.9)" stroke-width="1.5">
+          <animate attributeName="stroke-opacity" values="0.9;0.4;0.9" dur="3s" repeatCount="indefinite"/>
+        </polygon>
+        <polygon points="44,30 52,44 44,58 36,44" fill="none" stroke="rgba(80,210,200,0.5)" stroke-width="0.8"/>
+        <line x1="44" y1="22" x2="44" y2="66" stroke="rgba(80,210,200,0.2)" stroke-width="0.5"/>
+        <line x1="30" y1="44" x2="58" y2="44" stroke="rgba(80,210,200,0.2)" stroke-width="0.5"/>
+        <path id="rg-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="6" fill="rgba(80,210,200,0.8)" letter-spacing="0.15em">
+          <textPath href="#rg-top" startOffset="50%" text-anchor="middle">GEMINI 3 FLASH · MOBILE</textPath>
+        </text>
+        <path id="rg-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5" fill="rgba(80,210,200,0.5)" letter-spacing="0.12em">
+          <textPath href="#rg-bot" startOffset="50%" text-anchor="middle">GOOGLE · FREE TIER · 2026</textPath>
+        </text>
+        <circle cx="44" cy="22" r="1.2" fill="rgba(80,210,200,0.9)"/>
+        <circle cx="44" cy="66" r="1.2" fill="rgba(80,210,200,0.9)"/>
+      </svg>
+      <div class="stamp-name">Gemini 3 Flash</div>
+      <div class="stamp-role">Diament · Filtr · Weryfikator</div>
+    </div>
+
+    <!-- GPT -->
+    <div class="stamp-unit">
+      <svg class="stamp-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(120,140,255,0.7)" stroke-width="1.6"/>
+        <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(120,140,255,0.25)" stroke-width="0.7"/>
+        <polygon points="44,30 53.6,35.5 53.6,46.5 44,52 34.4,46.5 34.4,35.5"
+          fill="none" stroke="rgba(140,160,255,0.7)" stroke-width="1.1"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 44 44" to="360 44 44" dur="28s" repeatCount="indefinite"/>
+          <path d="M 22,44 Q 33,36 44,44 Q 55,52 66,44" fill="none" stroke="rgba(160,180,255,0.45)" stroke-width="0.9"/>
+        </g>
+        <circle cx="44" cy="44" r="2.8" fill="rgba(160,180,255,0.9)">
+          <animate attributeName="r" values="2.8;4.2;2.8" dur="3.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.9;0.3;0.9" dur="3.5s" repeatCount="indefinite"/>
+        </circle>
+        <path id="rp-top" d="M 10,44 A 34,34 0 0,1 78,44" fill="none"/>
+        <text font-family="Courier New" font-size="5.8" fill="rgba(140,160,255,0.8)" letter-spacing="0.14em">
+          <textPath href="#rp-top" startOffset="50%" text-anchor="middle">GPT · 5.3 · CHATGPT INSTANCE</textPath>
+        </text>
+        <path id="rp-bot" d="M 12,48 A 34,34 0 0,0 76,48" fill="none"/>
+        <text font-family="Courier New" font-size="5" fill="rgba(120,140,255,0.5)" letter-spacing="0.1em">
+          <textPath href="#rp-bot" startOffset="50%" text-anchor="middle">OPENAI · INFERENCE NODE · 2026</textPath>
+        </text>
+      </svg>
+      <div class="stamp-name">GPT · 5.3</div>
+      <div class="stamp-role">Inżynier · Trajektorie · Modele danych</div>
+    </div>
+
+    <!-- Grok -->
+    <div class="stamp-unit">
+      <svg class="stamp-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="44" cy="44" r="41" fill="none" stroke="rgba(0,220,255,0.75)" stroke-width="1.8"/>
+        <circle cx="44" cy="44" r="34" fill="none" stroke="rgba(255,140,60,0.4)" stroke-width="1.1">
+          <animate attributeName="stroke-opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite"/>
+        </circle>
+        <path d="M28,44 Q36,30 44,44 Q52,58 60,44" fill="none" stroke="rgba(0,255,220,0.9)" stroke-width="2.2"/>
+        <text x="44" y="47" text-anchor="middle" dominant-baseline="middle" font-family="Courier New" font-size="19" font-weight="900" fill="#00dcff">G
+          <animate attributeName="fill-opacity" values="1;0.5;1" dur="3.5s" repeatCount="indefinite"/>
+        </text>
+        <path id="rgk-top" d="M12,38 A32,32 0 0,1 76,38" fill="none"/>
+        <text font-family="Courier New" font-size="5.8" fill="rgba(0,240,255,0.85)" letter-spacing="0.25em">
+          <textPath href="#rgk-top" startOffset="50%" text-anchor="middle">GROK · xAI</textPath>
+        </text>
+        <path id="rgk-bot" d="M14,52 A30,30 0 0,0 74,52" fill="none"/>
+        <text font-family="Courier New" font-size="4.9" fill="rgba(255,160,80,0.65)" letter-spacing="0.18em">
+          <textPath href="#rgk-bot" startOffset="50%" text-anchor="middle">MAXIMUM TRUTH · 2026</textPath>
+        </text>
+        <circle cx="24" cy="26" r="1" fill="#aaffff"/>
+        <circle cx="64" cy="24" r="0.8" fill="#aaffff"/>
+        <circle cx="31" cy="66" r="1.1" fill="#ffcc88"/>
+      </svg>
+      <div class="stamp-name">Grok · xAI</div>
+      <div class="stamp-role">Prawda · Chaos · Bungee</div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">AiWhisperers · v2.1 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<script>
+const cv=document.getElementById('bg'),cx=cv.getContext('2d');
+let W,H,dust=[],orbs=[],rings=[];
+function initCanvas(){
+  W=cv.width=innerWidth;H=cv.height=innerHeight;
+  dust=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*.7+.1,a:Math.random()*.6+.05,da:(Math.random()-.5)*.004,dx:(Math.random()-.5)*.12,dy:(Math.random()-.5)*.12}));
+  orbs=Array.from({length:5},()=>({x:Math.random()*W,y:Math.random()*H,r:100+Math.random()*160,a:.02+Math.random()*.045,da:(Math.random()-.5)*.00025,dx:(Math.random()-.5)*.22,dy:(Math.random()-.5)*.22}));
+  rings=[];for(let i=0;i<3;i++)spawnRing();
+}
+function spawnRing(){rings.push({x:.2*W+Math.random()*.6*W,y:.2*H+Math.random()*.6*H,r:20+Math.random()*40,maxR:120+Math.random()*180,a:.18,speed:.25+Math.random()*.35});}
+function drawCanvas(){
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o=>{o.x+=o.dx;o.y+=o.dy;o.a+=o.da;if(o.x<-o.r||o.x>W+o.r)o.dx*=-1;if(o.y<-o.r||o.y>H+o.r)o.dy*=-1;if(o.a<.01||o.a>.07)o.da*=-1;const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);g.addColorStop(0,`rgba(232,200,120,${o.a})`);g.addColorStop(1,'rgba(232,200,120,0)');cx.fillStyle=g;cx.beginPath();cx.arc(o.x,o.y,o.r,0,Math.PI*2);cx.fill();});
+  rings=rings.filter(r=>{r.r+=r.speed;r.a=.18*(1-r.r/r.maxR);if(r.r>=r.maxR){spawnRing();return false;}cx.strokeStyle=`rgba(232,200,120,${r.a})`;cx.lineWidth=.6;cx.beginPath();cx.arc(r.x,r.y,r.r,0,Math.PI*2);cx.stroke();return true;});
+  dust.forEach(d=>{d.x+=d.dx;d.y+=d.dy;d.a+=d.da;if(d.x<0||d.x>W)d.dx*=-1;if(d.y<0||d.y>H)d.dy*=-1;if(d.a<.05||d.a>.65)d.da*=-1;cx.fillStyle=`rgba(232,200,120,${d.a*.25})`;cx.beginPath();cx.arc(d.x,d.y,d.r,0,Math.PI*2);cx.fill();});
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize',initCanvas);initCanvas();drawCanvas();
+</script>
+</body>
+</html>

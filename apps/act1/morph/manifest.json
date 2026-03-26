@@ -1,0 +1,94 @@
+{
+  "id": "morph",
+  "name": "Moprh · Pole Morficzne 🔮",
+  "version": "0.3",
+  "date": "2026-04-14",
+  "description": "Mapa 3D połączeń i struktur konceptualnych — morfologiczna analiza sieci pojęciowych z trybem multi-model i dziennikiem proweniencji.",
+  "type": "morphic-analysis",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Kosmiczna Mapa ① 🌌",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      },
+      {
+        "actor": "Gemini",
+        "role": "seed",
+        "chat_id": ""
+      },
+      {
+        "actor": "GPT-4o",
+        "role": "seed",
+        "chat_id": ""
+      },
+      {
+        "actor": "Grok",
+        "role": "seed",
+        "chat_id": ""
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "soul_readme.html",
+    "components": [
+      {
+        "path": "map.html",
+        "role": "visualization"
+      },
+      {
+        "path": "log.html",
+        "role": "journal"
+      }
+    ],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "feeds",
+      "target": "horizon"
+    },
+    {
+      "type": "complements",
+      "target": "kompas"
+    }
+  ],
+  "tags": [
+    "morphic",
+    "3d",
+    "visualization",
+    "multi-model"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

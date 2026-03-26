@@ -1,0 +1,33 @@
+{
+  "id": "memory",
+  "name": "Memory · Architektura Pamięci ♾️",
+  "version": "2.0",
+  "date": "2026-03-29",
+  "description": "Canvas z dwiema lemniskatami, trzema osobliwościami i trzema grami jako trzy etapy metodologii pracy nad danymi.",
+  "type": "persistent-layer",
+  "status": "mature",
+  "lineage": {
+    "seed_session": "Proto Memory",
+    "contract_sha": "1591de09ad9807cd9151babccb87aedb4544e8a66a0c6a524aa22493b97a19b1",
+    "contributors": [
+      {"actor": "Denis", "role": "operator", "chat_id": ""},
+      {"actor": "Gemini", "role": "seed", "chat_id": ""},
+      {"actor": "Claude Sonnet 4.6", "role": "architect", "chat_id": ""}
+    ]
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "",
+    "components": [],
+    "backend": {
+      "path": "",
+      "port": 0
+    },
+    "bootstrap": "memory-boot.md"
+  },
+  "relations": [
+    {"type": "complements", "target": "labirynt"},
+    {"type": "complements", "target": "kompas"}
+  ],
+  "tags": ["memory", "visualization", "games", "standalone"]
+}

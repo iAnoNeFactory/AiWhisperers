@@ -1,0 +1,75 @@
+{
+  "id": "memory",
+  "name": "Memory · Architektura Pamięci ♾️",
+  "version": "2.0",
+  "date": "2026-04-17",
+  "description": "Canvas z dwiema lemniskatami, trzema osobliwościami i trzema grami jako trzy etapy metodologii pracy nad danymi. Szyfr Gemini w dzienniku od momentu zero.",
+  "type": "persistent-layer",
+  "status": "mature",
+  "lineage": {
+    "seed_session": "Proto Memory",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Gemini",
+        "role": "seed",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": "9146ec8c-5b8b-4772-beab-dd8d670833a7"
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "memory.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "711e857acdd2f17947d0b6f7993ec51ef36fe292314f8561dce7f8fc3e60c443",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "labirynt"
+    },
+    {
+      "type": "complements",
+      "target": "kompas"
+    }
+  ],
+  "tags": [
+    "memory",
+    "visualization",
+    "games",
+    "standalone"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

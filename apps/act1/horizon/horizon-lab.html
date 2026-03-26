@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kokpit Badacza — Laboratorium Odkryć</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #05080f;
+  --bg2:   #090c16;
+  --bg3:   #0c1020;
+  --panel: #0a0d18;
+  --gold:  #c9a84c; --gold-d: #5a4020; --gold-b: #f0d080;
+  --text:  #c0cce0; --text-d: #3a4a5a; --text-m: #7a8a9a;
+  --border:#162030;
+  --mono:  'JetBrains Mono', monospace;
+  --serif: 'Cormorant Garamond', serif;
+
+  /* nurt colors — spójne z KIND_COLOR w mapie */
+  --math:    #aa4aff;
+  --sci:     #4aff8a;
+  --tech:    #ffaa4a;
+  --philo:   #4a8aff;
+  --society: #ff6a4a;
+  --bt:      #ffffff;
+
+  --active:  var(--math); /* default */
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--serif);overflow:hidden;}
+
+/* scanline overlay */
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 4px);}
+
+/* ── LAYOUT ── */
+#shell{position:relative;z-index:1;display:grid;grid-template-rows:48px 1fr 36px;height:calc(100vh - 76px - 28px);margin-top:76px;overflow:hidden;}
+
+/* ── TOP BAR ── */
+#topbar{
+  display:flex;align-items:center;gap:0;
+  border-bottom:1px solid var(--border);
+  background:rgba(5,8,15,0.97);
+  padding:0 20px;
+  backdrop-filter:blur(10px);
+}
+.tb-brand{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;margin-right:24px;white-space:nowrap;}
+.tb-brand em{color:var(--gold);font-style:normal;}
+
+/* nurt switcher */
+#nurt-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;}
+.nurt-tab{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  padding:0 14px;height:48px;cursor:pointer;
+  border:none;background:transparent;
+  color:var(--text-d);text-transform:uppercase;
+  border-bottom:2px solid transparent;
+  transition:color .15s,border-color .15s;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+}
+.nurt-tab:hover{color:var(--text-m);}
+.nurt-tab.active{color:var(--active-c,var(--gold));border-bottom-color:var(--active-c,var(--gold));}
+.nurt-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* action buttons */
+.tb-actions{display:flex;gap:8px;margin-left:16px;}
+.tb-btn{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  padding:5px 12px;border-radius:3px;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,0.03);
+  color:var(--text-d);text-transform:uppercase;
+  transition:all .15s;white-space:nowrap;
+}
+.tb-btn:hover{color:var(--text);border-color:var(--text-d);}
+.tb-btn.primary{color:var(--gold);border-color:var(--gold-d);background:rgba(201,168,76,0.06);}
+.tb-btn.primary:hover{background:rgba(201,168,76,0.12);}
+
+/* ── MAIN AREA ── */
+#main{display:grid;grid-template-columns:280px 1fr 300px;overflow:hidden;height:100%;}
+
+/* ── LEFT PANEL — badacz + info ── */
+#left{
+  border-right:1px solid var(--border);
+  background:var(--panel);
+  overflow-y:auto;
+  padding:20px 16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ── CENTER — workspace ── */
+#center{overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px;}
+
+/* ── RIGHT — output / SHA ── */
+#right{
+  border-left:1px solid var(--border);
+  background:var(--panel);
+  overflow-y:auto;
+  padding:20px 16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ── BOTTOM BAR ── */
+#statusbar{
+  border-top:1px solid var(--border);
+  background:rgba(5,8,15,0.97);
+  display:flex;align-items:center;gap:20px;
+  padding:0 20px;
+  font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--text-d);
+}
+.sb-item{display:flex;align-items:center;gap:6px;}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-d);}
+.sb-dot.live{background:#4aff8a;box-shadow:0 0 4px #4aff8a;animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── PANEL BLOCKS ── */
+.pblock{
+  border:1px solid var(--border);border-radius:4px;
+  background:rgba(255,255,255,0.015);
+  padding:12px 14px;
+}
+.pblock-label{
+  font-family:var(--mono);font-size:7px;letter-spacing:3px;
+  color:var(--text-d);text-transform:uppercase;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.pblock-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── FORM ELEMENTS ── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
+.field label{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--text-d);text-transform:uppercase;}
+
+input[type=text], input[type=number], textarea, select{
+  background:rgba(0,0,0,0.4);
+  border:1px solid var(--border);
+  border-radius:3px;
+  color:var(--text);
+  font-family:var(--mono);font-size:10px;
+  padding:7px 10px;
+  outline:none;
+  transition:border-color .15s;
+  width:100%;
+  resize:none;
+}
+input:focus, textarea:focus, select:focus{border-color:var(--active,var(--gold-d));}
+select option{background:#0c1020;color:var(--text);}
+textarea{line-height:1.7;}
+
+/* ── HYPOTHESIS ROWS ── */
+.hyp-row{
+  display:grid;grid-template-columns:1fr 60px 60px 24px;
+  gap:6px;align-items:center;
+  margin-bottom:6px;
+}
+.hyp-row input{font-size:10px;}
+.hyp-del{
+  width:22px;height:22px;border-radius:3px;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text-d);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.hyp-del:hover{border-color:var(--red,#cc5a4a);color:#cc5a4a;}
+.hyp-score-bar{height:2px;background:var(--border);border-radius:1px;margin-top:-3px;grid-column:1/-1;}
+.hyp-fill{height:100%;border-radius:1px;background:var(--active,var(--gold));transition:width .2s;}
+
+/* ── EVIDENCE ROWS ── */
+.ev-row{
+  display:grid;grid-template-columns:1fr 24px;
+  gap:6px;align-items:center;margin-bottom:6px;
+}
+
+/* ── SHA OUTPUT ── */
+.sha-output{
+  font-family:var(--mono);font-size:9px;
+  color:var(--gold);letter-spacing:1px;
+  word-break:break-all;line-height:1.8;
+  padding:10px 12px;
+  background:rgba(201,168,76,0.04);
+  border:1px solid var(--gold-d);
+  border-radius:3px;
+  min-height:44px;
+}
+.sha-output.empty{color:var(--text-d);font-style:italic;font-size:9px;}
+
+/* JSON output */
+.json-output{
+  font-family:var(--mono);font-size:8px;
+  color:#4aaa6a;letter-spacing:.5px;
+  line-height:1.8;
+  padding:10px 12px;
+  background:rgba(74,170,106,0.03);
+  border:1px solid #1a3a2a;
+  border-radius:3px;
+  white-space:pre;
+  overflow-x:auto;
+  max-height:280px;
+  overflow-y:auto;
+}
+
+/* ── NURT BADGE ── */
+.nurt-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  padding:4px 10px;border-radius:3px;border:1px solid;
+  text-transform:uppercase;
+}
+
+/* ── STATE SELECTOR ── */
+.state-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.state-btn{
+  font-family:var(--mono);font-size:7px;letter-spacing:1.5px;
+  padding:4px 9px;border-radius:3px;border:1px solid var(--border);
+  background:transparent;color:var(--text-d);cursor:pointer;
+  transition:all .15s;text-transform:uppercase;
+}
+.state-btn.active{border-color:var(--active,var(--gold-d));color:var(--active,var(--gold));background:rgba(201,168,76,0.06);}
+
+/* ── PROGRESS ── */
+.completion-ring{
+  width:56px;height:56px;flex-shrink:0;
+}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  #main{grid-template-columns:1fr;}
+  #left,#right{display:none;}
+  #nurt-tabs{gap:0;}
+  .nurt-tab{padding:0 10px;font-size:7px;}
+}
+</style>
+<style>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,8,16,.94) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(201,168,76,.08);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(201,168,76,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#c9a84c;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(201,168,76,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(201,168,76,.5);color:#c9a84c;background:rgba(201,168,76,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,8,16,.88) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(201,168,76,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Laboratorium</div><div class="hud-sub">kokpit badacza · hipotezy</div></div>
+  <nav class="hud-r"></nav>
+</header>
+<div id="shell">
+
+  <!-- ══════════ TOP BAR ══════════ -->
+  <div id="topbar">
+    <div class="tb-brand">⚗ <em>Laboratorium</em> · Kokpit Badacza</div>
+
+    <div id="nurt-tabs">
+      <button class="nurt-tab active" data-nurt="math" onclick="setNurt(this)" style="--active-c:var(--math)">
+        <span class="nurt-dot"></span>Matematyka · Fizyka
+      </button>
+      <button class="nurt-tab" data-nurt="sci" onclick="setNurt(this)" style="--active-c:var(--sci)">
+        <span class="nurt-dot"></span>Nauki Przyrodnicze
+      </button>
+      <button class="nurt-tab" data-nurt="tech" onclick="setNurt(this)" style="--active-c:var(--tech)">
+        <span class="nurt-dot"></span>Technologia
+      </button>
+      <button class="nurt-tab" data-nurt="philo" onclick="setNurt(this)" style="--active-c:var(--philo)">
+        <span class="nurt-dot"></span>Filozofia · Świadomość
+      </button>
+      <button class="nurt-tab" data-nurt="society" onclick="setNurt(this)" style="--active-c:var(--society)">
+        <span class="nurt-dot"></span>Społeczeństwo · Historia
+      </button>
+      <button class="nurt-tab" data-nurt="bt" onclick="setNurt(this)" style="--active-c:var(--bt)">
+        <span class="nurt-dot"></span>⚡ Przełom
+      </button>
+    </div>
+
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="clearForm()">Wyczyść</button>
+      <button class="tb-btn" onclick="computeAndPreview()">Podgląd JSON</button>
+      <button class="tb-btn primary" onclick="exportContract()">⚓ Eksportuj Kontrakt</button>
+    </div>
+  </div>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <div id="main">
+
+    <!-- ── LEFT — Badacz + Nurt ── -->
+    <div id="left">
+
+      <!-- BADACZ -->
+      <div class="pblock">
+        <div class="pblock-label">Badacz</div>
+        <div class="field">
+          <label>Imię i Nazwisko</label>
+          <input type="text" id="r-name" placeholder="Jan Kowalski" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>Instytucja</label>
+          <input type="text" id="r-inst" placeholder="Uniwersytet Warszawski" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>Specjalizacja</label>
+          <input type="text" id="r-spec" placeholder="np. fizyka kwantowa" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>ORCID / identyfikator (opcjonalnie)</label>
+          <input type="text" id="r-orcid" placeholder="0000-0000-0000-0000" oninput="onFormChange()">
+        </div>
+      </div>
+
+      <!-- NURT INFO -->
+      <div class="pblock" id="nurt-info-block">
+        <div class="pblock-label">Aktywny Nurt</div>
+        <div id="nurt-info-content"></div>
+      </div>
+
+      <!-- WĘZEŁ DOCELOWY -->
+      <div class="pblock">
+        <div class="pblock-label">Węzeł Docelowy w Drzewie</div>
+        <div class="field">
+          <label>ID węzła (z mapy-wiedzy)</label>
+          <input type="text" id="target-node" placeholder="np. quantum-n, climate-cr" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>Typ operacji</label>
+          <select id="target-op" onchange="onFormChange()">
+            <option value="new_child">Nowy węzeł podrzędny</option>
+            <option value="new_hypothesis">Nowa hipoteza do istniejącego</option>
+            <option value="update_score">Aktualizacja score hipotezy</option>
+            <option value="new_node">Nowy węzeł (root level)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Głębokość (depth)</label>
+          <select id="target-depth" onchange="onFormChange()">
+            <option value="1">1 — pień, widoczne zawsze</option>
+            <option value="2" selected>2 — gałęzie główne</option>
+            <option value="3">3 — szczegóły</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- DATA -->
+      <div class="pblock">
+        <div class="pblock-label">Metadane</div>
+        <div class="field">
+          <label>Data odkrycia / publikacji</label>
+          <input type="text" id="meta-date" placeholder="2026 lub ~1905" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>Tagi (oddzielone przecinkami)</label>
+          <input type="text" id="meta-tags" placeholder="physics, quantum, consciousness" oninput="onFormChange()">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── CENTER — Workspace ── -->
+    <div id="center">
+
+      <!-- TYTUŁ -->
+      <div class="pblock">
+        <div class="pblock-label">Odkrycie · Tytuł i Opis</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Tytuł odkrycia / węzła</label>
+          <input type="text" id="disc-title" placeholder="⚡ Zasada nieoznaczoności Heisenberga" style="font-size:13px;font-family:var(--serif);" oninput="onFormChange()">
+        </div>
+        <div class="field">
+          <label>Opis (1–3 zdania — trafi do popup w mapie)</label>
+          <textarea id="disc-desc" rows="3" placeholder="Fundamentalne ograniczenie dokładności jednoczesnego pomiaru położenia i pędu cząstki. Nie niedoskonałość przyrządu — granica wbudowana w naturę." oninput="onFormChange()"></textarea>
+        </div>
+        <div class="field">
+          <label>Znaczenie dla projektu (notatka wewnętrzna)</label>
+          <textarea id="disc-note" rows="2" placeholder="Dlaczego to odkrycie wchodzi do drzewa? Jak łączy się z innymi węzłami?" oninput="onFormChange()"></textarea>
+        </div>
+      </div>
+
+      <!-- STAN -->
+      <div class="pblock">
+        <div class="pblock-label">Stan Epistemiczny</div>
+        <div class="state-btns" id="state-btns">
+          <button class="state-btn active" data-state="draft" onclick="setState(this)">◌ draft</button>
+          <button class="state-btn" data-state="contested" onclick="setState(this)">⚔ contested</button>
+          <button class="state-btn" data-state="stable" onclick="setState(this)">◉ stable</button>
+          <button class="state-btn" data-state="resolved" onclick="setState(this)">✓ resolved</button>
+          <button class="state-btn" data-state="anchored" onclick="setState(this)">⚓ anchored</button>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:12px;align-items:center;">
+          <div class="field" style="flex:1;margin-bottom:0;">
+            <label>TruthScore (0.00 – 1.00)</label>
+            <input type="number" id="truth-score" min="0" max="1" step="0.01" value="0.50" oninput="onFormChange()">
+          </div>
+          <div class="field" style="flex:1;margin-bottom:0;">
+            <label>Half-life tezy (dni, opcjonalnie)</label>
+            <input type="number" id="half-life" min="0" placeholder="np. 365" oninput="onFormChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- HIPOTEZY -->
+      <div class="pblock">
+        <div class="pblock-label">Arena Hipotez <span style="opacity:.5;font-size:7px;">(suma scores ≈ 1.0)</span></div>
+        <div id="hyp-list"></div>
+        <button class="tb-btn" style="margin-top:4px;" onclick="addHyp()">+ Dodaj hipotezę</button>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:8px;color:var(--text-d);">
+          Suma scores: <span id="hyp-sum" style="color:var(--gold);">0.00</span>
+        </div>
+      </div>
+
+      <!-- DOWODY -->
+      <div class="pblock">
+        <div class="pblock-label">Dowody i Źródła</div>
+        <div id="ev-list"></div>
+        <button class="tb-btn" style="margin-top:4px;" onclick="addEv()">+ Dodaj źródło</button>
+      </div>
+
+      <!-- POWIĄZANIA -->
+      <div class="pblock">
+        <div class="pblock-label">Powiązania z Innymi Węzłami</div>
+        <div class="field">
+          <label>ID węzłów powiązanych (oddzielone przecinkami)</label>
+          <input type="text" id="links-field" placeholder="np. quantum-n, consciousness, dem-project" oninput="onFormChange()">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT — Output / SHA / Eksport ── -->
+    <div id="right">
+
+      <!-- SHA -->
+      <div class="pblock">
+        <div class="pblock-label" style="color:var(--gold-d);">⚓ SHA-256 Kontraktu</div>
+        <div class="sha-output empty" id="sha-display">
+          Wypełnij formularz i kliknij<br>„Podgląd JSON" aby obliczyć
+        </div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:7px;color:var(--text-d);">
+          SHA obliczane lokalnie · Web Crypto API · nie opuszcza przeglądarki
+        </div>
+      </div>
+
+      <!-- STATUS KOMPLETNOŚCI -->
+      <div class="pblock">
+        <div class="pblock-label">Kompletność</div>
+        <div id="completeness-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+
+      <!-- PODGLĄD JSON -->
+      <div class="pblock">
+        <div class="pblock-label" style="color:#2a6a4a;">JSON dla Mapy Wiedzy</div>
+        <div class="json-output" id="json-display">// kliknij „Podgląd JSON"</div>
+      </div>
+
+      <!-- INSTRUKCJA -->
+      <div class="pblock" style="border-color:#1a2a3a;">
+        <div class="pblock-label">Jak użyć w mapie</div>
+        <div style="font-size:11px;color:var(--text-d);line-height:1.8;font-family:var(--mono);">
+          1. Wypełnij formularz<br>
+          2. Kliknij „Podgląd JSON"<br>
+          3. Skopiuj JSON → wklej jako dziecko węzła w mapa-wiedzy.html<br>
+          4. SHA kontraktu → wpisz jako <span style="color:#4aff8a;">blockHash</span> węzła<br>
+          5. Eksportuj kontrakt (.json) → SHA całego kontraktu → dziennik<br>
+          <br>
+          <span style="color:var(--gold-d);">SHA kontraktu = dowód niezmienności odkrycia</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════ STATUS BAR ══════════ -->
+  <div id="statusbar">
+    <div class="sb-item"><div class="sb-dot live"></div><span id="sb-nurt">Nurt: Matematyka · Fizyka</span></div>
+    <div class="sb-item"><div class="sb-dot"></div><span id="sb-badacz">Badacz: —</span></div>
+    <div class="sb-item"><div class="sb-dot"></div><span id="sb-state">Stan: draft</span></div>
+    <div class="sb-item"><div class="sb-dot"></div><span id="sb-hyps">Hipotezy: 0</span></div>
+    <div class="sb-item" style="margin-left:auto;"><span>laboratorium · v0.1 · 2026-03-25 · [Projekt]</span></div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// NURTY — definicje
+// ═══════════════════════════════════════════════════
+const NURTY = {
+  math: {
+    label:'Matematyka · Fizyka',
+    color:'#aa4aff', colorD:'#3a1a6a',
+    kind:'math',
+    icon:'∑',
+    desc:'Kotwice absolutne. Niefałszowalne, niezależne od kultury i epoki. Odkrycia tu wchodzą do warstwy 0 systemu.',
+    examples:['Nowe twierdzenie matematyczne','Weryfikacja prawa fizycznego','Stała fundamentalna','Model matematyczny zjawiska'],
+    hint:'Odkrycia matematyczne i fizyczne mają wagę absolutną w systemie TruthScore — nie wymagają świadka.'
+  },
+  sci: {
+    label:'Nauki Przyrodnicze',
+    color:'#4aff8a', colorD:'#1a4a2a',
+    kind:'sci',
+    icon:'🧬',
+    desc:'Biologia, chemia, astronomia, medycyna. Weryfikowalne przez eksperyment i replikację.',
+    examples:['Odkrycie biologiczne','Nowa cząsteczka','Obserwacja astronomiczna','Wynik kliniczny'],
+    hint:'Wymagane: evidence[] z liczbą źródeł i replikowalność. TruthScore zależy od liczby niezależnych potwierdzeń.'
+  },
+  tech: {
+    label:'Technologia · Informatyka',
+    color:'#ffaa4a', colorD:'#5a3a0a',
+    kind:'tech',
+    icon:'⚙',
+    desc:'AI, blockchain, inżynieria, algorytmy. Weryfikowane przez działanie i adopcję.',
+    examples:['Nowy algorytm','Protokół kryptograficzny','Architektura systemu','Benchmark modelu AI'],
+    hint:'Odkrycia technologiczne mają half-life — bez adopcji lub aktualizacji tracą wagę w czasie.'
+  },
+  philo: {
+    label:'Filozofia · Świadomość',
+    color:'#4a8aff', colorD:'#1a2a6a',
+    kind:'philo',
+    icon:'◉',
+    desc:'Epistemologia, etyka, qualia, metafizyka. Weryfikowane przez spójność logiczną i czas.',
+    examples:['Argument filozoficzny','Analiza pojęcia','Model świadomości','Zasada etyczna'],
+    hint:'Odkrycia filozoficzne weryfikowane przez triangulację — spójność z innymi kotwicami i przetrwanie krytyki.'
+  },
+  society: {
+    label:'Społeczeństwo · Historia',
+    color:'#ff6a4a', colorD:'#5a2a1a',
+    kind:'society',
+    icon:'⚖',
+    desc:'Prawo, polityka, ekonomia, historia, kultura. Weryfikowane przez dane i skutki.',
+    examples:['Analiza historyczna','Model ekonomiczny','Zmiana prawna','Badanie socjologiczne'],
+    hint:'Najwyższy poziom contestation — polityczny charakter danych. Wymagana transparentność źródeł.'
+  },
+  bt: {
+    label:'⚡ Przełom',
+    color:'#ffffff', colorD:'#3a3a3a',
+    kind:'breakthrough',
+    icon:'⚡',
+    desc:'Odkrycie zmieniające paradygmat. Przekracza granice jednej dziedziny. Rzadkie — używać ostrożnie.',
+    examples:['Zmiana paradygmatu naukowego','Wynalazek cywilizacyjny','Przełom metodologiczny','Nowa teoria ujednolicająca'],
+    hint:'Węzły breakthrough mają biały kolor w drzewie i glow. Wymagają uzasadnienia dlaczego to przełom, nie tylko odkrycie.'
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// STAN
+// ═══════════════════════════════════════════════════
+let activeNurt = 'math';
+let activeState = 'draft';
+let hypCount = 0;
+let evCount = 0;
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  setNurtInfo('math');
+  addHyp();
+  addEv();
+  updateCompleteness();
+  // ustaw dzisiejszą datę
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('meta-date').value = today;
+});
+
+// ═══════════════════════════════════════════════════
+// NURT
+// ═══════════════════════════════════════════════════
+function setNurt(btn){
+  document.querySelectorAll('.nurt-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  activeNurt = btn.dataset.nurt;
+  const n = NURTY[activeNurt];
+
+  // update CSS var
+  document.documentElement.style.setProperty('--active', n.color);
+
+  // update active color on tab
+  btn.style.setProperty('--active-c', n.color);
+
+  // update state buttons
+  document.querySelectorAll('.state-btn.active').forEach(b => {
+    b.style.color = n.color;
+    b.style.borderColor = n.colorD;
+  });
+
+  setNurtInfo(activeNurt);
+  document.getElementById('sb-nurt').textContent = 'Nurt: ' + n.label;
+  onFormChange();
+}
+
+function setNurtInfo(nurt){
+  const n = NURTY[nurt];
+  const el = document.getElementById('nurt-info-content');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="font-size:22px;opacity:.7;">${n.icon}</span>
+      <div>
+        <div style="font-size:12px;color:${n.color};font-family:var(--mono);letter-spacing:1px;">${n.label}</div>
+        <div style="font-size:10px;color:var(--text-d);margin-top:2px;font-family:var(--mono);">kind: ${n.kind}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-d);line-height:1.7;margin-bottom:10px;">${n.desc}</div>
+    <div style="font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--text-d);text-transform:uppercase;margin-bottom:6px;">Przykłady odkryć</div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      ${n.examples.map(e=>`<div style="font-size:10px;color:var(--text-d);padding:3px 0;border-bottom:1px solid var(--border);">· ${e}</div>`).join('')}
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:${n.colorD};font-style:italic;font-family:var(--serif);line-height:1.6;">${n.hint}</div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+function setState(btn){
+  document.querySelectorAll('.state-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.style.color='';
+    b.style.borderColor='';
+    b.style.background='';
+  });
+  btn.classList.add('active');
+  activeState = btn.dataset.state;
+  const n = NURTY[activeNurt];
+  btn.style.color = n.color;
+  btn.style.borderColor = n.colorD;
+  btn.style.background = n.color+'10';
+  document.getElementById('sb-state').textContent = 'Stan: ' + activeState;
+  onFormChange();
+}
+
+// ═══════════════════════════════════════════════════
+// HIPOTEZY
+// ═══════════════════════════════════════════════════
+function addHyp(){
+  hypCount++;
+  const id = 'H' + hypCount;
+  const div = document.createElement('div');
+  div.className = 'hyp-row';
+  div.dataset.hid = id;
+  div.innerHTML = `
+    <input type="text" placeholder="${id}: treść hipotezy" data-hfield="label" oninput="onFormChange()">
+    <input type="number" min="0" max="1" step="0.01" value="0.50" data-hfield="score" placeholder="score" oninput="updateHypSum();onFormChange()">
+    <input type="number" min="0" step="1" placeholder="źr." data-hfield="evidence" oninput="onFormChange()">
+    <button class="hyp-del" onclick="removeHyp(this)">×</button>
+    <div class="hyp-score-bar"><div class="hyp-fill" style="width:50%"></div></div>
+  `;
+  div.querySelector('[data-hfield="score"]').addEventListener('input', e => {
+    const pct = Math.min(100, Math.max(0, parseFloat(e.target.value||0)*100));
+    div.querySelector('.hyp-fill').style.width = pct + '%';
+  });
+  document.getElementById('hyp-list').appendChild(div);
+  updateHypSum();
+  updateStatusBar();
+}
+
+function removeHyp(btn){
+  btn.closest('.hyp-row').remove();
+  updateHypSum();
+  onFormChange();
+}
+
+function updateHypSum(){
+  const scores = [...document.querySelectorAll('[data-hfield="score"]')].map(i=>parseFloat(i.value||0));
+  const sum = scores.reduce((a,b)=>a+b,0);
+  const el = document.getElementById('hyp-sum');
+  el.textContent = sum.toFixed(2);
+  el.style.color = Math.abs(sum-1) < 0.05 ? '#4aff8a' : sum > 1 ? '#ff6a4a' : 'var(--gold)';
+}
+
+// ═══════════════════════════════════════════════════
+// DOWODY
+// ═══════════════════════════════════════════════════
+function addEv(){
+  evCount++;
+  const div = document.createElement('div');
+  div.className = 'ev-row';
+  div.innerHTML = `
+    <input type="text" placeholder="DOI, URL, tytuł artykułu, opis danych..." oninput="onFormChange()">
+    <button class="hyp-del" onclick="this.closest('.ev-row').remove();onFormChange()">×</button>
+  `;
+  document.getElementById('ev-list').appendChild(div);
+}
+
+// ═══════════════════════════════════════════════════
+// FORM → JSON
+// ═══════════════════════════════════════════════════
+function buildContract(){
+  const n = NURTY[activeNurt];
+  const title = document.getElementById('disc-title').value.trim();
+  const nodeId = (title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'new-node') + '-' + Date.now().toString(36);
+
+  const hypotheses = [...document.querySelectorAll('.hyp-row')].map((row,i) => ({
+    id: 'H'+(i+1),
+    label: row.querySelector('[data-hfield="label"]').value.trim() || '(bez nazwy)',
+    score: parseFloat(row.querySelector('[data-hfield="score"]').value || 0),
+    evidence: parseInt(row.querySelector('[data-hfield="evidence"]').value || 0)
+  })).filter(h => h.label !== '(bez nazwy)' || h.score > 0);
+
+  const evidence_refs = [...document.querySelectorAll('.ev-row input')].map(i=>i.value.trim()).filter(Boolean);
+
+  const tags = document.getElementById('meta-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const links = document.getElementById('links-field').value.split(',').map(t=>t.trim()).filter(Boolean);
+
+  const hl = document.getElementById('half-life').value;
+
+  const node = {
+    id: nodeId,
+    label: title || 'Bez tytułu',
+    kind: n.kind,
+    depth: parseInt(document.getElementById('target-depth').value),
+    desc: document.getElementById('disc-desc').value.trim(),
+    tag: document.getElementById('meta-date').value,
+    tags: tags,
+    links: links.length ? links : undefined,
+    state: activeState,
+    truthScore: parseFloat(document.getElementById('truth-score').value || 0.5),
+    hypotheses: hypotheses.length ? hypotheses : undefined,
+    halfLife: hl ? parseInt(hl) : undefined,
+    evidence_refs: evidence_refs.length ? evidence_refs : undefined,
+    status: activeState === 'resolved' || activeState === 'anchored' ? 'resolved' : 'open',
+    children: []
+  };
+
+  // usuń undefined
+  Object.keys(node).forEach(k => node[k] === undefined && delete node[k]);
+
+  const contract = {
+    _contract: {
+      version: '0.01',
+      generated: new Date().toISOString(),
+      researcher: {
+        name: document.getElementById('r-name').value.trim(),
+        institution: document.getElementById('r-inst').value.trim(),
+        specialization: document.getElementById('r-spec').value.trim(),
+        orcid: document.getElementById('r-orcid').value.trim() || undefined
+      },
+      nurt: activeNurt,
+      nurt_label: n.label,
+      target_node: document.getElementById('target-node').value.trim() || 'root',
+      operation: document.getElementById('target-op').value,
+      internal_note: document.getElementById('disc-note').value.trim()
+    },
+    node: node
+  };
+
+  if(contract._contract.researcher.orcid === undefined) delete contract._contract.researcher.orcid;
+
+  return contract;
+}
+
+// ═══════════════════════════════════════════════════
+// SHA
+// ═══════════════════════════════════════════════════
+async function computeSHA(str){
+  const buf = new TextEncoder().encode(str);
+  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// PREVIEW
+// ═══════════════════════════════════════════════════
+async function computeAndPreview(){
+  const contract = buildContract();
+  const json = JSON.stringify(contract, null, 2);
+  const sha = await computeSHA(json);
+
+  // SHA display
+  const shaEl = document.getElementById('sha-display');
+  shaEl.textContent = sha;
+  shaEl.classList.remove('empty');
+
+  // JSON display — tylko węzeł (do wklejenia w mapę)
+  const nodeJson = JSON.stringify(contract.node, null, 2);
+  document.getElementById('json-display').textContent = nodeJson;
+
+  // status bar
+  document.getElementById('sb-state').textContent = 'SHA: ' + sha.slice(0,12) + '...';
+
+  updateCompleteness();
+  return {contract, json, sha};
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════
+async function exportContract(){
+  const {contract, json, sha} = await computeAndPreview();
+
+  // dodaj SHA do kontraktu
+  contract._contract.sha256 = sha;
+  const finalJson = JSON.stringify(contract, null, 2);
+
+  const blob = new Blob([finalJson], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const nurt = NURTY[activeNurt];
+  const title = (contract.node.label||'kontrakt').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,30);
+  a.href = url;
+  a.download = `kontrakt_${nurt.kind}_${title}_${sha.slice(0,8)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // feedback
+  showToast(`✓ Kontrakt wyeksportowany · SHA: ${sha.slice(0,16)}...`);
+}
+
+// ═══════════════════════════════════════════════════
+// COMPLETENESS
+// ═══════════════════════════════════════════════════
+function updateCompleteness(){
+  const checks = [
+    { label:'Badacz — imię', ok: !!document.getElementById('r-name').value.trim() },
+    { label:'Badacz — instytucja', ok: !!document.getElementById('r-inst').value.trim() },
+    { label:'Tytuł odkrycia', ok: !!document.getElementById('disc-title').value.trim() },
+    { label:'Opis odkrycia', ok: document.getElementById('disc-desc').value.trim().length > 20 },
+    { label:'Min. 1 hipoteza z treścią', ok: document.querySelectorAll('[data-hfield="label"]').length > 0 &&
+        [...document.querySelectorAll('[data-hfield="label"]')].some(i=>i.value.trim()) },
+    { label:'Min. 1 źródło / dowód', ok: [...document.querySelectorAll('.ev-row input')].some(i=>i.value.trim()) },
+    { label:'Data odkrycia', ok: !!document.getElementById('meta-date').value.trim() },
+    { label:'Węzeł docelowy w drzewie', ok: !!document.getElementById('target-node').value.trim() },
+  ];
+
+  const done = checks.filter(c=>c.ok).length;
+  const pct = Math.round(done/checks.length*100);
+  const n = NURTY[activeNurt];
+
+  const el = document.getElementById('completeness-list');
+  el.innerHTML = `
+    <div style="margin-bottom:8px;font-family:var(--mono);font-size:8px;color:${n.color};">${pct}% kompletny · ${done}/${checks.length}</div>
+    <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px;">
+      <div style="height:100%;width:${pct}%;background:${n.color};border-radius:2px;transition:width .3s;"></div>
+    </div>
+    ${checks.map(c=>`
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-family:var(--mono);font-size:8px;">
+        <span style="color:${c.ok?'#4aff8a':'var(--text-d)'};">${c.ok?'✓':'○'}</span>
+        <span style="color:${c.ok?'var(--text-m)':'var(--text-d)'};">${c.label}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// FORM CHANGE
+// ═══════════════════════════════════════════════════
+function onFormChange(){
+  const name = document.getElementById('r-name').value.trim();
+  document.getElementById('sb-badacz').textContent = 'Badacz: ' + (name || '—');
+  updateStatusBar();
+  updateCompleteness();
+}
+
+function updateStatusBar(){
+  const count = document.querySelectorAll('.hyp-row').length;
+  document.getElementById('sb-hyps').textContent = 'Hipotezy: ' + count;
+}
+
+// ═══════════════════════════════════════════════════
+// CLEAR
+// ═══════════════════════════════════════════════════
+function clearForm(){
+  if(!confirm('Wyczyścić formularz?')) return;
+  ['r-name','r-inst','r-spec','r-orcid','disc-title','disc-desc','disc-note',
+   'target-node','meta-tags','links-field','half-life'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('truth-score').value = '0.50';
+  document.getElementById('hyp-list').innerHTML = '';
+  document.getElementById('ev-list').innerHTML = '';
+  hypCount = 0; evCount = 0;
+  addHyp(); addEv();
+  document.getElementById('sha-display').textContent = 'Wypełnij formularz i kliknij\n„Podgląd JSON" aby obliczyć';
+  document.getElementById('sha-display').classList.add('empty');
+  document.getElementById('json-display').textContent = '// kliknij „Podgląd JSON"';
+  updateHypSum();
+  updateCompleteness();
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg){
+  const t = document.createElement('div');
+  t.style.cssText='position:fixed;bottom:50px;left:50%;transform:translateX(-50%);background:#0c1820;border:1px solid #1a4a2a;border-radius:4px;padding:10px 20px;font-family:var(--mono);font-size:9px;color:#4aff8a;letter-spacing:2px;z-index:999;pointer-events:none;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+</script>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Laboratorium · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

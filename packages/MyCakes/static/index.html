@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 MyCakes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fdf6ee; --blush: #f5c6c6; --rose: #e8909a; --dusty: #d4748a;
+    --mauve: #b05c72; --chocolate: #5c2d3a; --caramel: #c9843a; --honey: #f0c97a;
+    --mint: #a8d5ba; --mint-dark: #6ab38a; --white: #fffaf7;
+    --text: #3d2020; --text-light: #7a4a50;
+    --shadow: rgba(176,92,114,.15); --shadow-deep: rgba(92,45,58,.25);
+    --radius: 18px; --radius-sm: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Lato',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; }
+
+  /* HEADER */
+  .app-header {
+    background:linear-gradient(135deg,var(--chocolate) 0%,var(--mauve) 60%,var(--dusty) 100%);
+    padding:20px 32px 16px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 4px 20px var(--shadow-deep); position:sticky; top:0; z-index:100;
+  }
+  .app-header h1 { font-family:'Playfair Display',serif; color:var(--honey); font-size:1.8rem; }
+  .app-header h1 span { color:var(--blush); font-style:italic; }
+  .header-actions { display:flex; gap:10px; align-items:center; }
+  input.search { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+    border-radius:var(--radius-sm); padding:8px 14px; color:#fff; font-size:.9rem; width:200px; }
+  input.search::placeholder { color:rgba(255,255,255,.6); }
+
+  /* TABS */
+  .tabs { background:var(--chocolate); display:flex; gap:4px; padding:0 32px; overflow-x:auto; }
+  .tab-btn { background:none; border:none; padding:12px 20px; color:rgba(255,255,255,.65);
+    cursor:pointer; font-size:.9rem; font-family:'Lato',sans-serif; border-bottom:3px solid transparent;
+    transition:.2s; white-space:nowrap; }
+  .tab-btn:hover { color:#fff; }
+  .tab-btn.active { color:var(--honey); border-bottom-color:var(--honey); font-weight:700; }
+
+  /* PAGES */
+  .page { display:none; padding:28px 32px; max-width:1200px; margin:0 auto; }
+  .page.active { display:block; }
+
+  /* BUTTONS */
+  .btn { border:none; border-radius:var(--radius-sm); padding:9px 18px; cursor:pointer;
+    font-family:'Lato',sans-serif; font-weight:700; font-size:.85rem; transition:.2s; }
+  .btn-primary { background:linear-gradient(135deg,var(--honey),var(--caramel)); color:var(--chocolate); }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 12px var(--shadow); }
+  .btn-danger { background:var(--blush); color:var(--chocolate); }
+  .btn-danger:hover { background:var(--rose); }
+  .btn-ghost { background:rgba(176,92,114,.1); color:var(--mauve); }
+  .btn-ghost:hover { background:rgba(176,92,114,.2); }
+  .btn-sm { padding:5px 12px; font-size:.8rem; }
+  .btn-back { background:none; border:none; color:var(--mauve); cursor:pointer;
+    font-size:.9rem; font-weight:700; margin-bottom:16px; padding:4px 0; }
+  .btn-back:hover { color:var(--chocolate); }
+
+  /* SECTION TITLE */
+  .section-title { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--chocolate);
+    margin-bottom:20px; }
+  .section-title span { color:var(--mauve); font-style:italic; }
+
+  /* CARDS GRID */
+  .card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:0;
+    box-shadow:0 2px 12px var(--shadow); transition:.2s; overflow:hidden; cursor:pointer;
+  }
+  .card:hover { transform:translateY(-3px); box-shadow:0 6px 24px var(--shadow-deep); }
+  .card-img { width:100%; height:160px; object-fit:cover; background:linear-gradient(135deg,var(--blush),var(--honey)); }
+  .card-img-placeholder { width:100%; height:160px; display:flex; align-items:center;
+    justify-content:center; font-size:3rem;
+    background:linear-gradient(135deg,var(--blush) 0%,var(--honey) 100%); }
+  .card-body { padding:16px; }
+  .card-title { font-family:'Playfair Display',serif; font-size:1.05rem; color:var(--chocolate); margin-bottom:6px; }
+  .card-meta { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .tag { background:var(--blush); color:var(--mauve); border-radius:20px; padding:2px 10px;
+    font-size:.75rem; font-weight:700; }
+  .tag-mint { background:var(--mint); color:#2d6647; }
+  .stars { color:var(--caramel); font-size:.85rem; }
+  .card-actions { display:flex; gap:6px; margin-top:10px; }
+
+  /* DETAIL PAGE */
+  .detail-header { display:flex; gap:24px; margin-bottom:24px; flex-wrap:wrap; }
+  .detail-img { width:220px; height:180px; object-fit:cover; border-radius:var(--radius);
+    box-shadow:0 4px 16px var(--shadow-deep); flex-shrink:0; }
+  .detail-img-placeholder { width:220px; height:180px; border-radius:var(--radius);
+    display:flex; align-items:center; justify-content:center; font-size:4rem;
+    background:linear-gradient(135deg,var(--blush),var(--honey)); flex-shrink:0; }
+  .detail-info { flex:1; min-width:200px; }
+  .detail-info h2 { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--chocolate); }
+  .detail-desc { color:var(--text-light); margin:8px 0 12px; }
+  .detail-stats { display:flex; gap:12px; flex-wrap:wrap; }
+  .stat-box { background:var(--white); border-radius:var(--radius-sm); padding:10px 16px;
+    text-align:center; box-shadow:0 2px 8px var(--shadow); }
+  .stat-box .val { font-size:1.2rem; font-weight:700; color:var(--mauve); }
+  .stat-box .lbl { font-size:.72rem; color:var(--text-light); }
+
+  /* CARD STATS GRID */
+  .card-stats { display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; margin-bottom:10px; }
+  .card-stat { font-size:.8rem; color:var(--text-light); }
+  .card-stat strong { color:var(--text); }
+
+  /* STAGE HEADER in steps */
+  .stage-header { font-family:'Playfair Display',serif; color:var(--mauve); font-size:.95rem;
+    font-weight:700; margin:16px 0 8px; border-bottom:1px solid var(--blush); padding-bottom:4px; }
+
+  /* REVIEWS PAGE */
+  .reviews-filter { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+  .review-card { background:var(--white); border-radius:var(--radius-sm); padding:14px 16px;
+    margin-bottom:10px; box-shadow:0 1px 6px var(--shadow); }
+  .review-card-header { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+  .review-entity { font-size:.75rem; background:var(--blush); color:var(--mauve);
+    border-radius:20px; padding:2px 10px; font-weight:700; }
+
+  /* RECIPE PANEL (expandable in cake detail) */
+  .recipe-panel { background:var(--cream); border:1px solid var(--blush); border-top:none;
+    border-radius:0 0 6px 6px; padding:12px 14px; font-size:.84rem; }
+  .recipe-panel .rp-title { font-weight:700; color:var(--mauve); font-size:.75rem;
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .recipe-panel .rp-section { margin-bottom:10px; }
+  .recipe-panel .rp-section:last-child { margin-bottom:0; }
+  .stack-layer { cursor:pointer; }
+  .stack-layer.open { border-radius:6px 6px 0 0; }
+
+  /* SHOPPING LIST */
+  .shopping-list { background:var(--white); border-radius:var(--radius); padding:20px;
+    box-shadow:0 2px 12px var(--shadow); margin-top:20px; }
+  .shopping-list h3 { font-family:'Playfair Display',serif; color:var(--chocolate); margin-bottom:14px; }
+
+  /* LAYER STACK BUILDER */
+  .stack-builder { background:var(--white); border-radius:var(--radius); padding:20px;
+    box-shadow:0 2px 12px var(--shadow); margin-bottom:20px; }
+  .stack-builder h3 { font-family:'Playfair Display',serif; color:var(--chocolate); margin-bottom:14px; }
+  .stack-visual { display:flex; flex-direction:column-reverse; gap:4px; min-height:60px;
+    border:2px dashed var(--blush); border-radius:var(--radius-sm); padding:10px; margin-bottom:12px; }
+  .stack-layer { background:linear-gradient(90deg,var(--blush),var(--honey));
+    border-radius:6px; padding:8px 14px; display:flex; justify-content:space-between;
+    align-items:center; font-size:.85rem; font-weight:700; color:var(--chocolate); }
+  .stack-layer.frosting { background:linear-gradient(90deg,var(--mint),var(--mint-dark)); color:#1a3d28; }
+  .stack-layer.decoration { background:linear-gradient(90deg,var(--honey),var(--caramel)); color:var(--chocolate); }
+  .stack-empty { color:var(--text-light); text-align:center; padding:16px; font-size:.85rem; }
+  .stack-controls { display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* TABS (detail) */
+  .dtabs { display:flex; gap:2px; border-bottom:2px solid var(--blush); margin-bottom:16px; }
+  .dtab { background:none; border:none; padding:10px 18px; cursor:pointer; color:var(--text-light);
+    font-weight:700; font-size:.85rem; border-bottom:3px solid transparent; margin-bottom:-2px; transition:.15s; }
+  .dtab.active { color:var(--mauve); border-bottom-color:var(--mauve); }
+
+  /* TABLE */
+  .ing-table { width:100%; border-collapse:collapse; }
+  .ing-table th { text-align:left; padding:8px 10px; background:var(--blush);
+    color:var(--chocolate); font-size:.8rem; }
+  .ing-table td { padding:8px 10px; border-bottom:1px solid var(--blush); font-size:.88rem; }
+  .ing-table tr:last-child td { border:none; }
+
+  /* STEPS */
+  .steps-list { list-style:none; }
+  .step-item { display:flex; gap:14px; margin-bottom:14px; }
+  .step-num { background:var(--mauve); color:#fff; border-radius:50%; width:30px; height:30px;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; flex-shrink:0; }
+  .step-body { flex:1; }
+  .step-title { font-weight:700; color:var(--chocolate); margin-bottom:3px; }
+  .step-desc { color:var(--text-light); font-size:.88rem; line-height:1.5; }
+  .step-time { font-size:.75rem; color:var(--caramel); margin-top:3px; }
+
+  /* REVIEWS */
+  .review-form { background:var(--white); border-radius:var(--radius); padding:18px;
+    box-shadow:0 2px 8px var(--shadow); margin-bottom:20px; }
+  .review-item { border-bottom:1px solid var(--blush); padding:12px 0; }
+  .review-item:last-child { border:none; }
+  .review-author { font-weight:700; color:var(--chocolate); font-size:.9rem; }
+  .review-date { font-size:.75rem; color:var(--text-light); margin-left:8px; }
+  .review-text { color:var(--text-light); font-size:.88rem; margin-top:4px; }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(92,45,58,.4);
+    z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--white); border-radius:var(--radius); padding:28px; width:100%;
+    max-width:680px; max-height:90vh; overflow-y:auto; box-shadow:0 8px 40px var(--shadow-deep); }
+  .modal h2 { font-family:'Playfair Display',serif; color:var(--chocolate); margin-bottom:20px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .form-row.single { grid-template-columns:1fr; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-label { font-size:.8rem; font-weight:700; color:var(--mauve); text-transform:uppercase; letter-spacing:.03em; }
+  .form-input, .form-select, .form-textarea {
+    border:1.5px solid var(--blush); border-radius:var(--radius-sm); padding:9px 12px;
+    font-family:'Lato',sans-serif; font-size:.9rem; color:var(--text); background:var(--cream);
+    transition:.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline:none; border-color:var(--mauve); background:#fff;
+  }
+  .form-textarea { resize:vertical; min-height:80px; }
+  .dynamic-rows { border:1px solid var(--blush); border-radius:var(--radius-sm); padding:10px; margin-bottom:8px; }
+  .drow { display:grid; gap:6px; margin-bottom:6px; align-items:center; }
+  .drow-ing { grid-template-columns:2fr 1fr 1fr auto; }
+  .drow-step { grid-template-columns:auto 2fr 3fr 1fr auto; }
+  .drow button { background:var(--blush); border:none; border-radius:6px; padding:6px 10px;
+    cursor:pointer; color:var(--mauve); font-weight:700; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+
+  /* CALCULATOR */
+  .calc-card { background:var(--white); border-radius:var(--radius); padding:24px;
+    box-shadow:0 2px 12px var(--shadow); max-width:640px; }
+  .calc-result { margin-top:20px; }
+  .calc-section { margin-bottom:16px; }
+  .calc-section h4 { font-family:'Playfair Display',serif; color:var(--chocolate); margin-bottom:8px; }
+  .scale-badge { display:inline-block; background:var(--honey); color:var(--chocolate);
+    padding:4px 12px; border-radius:20px; font-weight:700; font-size:.85rem; margin-bottom:10px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--chocolate); color:var(--honey);
+    padding:12px 20px; border-radius:var(--radius-sm); font-weight:700; z-index:999;
+    transform:translateY(80px); opacity:0; transition:.3s; box-shadow:0 4px 16px var(--shadow-deep); }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* EMPTY STATE */
+  .empty { text-align:center; padding:48px 20px; color:var(--text-light); }
+  .empty .empty-icon { font-size:3rem; margin-bottom:12px; }
+
+  /* PHOTO PREVIEW */
+  .photo-preview { width:100px; height:80px; object-fit:cover; border-radius:var(--radius-sm);
+    margin-top:6px; }
+
+  @media(max-width:600px) {
+    .app-header { flex-direction:column; gap:10px; padding:14px 16px; }
+    .page { padding:16px; }
+    .form-row { grid-template-columns:1fr; }
+    .detail-img, .detail-img-placeholder { width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>🎂 My<span>Cakes</span></h1>
+  <div class="header-actions">
+    <input class="search" id="searchInput" placeholder="Szukaj..." oninput="onSearch()" />
+    <button class="btn btn-primary" id="btnAdd" onclick="openModal()">+ Dodaj</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showPage('cakes',this)">🎂 Torty</button>
+  <button class="tab-btn" onclick="showPage('layers',this)">🍰 Warstwy</button>
+  <button class="tab-btn" onclick="showPage('frostings',this)">🎨 Tynki</button>
+  <button class="tab-btn" onclick="showPage('decorations',this)">🌸 Ozdoby</button>
+  <button class="tab-btn" onclick="showPage('calculator',this)">⚖️ Kalkulator</button>
+  <button class="tab-btn" onclick="showPage('reviews',this)">⭐ Opinie</button>
+</nav>
+
+<!-- ═══ TORTY ═══════════════════════════════════════════════════════════════ -->
+<section class="page active" id="page-cakes">
+  <div id="cakeList"></div>
+</section>
+
+<!-- ═══ SZCZEGÓŁY TORTU ══════════════════════════════════════════════════════ -->
+<section class="page" id="page-cake-detail">
+  <button class="btn-back" onclick="showPage('cakes')">← Powrót do listy tortów</button>
+  <div id="cakeDetailContent"></div>
+</section>
+
+<!-- ═══ WARSTWY ══════════════════════════════════════════════════════════════ -->
+<section class="page" id="page-layers">
+  <div id="layerList"></div>
+</section>
+
+<!-- ═══ SZCZEGÓŁY WARSTWY ════════════════════════════════════════════════════ -->
+<section class="page" id="page-layer-detail">
+  <button class="btn-back" onclick="showPage('layers')">← Powrót do warstw</button>
+  <div id="layerDetailContent"></div>
+</section>
+
+<!-- ═══ TYNKI ════════════════════════════════════════════════════════════════ -->
+<section class="page" id="page-frostings">
+  <div id="frostingList"></div>
+</section>
+
+<!-- ═══ SZCZEGÓŁY TYNKU ══════════════════════════════════════════════════════ -->
+<section class="page" id="page-frosting-detail">
+  <button class="btn-back" onclick="showPage('frostings')">← Powrót do tynków</button>
+  <div id="frostingDetailContent"></div>
+</section>
+
+<!-- ═══ OZDOBY ═══════════════════════════════════════════════════════════════ -->
+<section class="page" id="page-decorations">
+  <div id="decorationList"></div>
+</section>
+
+<!-- ═══ KALKULATOR ═══════════════════════════════════════════════════════════ -->
+<section class="page" id="page-calculator">
+  <h2 class="section-title">⚖️ <span>Kalkulator</span> składników</h2>
+  <div class="calc-card">
+    <p style="color:var(--text-light);margin-bottom:18px;">
+      Oblicz proporcje składników dla nowych wymiarów tortu. Grubość warstw pozostaje stała jeśli nie podasz nowej wysokości.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tort</label>
+        <select class="form-select" id="calcCakeId" onchange="calcUpdateInfo()"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nowa średnica [cm]</label>
+        <input class="form-input" type="number" id="calcNewD" step="0.5" placeholder="np. 28" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nowa wysokość [cm] <small style="color:var(--text-light)">(opcjonalnie)</small></label>
+        <input class="form-input" type="number" id="calcNewH" step="0.5" placeholder="zostaw puste = bez zmiany" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">lub: docelowo osób <small style="color:var(--text-light)">(zamiast średnicy)</small></label>
+        <input class="form-input" type="number" id="calcServes" min="1" placeholder="np. 20" />
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:4px">
+      <div></div>
+      <div class="form-group" style="justify-content:flex-end">
+        <button class="btn btn-primary" onclick="runCalculator()">Oblicz</button>
+      </div>
+    </div>
+    <div id="calcInfo" style="color:var(--text-light);font-size:.85rem;margin-bottom:4px;"></div>
+    <div id="calcResult" class="calc-result"></div>
+  </div>
+  <div id="shoppingListSection"></div>
+</section>
+
+<!-- ═══ OPINIE ════════════════════════════════════════════════════════════════ -->
+<section class="page" id="page-reviews">
+  <h2 class="section-title">⭐ <span>Opinie</span></h2>
+  <div class="reviews-filter">
+    <div class="form-group">
+      <label class="form-label">Typ</label>
+      <select class="form-select" id="revFilterType" onchange="onRevFilterType()">
+        <option value="">Wszystkie</option>
+        <option value="cake">Torty</option>
+        <option value="layer">Warstwy</option>
+        <option value="frosting">Tynki</option>
+      </select>
+    </div>
+    <div class="form-group" id="revFilterEntityGroup" style="display:none">
+      <label class="form-label">Encja</label>
+      <select class="form-select" id="revFilterEntity" onchange="loadReviews()">
+        <option value="">Wszystkie</option>
+      </select>
+    </div>
+    <div style="padding-top:22px">
+      <button class="btn btn-primary btn-sm" onclick="loadReviews()">Odśwież</button>
+    </div>
+  </div>
+  <div id="reviewsList"></div>
+</section>
+
+<!-- ═══ MODAL ════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfBg(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE & HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+let currentPage = 'cakes';
+let searchQuery = '';
+
+const api = async (method, path, body) => {
+  const opts = { method, headers: {} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const r = await fetch('/api' + path, opts);
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || r.statusText); }
+  if (r.status === 204) return null;
+  return r.json();
+};
+
+const starsHtml = (avg) => {
+  if (!avg) return '<span style="color:var(--text-light)">—</span>';
+  const full = Math.round(avg);
+  return '★'.repeat(full) + '☆'.repeat(5 - full) + ` <small>${avg}</small>`;
+};
+
+const fmtAmt = (n) => {
+  const s = (+n).toFixed(1);
+  return s.endsWith('.0') ? s.slice(0,-2) : s;
+};
+
+const imgOrPlaceholder = (photo, emoji, cls='card-img') =>
+  photo
+    ? `<img class="${cls}" src="${photo}" alt="" />`
+    : `<div class="${cls}-placeholder">${emoji}</div>`;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showPage(name, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  currentPage = name;
+
+  // Update tab highlight (only top-level tabs)
+  if (tabEl) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+
+  // Sync add button label
+  const labels = {
+    cakes:'+ Tort', layers:'+ Warstwa', frostings:'+ Tynk',
+    decorations:'+ Ozdoba', calculator:'', reviews:'', 'cake-detail':'', 'layer-detail':'',
+    'frosting-detail':''
+  };
+  const btn = document.getElementById('btnAdd');
+  btn.style.display = (labels[name] === '' || labels[name] === undefined) ? 'none' : '';
+  btn.textContent = labels[name] || '';
+
+  const si = document.getElementById('searchInput');
+  si.style.display = ['cakes','layers','frostings','decorations'].includes(name) ? '' : 'none';
+
+  if (name === 'cakes')       renderCakes();
+  if (name === 'layers')      renderLayers();
+  if (name === 'frostings')   renderFrostings();
+  if (name === 'decorations') renderDecorations();
+  if (name === 'calculator')  populateCalcSelect();
+  if (name === 'reviews')     loadReviews();
+}
+
+function onSearch() {
+  searchQuery = document.getElementById('searchInput').value.toLowerCase();
+  if      (currentPage === 'cakes')       renderCakes();
+  else if (currentPage === 'layers')      renderLayers();
+  else if (currentPage === 'frostings')   renderFrostings();
+  else if (currentPage === 'decorations') renderDecorations();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CAKES
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderCakes() {
+  const el = document.getElementById('cakeList');
+  el.innerHTML = '<p style="color:var(--text-light)">Ładowanie...</p>';
+  try {
+    let cakes = await api('GET', '/cakes');
+    if (searchQuery) cakes = cakes.filter(c => c.name.toLowerCase().includes(searchQuery));
+    if (!cakes.length) {
+      el.innerHTML = `<h2 class="section-title">Twoje <span>torty</span></h2>
+        <div class="empty"><div class="empty-icon">🎂</div><p>${searchQuery ? 'Nie znaleziono.' : 'Brak tortów. Dodaj pierwszy!'}</p></div>`;
+      return;
+    }
+    el.innerHTML = `<h2 class="section-title">Twoje <span>torty</span> <small style="font-size:.9rem;color:var(--text-light)">(${cakes.length})</small></h2>
+      <div class="card-grid">${cakes.map(cakeCard).join('')}</div>`;
+  } catch(e) { el.innerHTML = `<p style="color:red">Błąd: ${e.message}</p>`; }
+}
+
+function cakeCard(c) {
+  return `<div class="card" onclick="viewCake(${c.id})">
+    ${imgOrPlaceholder(c.photo_path, '🎂')}
+    <div class="card-body">
+      <div class="card-title">${c.name}</div>
+      <div class="card-stats">
+        <span class="card-stat"><strong>Ø${c.diameter_cm}</strong> cm</span>
+        <span class="card-stat"><strong>${fmtAmt(c.total_height_cm)}</strong> cm wys.</span>
+        <span class="card-stat"><strong>${c.layer_count}</strong> warstw</span>
+        ${c.serves ? `<span class="card-stat"><strong>${c.serves}</strong> os.</span>` : '<span class="card-stat"></span>'}
+      </div>
+      <div class="stars">${starsHtml(c.avg_rating)} <small style="color:var(--text-light)">(${c.review_count})</small></div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="viewCake(${c.id})">Szczegóły</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('cake',${c.id})">Edytuj</button>
+        <button class="btn btn-ghost btn-sm" onclick="cloneCake(${c.id})">Kopiuj</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCake(${c.id})">Usuń</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function viewCake(id) {
+  showPage('cake-detail');
+  const el = document.getElementById('cakeDetailContent');
+  el.innerHTML = '<p style="color:var(--text-light)">Ładowanie...</p>';
+  const [cake, reviews] = await Promise.all([
+    api('GET', `/cakes/${id}`),
+    api('GET', `/reviews/cake/${id}`),
+  ]);
+  el.innerHTML = renderCakeDetail(cake, reviews);
+}
+
+function renderCakeDetail(c, reviews) {
+  const totalH = c.layers.reduce((s, l) => s + l.height_cm, 0);
+  const layersHtml = c.layers.length
+    ? c.layers.sort((a,b)=>a.position-b.position).map(l => `
+        <div>
+          <div class="stack-layer" onclick="toggleRecipePanel('layer',${l.layer_id},this)">
+            <span>${l.position+1}. ${l.layer_name} <small>(${l.layer_category})</small></span>
+            <span>Ø${fmtAmt(l.diameter_cm)}cm × h${fmtAmt(l.height_cm)}cm</span>
+            <div onclick="event.stopPropagation()">
+              <button class="btn btn-danger btn-sm" onclick="removeCakeLayer(${c.id},${l.id})">✕</button>
+            </div>
+          </div>
+          <div class="recipe-panel" id="recipe-layer-${l.layer_id}" style="display:none"></div>
+        </div>`).join('')
+    : '<div class="stack-empty">Brak warstw — dodaj z biblioteki</div>';
+
+  const frostingsHtml = c.frostings.map(f => `
+    <div>
+      <div class="stack-layer frosting" onclick="toggleRecipePanel('frosting',${f.frosting_id},this)">
+        <span>🎨 ${f.frosting_name} <small>(${f.frosting_type})</small></span>
+        <span>${f.apply_sides?'boki ':''} ${f.apply_top?'góra':''}</span>
+        <div onclick="event.stopPropagation()">
+          <button class="btn btn-danger btn-sm" onclick="removeCakeFrosting(${c.id},${f.id})">✕</button>
+        </div>
+      </div>
+      <div class="recipe-panel" id="recipe-frosting-${f.frosting_id}" style="display:none"></div>
+    </div>`).join('') || '';
+
+  const decoHtml = c.decorations.map(d => `
+    <div class="stack-layer decoration">
+      <span>🌸 ${d.decoration_name}</span>
+      <span>${fmtAmt(d.quantity)} ${d.note||''}</span>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-danger btn-sm" onclick="removeCakeDecoration(${c.id},${d.id})">✕</button>
+      </div>
+    </div>`).join('') || '';
+
+  const allIngredients = {};
+  c.layers.forEach(l => l.ingredients.forEach(i => {
+    const k = `${i.name}||${i.unit}`;
+    allIngredients[k] = (allIngredients[k]||0) + i.amount;
+  }));
+  const ingTableRows = Object.entries(allIngredients).map(([k,amt]) => {
+    const [name, unit] = k.split('||');
+    return `<tr><td>${name}</td><td>${fmtAmt(amt)}</td><td>${unit}</td></tr>`;
+  }).join('');
+
+  const reviewsHtml = reviews.length
+    ? reviews.map(r => `<div class="review-item">
+        <span class="review-author">${r.author}</span>
+        <span class="review-date">${r.created_at.slice(0,10)}</span>
+        <span class="stars" style="margin-left:8px">${'★'.repeat(r.rating)}</span>
+        <div class="review-text">${r.text||''}</div>
+      </div>`).join('')
+    : '<p style="color:var(--text-light)">Brak opinii.</p>';
+
+  return `
+    <div class="detail-header">
+      ${imgOrPlaceholder(c.photo_path,'🎂','detail-img')}
+      <div class="detail-info">
+        <h2>${c.name}</h2>
+        <p class="detail-desc">${c.description||''}</p>
+        <div class="detail-stats">
+          <div class="stat-box"><div class="val">Ø${c.diameter_cm}cm</div><div class="lbl">Średnica</div></div>
+          <div class="stat-box"><div class="val">${fmtAmt(totalH)}cm</div><div class="lbl">Wysokość</div></div>
+          <div class="stat-box"><div class="val">${c.layers.length}</div><div class="lbl">Warstwy</div></div>
+          <div class="stat-box"><div class="val">${starsHtml(c.avg_rating)}</div><div class="lbl">Ocena</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('cake',${c.id})">Edytuj info</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            Zdjęcie <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto('cakes',${c.id},this)">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack-builder">
+      <h3>Kompozycja tortu</h3>
+      <div class="stack-visual" id="stackVisual-${c.id}">
+        ${layersHtml}${frostingsHtml}${decoHtml}
+      </div>
+      <div class="stack-controls">
+        <button class="btn btn-ghost btn-sm" onclick="openAddLayerModal(${c.id})">+ Warstwa</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAddFrostingModal(${c.id})">+ Tynk</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAddDecorationModal(${c.id})">+ Ozdoba</button>
+      </div>
+    </div>
+
+    <div class="dtabs">
+      <button class="dtab active" onclick="switchDTab('ing','${c.id}',this)">Składniki łącznie</button>
+      <button class="dtab" onclick="switchDTab('reviews','${c.id}',this)">Opinie (${reviews.length})</button>
+    </div>
+    <div id="dtab-ing-${c.id}">
+      <table class="ing-table"><thead><tr><th>Składnik</th><th>Ilość</th><th>Jednostka</th></tr></thead>
+      <tbody>${ingTableRows || '<tr><td colspan="3" style="color:var(--text-light)">Brak składników</td></tr>'}</tbody></table>
+    </div>
+    <div id="dtab-reviews-${c.id}" style="display:none">
+      <div class="review-form" id="reviewForm-cake-${c.id}">
+        ${reviewFormHtml('cake', c.id)}
+      </div>
+      ${reviewsHtml}
+    </div>
+  `;
+}
+
+function switchDTab(tab, id, el) {
+  const prefix = el.closest('[class*="dtabs"]').nextElementSibling;
+  el.closest('.dtabs').querySelectorAll('.dtab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // hide all dtab divs for this entity
+  let cur = el.closest('.dtabs').nextElementSibling;
+  while (cur && cur.id && cur.id.startsWith('dtab-')) {
+    cur.style.display = 'none';
+    cur = cur.nextElementSibling;
+  }
+  document.getElementById(`dtab-${tab}-${id}`).style.display = '';
+}
+
+async function deleteCake(id) {
+  if (!confirm('Usunąć tort?')) return;
+  await api('DELETE', `/cakes/${id}`);
+  showToast('Tort usunięty');
+  renderCakes();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYERS
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderLayers() {
+  const el = document.getElementById('layerList');
+  el.innerHTML = '<p style="color:var(--text-light)">Ładowanie...</p>';
+  let layers = await api('GET', '/layers');
+  if (searchQuery) layers = layers.filter(l => l.name.toLowerCase().includes(searchQuery));
+  if (!layers.length) {
+    el.innerHTML = `<h2 class="section-title">Biblioteka <span>warstw</span></h2>
+      <div class="empty"><div class="empty-icon">🍰</div><p>${searchQuery ? 'Nie znaleziono.' : 'Brak warstw. Dodaj pierwszą!'}</p></div>`;
+    return;
+  }
+  el.innerHTML = `<h2 class="section-title">Biblioteka <span>warstw</span></h2>
+    <div class="card-grid">${layers.map(layerCard).join('')}</div>`;
+}
+
+function layerCard(l) {
+  return `<div class="card" onclick="viewLayer(${l.id})">
+    ${imgOrPlaceholder(l.photo_path, '🍰')}
+    <div class="card-body">
+      <div class="card-title">${l.name}</div>
+      <div class="card-meta"><span class="tag">${l.category}</span></div>
+      <div class="card-stats">
+        <span class="card-stat"><strong>h ${l.default_height_cm}</strong> cm</span>
+        <span class="card-stat"><strong>Ø${l.default_diameter_cm}</strong> cm</span>
+      </div>
+      <div class="stars">${starsHtml(l.avg_rating)} <small style="color:var(--text-light)">(${l.review_count})</small></div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="viewLayer(${l.id})">Szczegóły</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('layer',${l.id})">Edytuj</button>
+        <button class="btn btn-ghost btn-sm" onclick="cloneLayer(${l.id})">Kopiuj</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLayer(${l.id})">Usuń</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function viewLayer(id) {
+  showPage('layer-detail');
+  const el = document.getElementById('layerDetailContent');
+  const [layer, reviews] = await Promise.all([
+    api('GET', `/layers/${id}`),
+    api('GET', `/reviews/layer/${id}`),
+  ]);
+  el.innerHTML = renderLayerDetail(layer, reviews);
+}
+
+function renderLayerDetail(l, reviews) {
+  const ingRows = l.ingredients.map(i =>
+    `<tr><td>${i.name}</td><td>${fmtAmt(i.amount)}</td><td>${i.unit}</td></tr>`).join('');
+  const stepsHtml = l.steps.length ? stepsGroupedByStage(l.steps) : '<p style="color:var(--text-light)">Brak kroków.</p>';
+
+  const reviewsHtml = reviews.length
+    ? reviews.map(r => `<div class="review-item">
+        <span class="review-author">${r.author}</span>
+        <span class="review-date">${r.created_at.slice(0,10)}</span>
+        <span class="stars" style="margin-left:8px">${'★'.repeat(r.rating)}</span>
+        <div class="review-text">${r.text||''}</div>
+      </div>`).join('')
+    : '<p style="color:var(--text-light)">Brak opinii.</p>';
+
+  return `
+    <div class="detail-header">
+      ${imgOrPlaceholder(l.photo_path,'🍰','detail-img')}
+      <div class="detail-info">
+        <h2>${l.name}</h2>
+        <p class="detail-desc">${l.description||''}</p>
+        <div class="detail-stats">
+          <div class="stat-box"><div class="val">${l.category}</div><div class="lbl">Kategoria</div></div>
+          <div class="stat-box"><div class="val">h ${l.default_height_cm}cm</div><div class="lbl">Grubość domyślna</div></div>
+          <div class="stat-box"><div class="val">Ø${l.default_diameter_cm}cm</div><div class="lbl">Średnica domyślna</div></div>
+          <div class="stat-box"><div class="val">${starsHtml(l.avg_rating)}</div><div class="lbl">Ocena</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('layer',${l.id})">Edytuj</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            Zdjęcie <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto('layers',${l.id},this)">
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="dtabs">
+      <button class="dtab active" onclick="switchDTab('ling','${l.id}',this)">Składniki</button>
+      <button class="dtab" onclick="switchDTab('lsteps','${l.id}',this)">Kroki</button>
+      <button class="dtab" onclick="switchDTab('lreviews','${l.id}',this)">Opinie (${reviews.length})</button>
+    </div>
+    <div id="dtab-ling-${l.id}">
+      <table class="ing-table"><thead><tr><th>Składnik</th><th>Ilość</th><th>Jednostka</th></tr></thead>
+      <tbody>${ingRows||'<tr><td colspan="3" style="color:var(--text-light)">Brak</td></tr>'}</tbody></table>
+    </div>
+    <div id="dtab-lsteps-${l.id}" style="display:none">${stepsHtml}</div>
+    <div id="dtab-lreviews-${l.id}" style="display:none">
+      <div class="review-form">${reviewFormHtml('layer', l.id)}</div>
+      ${reviewsHtml}
+    </div>
+  `;
+}
+
+async function deleteLayer(id) {
+  if (!confirm('Usunąć warstwę?')) return;
+  await api('DELETE', `/layers/${id}`);
+  showToast('Warstwa usunięta');
+  renderLayers();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FROSTINGS
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderFrostings() {
+  const el = document.getElementById('frostingList');
+  el.innerHTML = '<p style="color:var(--text-light)">Ładowanie...</p>';
+  let frostings = await api('GET', '/frostings');
+  if (searchQuery) frostings = frostings.filter(f => f.name.toLowerCase().includes(searchQuery));
+  if (!frostings.length) {
+    el.innerHTML = `<h2 class="section-title">Biblioteka <span>tynków</span></h2>
+      <div class="empty"><div class="empty-icon">🎨</div><p>${searchQuery ? 'Nie znaleziono.' : 'Brak tynków. Dodaj pierwszy!'}</p></div>`;
+    return;
+  }
+  el.innerHTML = `<h2 class="section-title">Biblioteka <span>tynków</span></h2>
+    <div class="card-grid">${frostings.map(frostingCard).join('')}</div>`;
+}
+
+function frostingCard(f) {
+  return `<div class="card" onclick="viewFrosting(${f.id})">
+    ${imgOrPlaceholder(f.photo_path,'🎨')}
+    <div class="card-body">
+      <div class="card-title">${f.name}</div>
+      <div class="card-meta"><span class="tag">${f.type}</span></div>
+      <div class="card-stats">
+        <span class="card-stat">ref <strong>Ø${f.ref_diameter_cm}</strong> cm</span>
+        <span class="card-stat">ref <strong>h${f.ref_height_cm}</strong> cm</span>
+      </div>
+      <div class="stars">${starsHtml(f.avg_rating)} <small style="color:var(--text-light)">(${f.review_count})</small></div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="viewFrosting(${f.id})">Szczegóły</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('frosting',${f.id})">Edytuj</button>
+        <button class="btn btn-ghost btn-sm" onclick="cloneFrosting(${f.id})">Kopiuj</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFrosting(${f.id})">Usuń</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function viewFrosting(id) {
+  showPage('frosting-detail');
+  const el = document.getElementById('frostingDetailContent');
+  const [frosting, reviews] = await Promise.all([
+    api('GET', `/frostings/${id}`),
+    api('GET', `/reviews/frosting/${id}`),
+  ]);
+  const ingRows = frosting.ingredients.map(i =>
+    `<tr><td>${i.name}</td><td>${fmtAmt(i.amount)}</td><td>${i.unit}</td></tr>`).join('');
+  const stepsHtml = frosting.steps.length ? stepsGroupedByStage(frosting.steps) : '<p style="color:var(--text-light)">Brak kroków.</p>';
+  const reviewsHtml = reviews.map(r => `<div class="review-item">
+    <span class="review-author">${r.author}</span>
+    <span class="review-date">${r.created_at.slice(0,10)}</span>
+    <span class="stars" style="margin-left:8px">${'★'.repeat(r.rating)}</span>
+    <div class="review-text">${r.text||''}</div>
+  </div>`).join('') || '<p style="color:var(--text-light)">Brak opinii.</p>';
+
+  el.innerHTML = `
+    <div class="detail-header">
+      ${imgOrPlaceholder(frosting.photo_path,'🎨','detail-img')}
+      <div class="detail-info">
+        <h2>${frosting.name}</h2>
+        <p class="detail-desc">${frosting.description||''}</p>
+        <div class="detail-stats">
+          <div class="stat-box"><div class="val">${frosting.type}</div><div class="lbl">Typ</div></div>
+          <div class="stat-box"><div class="val">Ø${frosting.ref_diameter_cm}cm</div><div class="lbl">Ref. śred.</div></div>
+          <div class="stat-box"><div class="val">h${frosting.ref_height_cm}cm</div><div class="lbl">Ref. wys.</div></div>
+          <div class="stat-box"><div class="val">${starsHtml(frosting.avg_rating)}</div><div class="lbl">Ocena</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('frosting',${frosting.id})">Edytuj</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            Zdjęcie <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto('frostings',${frosting.id},this)">
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="dtabs">
+      <button class="dtab active" onclick="switchDTab('fing','${frosting.id}',this)">Składniki</button>
+      <button class="dtab" onclick="switchDTab('fsteps','${frosting.id}',this)">Kroki</button>
+      <button class="dtab" onclick="switchDTab('freviews','${frosting.id}',this)">Opinie (${reviews.length})</button>
+    </div>
+    <div id="dtab-fing-${frosting.id}">
+      <table class="ing-table"><thead><tr><th>Składnik</th><th>Ilość</th><th>Jednostka</th></tr></thead>
+      <tbody>${ingRows||'<tr><td colspan="3" style="color:var(--text-light)">Brak</td></tr>'}</tbody></table>
+    </div>
+    <div id="dtab-fsteps-${frosting.id}" style="display:none">${stepsHtml}</div>
+    <div id="dtab-freviews-${frosting.id}" style="display:none">
+      <div class="review-form">${reviewFormHtml('frosting', frosting.id)}</div>
+      ${reviewsHtml}
+    </div>
+  `;
+}
+
+async function deleteFrosting(id) {
+  if (!confirm('Usunąć tynk?')) return;
+  await api('DELETE', `/frostings/${id}`);
+  showToast('Tynk usunięty');
+  renderFrostings();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DECORATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderDecorations() {
+  const el = document.getElementById('decorationList');
+  let decs = await api('GET', '/decorations');
+  if (searchQuery) decs = decs.filter(d => d.name.toLowerCase().includes(searchQuery));
+  if (!decs.length) {
+    el.innerHTML = `<h2 class="section-title">Biblioteka <span>ozdób</span></h2>
+      <div class="empty"><div class="empty-icon">🌸</div><p>${searchQuery ? 'Nie znaleziono.' : 'Brak ozdób.'}</p></div>`;
+    return;
+  }
+  el.innerHTML = `<h2 class="section-title">Biblioteka <span>ozdób</span></h2>
+    <div class="card-grid">${decs.map(d => `
+      <div class="card">
+        ${imgOrPlaceholder(d.photo_path,'🌸')}
+        <div class="card-body">
+          <div class="card-title">${d.name}</div>
+          <div class="card-meta"><span class="tag">${d.type}</span><span class="tag tag-mint">${d.unit}</span></div>
+          <p style="color:var(--text-light);font-size:.85rem">${d.description||''}</p>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('decoration',${d.id})">Edytuj</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDecoration(${d.id})">Usuń</button>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+}
+
+async function deleteDecoration(id) {
+  if (!confirm('Usunąć ozdobę?')) return;
+  await api('DELETE', `/decorations/${id}`);
+  showToast('Ozdoba usunięta');
+  renderDecorations();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════════════════════════════════
+let _starRating = 5;
+
+function reviewFormHtml(type, id) {
+  return `<h4 style="font-family:'Playfair Display',serif;color:var(--chocolate);margin-bottom:10px">Dodaj opinię</h4>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Imię</label>
+        <input class="form-input" id="rev-author-${type}-${id}" placeholder="Anonim">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ocena</label>
+        <div id="rev-stars-${type}-${id}" style="font-size:1.5rem;cursor:pointer;color:var(--caramel)">
+          ${[1,2,3,4,5].map(n=>`<span onclick="setRevStar('${type}','${id}',${n})" data-n="${n}">★</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">Komentarz</label>
+      <textarea class="form-textarea" id="rev-text-${type}-${id}" rows="2" placeholder="Twoja opinia..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="submitReview('${type}',${id})">Wyślij opinię</button>`;
+}
+
+function setRevStar(type, id, n) {
+  _starRating = n;
+  const el = document.getElementById(`rev-stars-${type}-${id}`);
+  el.querySelectorAll('span').forEach(s => {
+    s.style.opacity = parseInt(s.dataset.n) <= n ? '1' : '0.3';
+  });
+}
+
+async function submitReview(type, id) {
+  const author = document.getElementById(`rev-author-${type}-${id}`).value || 'Anonim';
+  const text = document.getElementById(`rev-text-${type}-${id}`).value;
+  try {
+    await api('POST', '/reviews', { target_type: type, target_id: id, author, text, rating: _starRating });
+    showToast('Opinia dodana!');
+    if (type === 'cake') viewCake(id);
+    else if (type === 'layer') viewLayer(id);
+    else if (type === 'frosting') viewFrosting(id);
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILDER MODALS
+// ═══════════════════════════════════════════════════════════════════════════
+async function openAddLayerModal(cakeId) {
+  const layers = await api('GET', '/layers');
+  const cake = await api('GET', `/cakes/${cakeId}`);
+  const usedPositions = cake.layers.map(l => l.position);
+  const nextPos = usedPositions.length ? Math.max(...usedPositions) + 1 : 0;
+  showModal(`
+    <h2>Dodaj warstwę do tortu</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Warstwa z biblioteki</label>
+        <select class="form-select" id="al-layer-id" onchange="prefillLayerDims(${cakeId})">
+          ${layers.map(l => `<option value="${l.id}" data-h="${l.default_height_cm}" data-d="${l.default_diameter_cm}">${l.name} (h:${l.default_height_cm}cm)</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pozycja (0 = spód)</label>
+        <input class="form-input" type="number" id="al-position" value="${nextPos}" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Grubość [cm] <small style="color:var(--text-light)">(zostaw puste = domyślna)</small></label>
+        <input class="form-input" type="number" id="al-height" step="0.1" placeholder="domyślna">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Średnica [cm] <small style="color:var(--text-light)">(zostaw puste = domyślna)</small></label>
+        <input class="form-input" type="number" id="al-diameter" step="0.5" placeholder="${cake.diameter_cm}">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="addLayerToCake(${cakeId})">Dodaj</button>
+    </div>
+  `);
+}
+
+async function addLayerToCake(cakeId) {
+  const layer_id = parseInt(document.getElementById('al-layer-id').value);
+  const position = parseInt(document.getElementById('al-position').value);
+  const hVal = document.getElementById('al-height').value;
+  const dVal = document.getElementById('al-diameter').value;
+  try {
+    await api('POST', `/cakes/${cakeId}/layers`, {
+      layer_id, position,
+      height_cm: hVal ? parseFloat(hVal) : null,
+      diameter_cm: dVal ? parseFloat(dVal) : null,
+    });
+    closeModal();
+    showToast('Warstwa dodana!');
+    viewCake(cakeId);
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+async function removeCakeLayer(cakeId, clId) {
+  if (!confirm('Usunąć warstwę z tortu?')) return;
+  await api('DELETE', `/cakes/${cakeId}/layers/${clId}`);
+  showToast('Warstwa usunięta z tortu');
+  viewCake(cakeId);
+}
+
+async function openAddFrostingModal(cakeId) {
+  const frostings = await api('GET', '/frostings');
+  showModal(`
+    <h2>Dodaj tynk do tortu</h2>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Tynk z biblioteki</label>
+      <select class="form-select" id="af-frosting-id">
+        ${frostings.map(f => `<option value="${f.id}">${f.name} (${f.type})</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <input type="checkbox" id="af-sides" checked>
+        <label class="form-label" style="margin:0">Boki (walec)</label>
+      </div>
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <input type="checkbox" id="af-top" checked>
+        <label class="form-label" style="margin:0">Góra (koło)</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="addFrostingToCake(${cakeId})">Dodaj</button>
+    </div>
+  `);
+}
+
+async function addFrostingToCake(cakeId) {
+  const frosting_id = parseInt(document.getElementById('af-frosting-id').value);
+  const apply_sides = document.getElementById('af-sides').checked;
+  const apply_top = document.getElementById('af-top').checked;
+  try {
+    await api('POST', `/cakes/${cakeId}/frostings`, { frosting_id, apply_sides, apply_top });
+    closeModal();
+    showToast('Tynk dodany!');
+    viewCake(cakeId);
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+async function removeCakeFrosting(cakeId, cfId) {
+  if (!confirm('Usunąć tynk z tortu?')) return;
+  await api('DELETE', `/cakes/${cakeId}/frostings/${cfId}`);
+  showToast('Tynk usunięty');
+  viewCake(cakeId);
+}
+
+async function openAddDecorationModal(cakeId) {
+  const decs = await api('GET', '/decorations');
+  if (!decs.length) { showToast('Najpierw dodaj ozdoby do biblioteki!'); return; }
+  showModal(`
+    <h2>Dodaj ozdobę do tortu</h2>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Ozdoba</label>
+      <select class="form-select" id="ad-dec-id">
+        ${decs.map(d => `<option value="${d.id}">${d.name} (${d.type})</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Ilość</label>
+        <input class="form-input" type="number" id="ad-qty" value="1" step="0.5" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notatka</label>
+        <input class="form-input" id="ad-note" placeholder="opcjonalnie">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="addDecorationToCake(${cakeId})">Dodaj</button>
+    </div>
+  `);
+}
+
+async function addDecorationToCake(cakeId) {
+  const decoration_id = parseInt(document.getElementById('ad-dec-id').value);
+  const quantity = parseFloat(document.getElementById('ad-qty').value);
+  const note = document.getElementById('ad-note').value;
+  try {
+    await api('POST', `/cakes/${cakeId}/decorations`, { decoration_id, quantity, note });
+    closeModal();
+    showToast('Ozdoba dodana!');
+    viewCake(cakeId);
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+async function removeCakeDecoration(cakeId, cdId) {
+  if (!confirm('Usunąć ozdobę z tortu?')) return;
+  await api('DELETE', `/cakes/${cakeId}/decorations/${cdId}`);
+  showToast('Ozdoba usunięta');
+  viewCake(cakeId);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODAL — CRUD FORMS
+// ═══════════════════════════════════════════════════════════════════════════
+async function openModal(type, id) {
+  if (!type) type = currentPage.replace('-detail','');
+  if      (type === 'cakes')       type = 'cake';
+  else if (type === 'layers')      type = 'layer';
+  else if (type === 'frostings')   type = 'frosting';
+  else if (type === 'decorations') type = 'decoration';
+
+  let existing = null;
+  if (id) {
+    const endpoints = { cake:'/cakes', layer:'/layers', frosting:'/frostings', decoration:'/decorations' };
+    existing = await api('GET', `${endpoints[type]}/${id}`);
+  }
+
+  if      (type === 'cake')       showModal(cakeFormHtml(existing));
+  else if (type === 'layer')      showModal(layerFormHtml(existing));
+  else if (type === 'frosting')   showModal(frostingFormHtml(existing));
+  else if (type === 'decoration') showModal(decorationFormHtml(existing));
+}
+
+// ── Cake form
+function cakeFormHtml(e) {
+  return `
+    <h2>${e ? 'Edytuj' : 'Nowy'} tort</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nazwa *</label>
+        <input class="form-input" id="f-name" value="${e?.name||''}" placeholder="Nazwa tortu">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Średnica [cm]</label>
+        <input class="form-input" type="number" id="f-diam" value="${e?.diameter_cm||24}" step="0.5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Na ile osób</label>
+        <input class="form-input" type="number" id="f-serves" value="${e?.serves||0}" min="0" placeholder="0 = nieokreślone">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label">Opis</label>
+        <textarea class="form-textarea" id="f-desc">${e?.description||''}</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveCake(${e?.id||'null'})">Zapisz</button>
+    </div>`;
+}
+
+async function saveCake(id) {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('Podaj nazwę!'); return; }
+  const body = {
+    name,
+    description: document.getElementById('f-desc').value,
+    diameter_cm: parseFloat(document.getElementById('f-diam').value),
+    serves: parseInt(document.getElementById('f-serves').value)||0,
+  };
+  try {
+    if (id) await api('PUT', `/cakes/${id}`, body);
+    else    await api('POST', '/cakes', body);
+    closeModal(); showToast('Tort zapisany!'); renderCakes();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// ── Layer form
+function layerFormHtml(e) {
+  const cats = ['biszkopt','krem','mus','galaretka','owocowa','orzechowa','serowa','czekoladowa','inne'];
+  return `
+    <h2>${e ? 'Edytuj' : 'Nowa'} warstwa</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nazwa *</label>
+        <input class="form-input" id="f-name" value="${e?.name||''}" placeholder="Np. Biszkopt waniliowy">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategoria</label>
+        <select class="form-select" id="f-cat">
+          ${cats.map(c=>`<option ${e?.category===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Domyślna grubość [cm]</label>
+        <input class="form-input" type="number" id="f-h" value="${e?.default_height_cm||2}" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Domyślna średnica [cm]</label>
+        <input class="form-input" type="number" id="f-d" value="${e?.default_diameter_cm||24}" step="0.5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Czas przygotowania [min]</label>
+        <input class="form-input" type="number" id="f-prep" value="${e?.prep_time_min||0}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Czas pieczenia [min]</label>
+        <input class="form-input" type="number" id="f-bake" value="${e?.bake_time_min||0}">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label">Opis</label>
+        <textarea class="form-textarea" id="f-desc">${e?.description||''}</textarea>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Składniki</label>
+      <div class="dynamic-rows" id="ingRows"></div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addIngRow()">+ Składnik</button>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Kroki</label>
+      <div class="dynamic-rows" id="stepRows"></div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addStepRow()">+ Krok</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveLayer(${e?.id||'null'})">Zapisz</button>
+    </div>`;
+}
+
+function addIngRow(item={}) {
+  const row = document.createElement('div');
+  row.className = 'drow drow-ing';
+  row.innerHTML = `
+    <input class="form-input" placeholder="Składnik" value="${item.name||''}">
+    <input class="form-input" type="number" placeholder="Ilość" step="0.1" value="${item.amount||''}">
+    <input class="form-input" placeholder="j.m." value="${item.unit||''}">
+    <button type="button" onclick="this.parentNode.remove()">✕</button>`;
+  document.getElementById('ingRows').appendChild(row);
+}
+
+function addStepRow(item={}) {
+  const idx = document.getElementById('stepRows').children.length;
+  const row = document.createElement('div');
+  row.className = 'drow drow-step';
+  row.style.gridTemplateColumns = 'auto 2fr 3fr 1fr 1fr auto';
+  row.innerHTML = `
+    <span style="color:var(--mauve);font-weight:700">${idx+1}.</span>
+    <input class="form-input" placeholder="Tytuł" value="${item.title||''}">
+    <input class="form-input" placeholder="Opis kroku" value="${item.description||''}">
+    <input class="form-input" type="number" placeholder="min" value="${item.time_min||''}">
+    <input class="form-input" placeholder="Etap" value="${item.stage||'Dzień 1'}">
+    <button type="button" onclick="this.parentNode.remove()">✕</button>`;
+  document.getElementById('stepRows').appendChild(row);
+}
+
+function collectIngredients() {
+  return [...document.getElementById('ingRows').children].map(r => {
+    const [name, amount, unit] = r.querySelectorAll('input');
+    return { name: name.value, amount: parseFloat(amount.value)||0, unit: unit.value };
+  }).filter(i => i.name);
+}
+
+function collectSteps() {
+  return [...document.getElementById('stepRows').children].map((r, i) => {
+    const inputs = r.querySelectorAll('input');
+    return { position: i, title: inputs[0].value, description: inputs[1].value,
+             time_min: parseInt(inputs[2].value)||0, stage: inputs[3].value || 'Dzień 1' };
+  });
+}
+
+async function saveLayer(id) {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('Podaj nazwę!'); return; }
+  const body = {
+    name,
+    category: document.getElementById('f-cat').value,
+    default_height_cm: parseFloat(document.getElementById('f-h').value),
+    default_diameter_cm: parseFloat(document.getElementById('f-d').value),
+    prep_time_min: parseInt(document.getElementById('f-prep').value)||0,
+    bake_time_min: parseInt(document.getElementById('f-bake').value)||0,
+    description: document.getElementById('f-desc').value,
+    ingredients: collectIngredients(),
+    steps: collectSteps(),
+  };
+  try {
+    if (id) await api('PUT', `/layers/${id}`, body);
+    else    await api('POST', '/layers', body);
+    closeModal(); showToast('Warstwa zapisana!'); renderLayers();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// ── Frosting form
+function frostingFormHtml(e) {
+  const types = ['masło','ganache','śmietana','serek','krem cukierniczy','inne'];
+  return `
+    <h2>${e ? 'Edytuj' : 'Nowy'} tynk</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nazwa *</label>
+        <input class="form-input" id="f-name" value="${e?.name||''}" placeholder="Np. Buttercream waniliowy">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Typ</label>
+        <select class="form-select" id="f-type">
+          ${types.map(t=>`<option ${e?.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Ref. średnica tortu [cm]</label>
+        <input class="form-input" type="number" id="f-ref-d" value="${e?.ref_diameter_cm||24}" step="0.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ref. wysokość tortu [cm]</label>
+        <input class="form-input" type="number" id="f-ref-h" value="${e?.ref_height_cm||10}" step="0.5">
+      </div>
+    </div>
+    <p style="color:var(--text-light);font-size:.8rem;margin:-8px 0 12px">Składniki przepisu są na tort o tych wymiarach. Kalkulator przeskaluje do nowych wymiarów.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Czas przygotowania [min]</label>
+        <input class="form-input" type="number" id="f-prep" value="${e?.prep_time_min||0}">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label">Opis</label>
+        <textarea class="form-textarea" id="f-desc">${e?.description||''}</textarea>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Składniki <small style="color:var(--text-light)">(na podane wymiary ref.)</small></label>
+      <div class="dynamic-rows" id="ingRows"></div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addFrostIngRow()">+ Składnik</button>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Kroki</label>
+      <div class="dynamic-rows" id="stepRows"></div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addStepRow()">+ Krok</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveFrosting(${e?.id||'null'})">Zapisz</button>
+    </div>`;
+}
+
+function addFrostIngRow(item={}) {
+  const row = document.createElement('div');
+  row.className = 'drow';
+  row.style.gridTemplateColumns = '2fr 1fr 1fr auto';
+  row.innerHTML = `
+    <input class="form-input" placeholder="Składnik" value="${item.name||''}">
+    <input class="form-input" type="number" placeholder="Ilość" step="0.1" value="${item.amount||''}">
+    <input class="form-input" placeholder="j.m." value="${item.unit||''}">
+    <button type="button" onclick="this.parentNode.remove()">✕</button>`;
+  document.getElementById('ingRows').appendChild(row);
+}
+
+function collectFrostIngredients() {
+  return [...document.getElementById('ingRows').children].map(r => {
+    const inputs = r.querySelectorAll('input');
+    return { name: inputs[0].value, amount: parseFloat(inputs[1].value)||0, unit: inputs[2].value };
+  }).filter(i => i.name);
+}
+
+async function saveFrosting(id) {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('Podaj nazwę!'); return; }
+  const body = {
+    name,
+    type: document.getElementById('f-type').value,
+    ref_diameter_cm: parseFloat(document.getElementById('f-ref-d').value)||24,
+    ref_height_cm: parseFloat(document.getElementById('f-ref-h').value)||10,
+    prep_time_min: parseInt(document.getElementById('f-prep').value)||0,
+    description: document.getElementById('f-desc').value,
+    ingredients: collectFrostIngredients(),
+    steps: collectSteps(),
+  };
+  try {
+    if (id) await api('PUT', `/frostings/${id}`, body);
+    else    await api('POST', '/frostings', body);
+    closeModal(); showToast('Tynk zapisany!'); renderFrostings();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// ── Decoration form
+function decorationFormHtml(e) {
+  const types = ['owoc','kwiat','figurka','posypka','czekolada','inne'];
+  return `
+    <h2>${e ? 'Edytuj' : 'Nowa'} ozdoba</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nazwa *</label>
+        <input class="form-input" id="f-name" value="${e?.name||''}" placeholder="Np. Maliny świeże">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Typ</label>
+        <select class="form-select" id="f-type">
+          ${types.map(t=>`<option ${e?.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Jednostka</label>
+        <input class="form-input" id="f-unit" value="${e?.unit||'szt'}" placeholder="szt, g, pęczek...">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label">Opis</label>
+        <textarea class="form-textarea" id="f-desc">${e?.description||''}</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveDecoration(${e?.id||'null'})">Zapisz</button>
+    </div>`;
+}
+
+async function saveDecoration(id) {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('Podaj nazwę!'); return; }
+  const body = {
+    name,
+    type: document.getElementById('f-type').value,
+    unit: document.getElementById('f-unit').value,
+    description: document.getElementById('f-desc').value,
+  };
+  try {
+    if (id) await api('PUT', `/decorations/${id}`, body);
+    else    await api('POST', '/decorations', body);
+    closeModal(); showToast('Ozdoba zapisana!'); renderDecorations();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// Populate ingredient/step rows when editing layer
+function _populateRows(existing, type) {
+  if (!existing) return;
+  if (type === 'layer') {
+    existing.ingredients?.forEach(i => addIngRow(i));
+    existing.steps?.forEach(s => addStepRow(s));
+  } else if (type === 'frosting') {
+    existing.ingredients?.forEach(i => addFrostIngRow(i));
+    existing.steps?.forEach(s => addStepRow(s));
+  }
+}
+
+// Override showModal to also populate rows after rendering
+const _origShowModal = window.showModal;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+let _modalPostRender = null;
+
+function showModal(html, postRender) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+  if (postRender) postRender();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function closeModalIfBg(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// Patch openModal to populate rows after render
+const _origOpenModal = openModal;
+window.openModal = async function(type, id) {
+  if (!type) type = currentPage.replace('-detail','');
+  if      (type === 'cakes')       type = 'cake';
+  else if (type === 'layers')      type = 'layer';
+  else if (type === 'frostings')   type = 'frosting';
+  else if (type === 'decorations') type = 'decoration';
+  let existing = null;
+  if (id) {
+    const endpoints = { cake:'/cakes', layer:'/layers', frosting:'/frostings', decoration:'/decorations' };
+    existing = await api('GET', `${endpoints[type]}/${id}`);
+  }
+  if      (type === 'cake')       showModal(cakeFormHtml(existing));
+  else if (type === 'layer')      { showModal(layerFormHtml(existing)); _populateRows(existing,'layer'); }
+  else if (type === 'frosting')   { showModal(frostingFormHtml(existing)); _populateRows(existing,'frosting'); }
+  else if (type === 'decoration') showModal(decorationFormHtml(existing));
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHOTO UPLOAD
+// ═══════════════════════════════════════════════════════════════════════════
+async function uploadPhoto(targetType, targetId, inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch(`/api/photos/${targetType}/${targetId}`, { method:'POST', body:fd });
+  if (!r.ok) { showToast('Błąd uploadu zdjęcia'); return; }
+  showToast('Zdjęcie zapisane!');
+  if (targetType === 'cakes')     viewCake(targetId);
+  else if (targetType === 'layers')    viewLayer(targetId);
+  else if (targetType === 'frostings') viewFrosting(targetId);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CALCULATOR
+// ═══════════════════════════════════════════════════════════════════════════
+async function populateCalcSelect() {
+  const cakes = await api('GET', '/cakes');
+  const sel = document.getElementById('calcCakeId');
+  sel.innerHTML = cakes.length
+    ? cakes.map(c => `<option value="${c.id}" data-d="${c.diameter_cm}">${c.name} (Ø${c.diameter_cm}cm)</option>`).join('')
+    : '<option>Brak tortów</option>';
+  calcUpdateInfo();
+}
+
+function calcUpdateInfo() {
+  const sel = document.getElementById('calcCakeId');
+  const opt = sel.options[sel.selectedIndex];
+  if (opt?.dataset.d) {
+    document.getElementById('calcInfo').textContent = `Oryginalna średnica: ${opt.dataset.d} cm`;
+  }
+}
+
+let _lastCalcResult = null;
+
+async function runCalculator() {
+  const cakeId = document.getElementById('calcCakeId').value;
+  const newDVal = document.getElementById('calcNewD').value;
+  const newHVal = document.getElementById('calcNewH').value;
+  const servesVal = document.getElementById('calcServes').value;
+  if (!newDVal && !servesVal) { showToast('Podaj nową średnicę lub liczbę osób!'); return; }
+  let url = `/calculator?cake_id=${cakeId}`;
+  if (newDVal)   url += `&new_d=${parseFloat(newDVal)}`;
+  if (newHVal)   url += `&new_h=${parseFloat(newHVal)}`;
+  if (servesVal) url += `&target_serves=${parseInt(servesVal)}`;
+  try {
+    const res = await api('GET', url);
+    _lastCalcResult = res;
+    document.getElementById('calcResult').innerHTML = renderCalcResult(res);
+    document.getElementById('shoppingListSection').innerHTML = '';
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+function renderCalcResult(r) {
+  const layersHtml = r.layers.map(l => `
+    <div class="calc-section">
+      <h4>${l.layer_name} <small style="color:var(--text-light)">(poz. ${l.position})</small></h4>
+      <span class="scale-badge">×${l.volume_scale.toFixed(2)}</span>
+      <span style="color:var(--text-light);font-size:.8rem;margin-left:8px">
+        Ø${l.orig_diameter_cm}→${l.new_diameter_cm}cm, h: ${l.orig_height_cm}→${l.new_height_cm}cm
+      </span>
+      <table class="ing-table" style="margin-top:8px">
+        <thead><tr><th>Składnik</th><th>Było</th><th>Będzie</th><th>j.m.</th></tr></thead>
+        <tbody>${l.ingredients.map(i=>`
+          <tr>
+            <td>${i.name}</td>
+            <td style="color:var(--text-light)">${fmtAmt(i.orig_amount)}</td>
+            <td style="font-weight:700;color:var(--mauve)">${fmtAmt(i.new_amount)}</td>
+            <td>${i.unit}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('');
+
+  const frostingsHtml = r.frostings.map(f => `
+    <div class="calc-section">
+      <h4>🎨 ${f.frosting_name}</h4>
+      <span class="scale-badge">×${f.area_scale.toFixed(2)}</span>
+      <span style="color:var(--text-light);font-size:.8rem;margin-left:8px">
+        pow. ref ${f.ref_area_cm2.toFixed(0)} → ${f.new_area_cm2.toFixed(0)} cm²
+      </span>
+      <table class="ing-table" style="margin-top:8px">
+        <thead><tr><th>Składnik</th><th>Było</th><th>Będzie</th><th>j.m.</th></tr></thead>
+        <tbody>${f.ingredients.map(i=>`
+          <tr>
+            <td>${i.name}</td>
+            <td style="color:var(--text-light)">${fmtAmt(i.orig_amount)}</td>
+            <td style="font-weight:700;color:var(--mauve)">${fmtAmt(i.new_amount)}</td>
+            <td>${i.unit}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('');
+
+  return `
+    <div style="background:var(--blush);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px">
+      <strong>${r.cake_name}</strong> &nbsp;
+      Ø ${r.orig_diameter_cm} → <strong>${r.new_diameter_cm}</strong> cm &nbsp;|&nbsp;
+      h: ${r.orig_total_height_cm} → <strong>${r.new_total_height_cm}</strong> cm
+    </div>
+    ${layersHtml}
+    ${frostingsHtml || ''}
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="showShoppingList()">🛒 Na Zakupy</button>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LISTA ZAKUPÓW
+// ═══════════════════════════════════════════════════════════════════════════
+function showShoppingList() {
+  if (!_lastCalcResult) return;
+  const r = _lastCalcResult;
+  const agg = {};  // key: "name||unit" → {display, amount}
+
+  const add = (name, amount, unit) => {
+    const k = `${name.trim().toLowerCase()}||${unit.trim().toLowerCase()}`;
+    if (!agg[k]) agg[k] = { display: name.trim(), unit: unit.trim(), amount: 0 };
+    agg[k].amount += amount;
+  };
+
+  r.layers.forEach(l => l.ingredients.forEach(i => add(i.name, i.new_amount, i.unit)));
+  r.frostings.forEach(f => f.ingredients.forEach(i => add(i.name, i.new_amount, i.unit)));
+
+  const rows = Object.values(agg).sort((a,b) => a.display.localeCompare(b.display, 'pl'));
+  const tableRows = rows.map(i => `<tr><td>${i.display}</td><td style="font-weight:700;color:var(--mauve)">${fmtAmt(i.amount)}</td><td>${i.unit}</td></tr>`).join('');
+  const copyText = `Lista zakupów — ${r.cake_name} Ø${r.new_diameter_cm}cm\n${'─'.repeat(40)}\n` +
+    rows.map(i => `${i.display.padEnd(24)} ${fmtAmt(i.amount)} ${i.unit}`).join('\n');
+
+  document.getElementById('shoppingListSection').innerHTML = `
+    <div class="shopping-list">
+      <h3>🛒 Lista zakupów — ${r.cake_name} Ø${r.new_diameter_cm}cm</h3>
+      <table class="ing-table">
+        <thead><tr><th>Składnik</th><th>Ilość</th><th>j.m.</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div style="margin-top:14px">
+        <button class="btn btn-ghost" onclick="copyShoppingList(\`${copyText.replace(/`/g,'\\`')}\`)">📋 Kopiuj do schowka</button>
+      </div>
+    </div>`;
+  document.getElementById('shoppingListSection').scrollIntoView({behavior:'smooth'});
+}
+
+function copyShoppingList(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Skopiowano do schowka!'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RECIPE PANEL — expandable in cake composition
+// ═══════════════════════════════════════════════════════════════════════════
+async function toggleRecipePanel(type, id, rowEl) {
+  const panel = document.getElementById(`recipe-${type}-${id}`);
+  if (!panel) return;
+  if (panel.style.display !== 'none') {
+    panel.style.display = 'none';
+    rowEl.classList.remove('open');
+    return;
+  }
+  rowEl.classList.add('open');
+  if (!panel.dataset.loaded) {
+    panel.innerHTML = '<em style="color:var(--text-light);font-size:.82rem">Ładowanie…</em>';
+    panel.style.display = 'block';
+    const data = await api('GET', `/${type}s/${id}`);
+    panel.innerHTML = buildRecipePanel(data);
+    panel.dataset.loaded = '1';
+  } else {
+    panel.style.display = 'block';
+  }
+}
+
+function buildRecipePanel(data) {
+  let html = '';
+  if (data.ingredients && data.ingredients.length) {
+    html += `<div class="rp-section">
+      <div class="rp-title">Składniki</div>
+      <table class="ing-table">
+        <thead><tr><th>Składnik</th><th>Ilość</th><th>Jed.</th></tr></thead>
+        <tbody>${data.ingredients.map(i =>
+          `<tr><td>${i.name}</td><td>${fmtAmt(i.amount)}</td><td>${i.unit}</td></tr>`
+        ).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+  if (data.steps && data.steps.length) {
+    html += `<div class="rp-section">
+      <div class="rp-title">Kroki</div>
+      ${stepsGroupedByStage(data.steps)}
+    </div>`;
+  }
+  return html || '<em style="color:var(--text-light);font-size:.82rem">Brak przepisu</em>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STEPS — grouped by stage
+// ═══════════════════════════════════════════════════════════════════════════
+function stepsGroupedByStage(steps) {
+  const grouped = {};
+  steps.forEach((s, i) => {
+    const stage = s.stage || 'Dzień 1';
+    if (!grouped[stage]) grouped[stage] = [];
+    grouped[stage].push({ ...s, _idx: i });
+  });
+  let html = '';
+  let globalIdx = 0;
+  for (const [stage, stageSteps] of Object.entries(grouped)) {
+    html += `<div class="stage-header">${stage}</div><ul class="steps-list">`;
+    stageSteps.forEach(s => {
+      globalIdx++;
+      html += `<li class="step-item">
+        <div class="step-num">${globalIdx}</div>
+        <div class="step-body">
+          <div class="step-title">${s.title||''}</div>
+          <div class="step-desc">${s.description||''}</div>
+          ${s.time_min ? `<div class="step-time">⏱ ${s.time_min} min</div>` : ''}
+        </div>
+      </li>`;
+    });
+    html += '</ul>';
+  }
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLONE
+// ═══════════════════════════════════════════════════════════════════════════
+async function cloneLayer(id) {
+  try {
+    const newLayer = await api('POST', `/layers/${id}/clone`);
+    showToast('Warstwa skopiowana!');
+    window.openModal('layer', newLayer.id);
+    renderLayers();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+async function cloneFrosting(id) {
+  try {
+    const newF = await api('POST', `/frostings/${id}/clone`);
+    showToast('Tynk skopiowany!');
+    window.openModal('frosting', newF.id);
+    renderFrostings();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+async function cloneCake(id) {
+  try {
+    const newC = await api('POST', `/cakes/${id}/clone`);
+    showToast('Tort skopiowany!');
+    window.openModal('cake', newC.id);
+    renderCakes();
+  } catch(e) { showToast('Błąd: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REVIEWS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function onRevFilterType() {
+  const type = document.getElementById('revFilterType').value;
+  const group = document.getElementById('revFilterEntityGroup');
+  const sel = document.getElementById('revFilterEntity');
+
+  if (!type) { group.style.display = 'none'; loadReviews(); return; }
+
+  group.style.display = '';
+  sel.innerHTML = '<option value="">Wszystkie</option>';
+
+  const endpoints = { cake: '/cakes', layer: '/layers', frosting: '/frostings' };
+  const items = await api('GET', endpoints[type]);
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item.name;
+    sel.appendChild(opt);
+  });
+  loadReviews();
+}
+
+async function loadReviews() {
+  const el = document.getElementById('reviewsList');
+  el.innerHTML = '<p style="color:var(--text-light)">Ładowanie...</p>';
+  const type = document.getElementById('revFilterType').value;
+  const entityId = document.getElementById('revFilterEntity').value;
+
+  let url = '/reviews';
+  const params = [];
+  if (type)     params.push(`target_type=${type}`);
+  if (entityId) params.push(`target_id=${entityId}`);
+  if (params.length) url += '?' + params.join('&');
+
+  try {
+    const reviews = await api('GET', url);
+    if (!reviews.length) { el.innerHTML = '<p style="color:var(--text-light)">Brak opinii.</p>'; return; }
+
+    // Build entity name lookup for display
+    const typeLabels = { cake:'🎂 Tort', layer:'🍰 Warstwa', frosting:'🎨 Tynk' };
+    el.innerHTML = reviews.map(r => `
+      <div class="review-card">
+        <div class="review-card-header">
+          <span class="review-entity">${typeLabels[r.target_type]||r.target_type} #${r.target_id}</span>
+          <span class="review-author">${r.author}</span>
+          <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+          <span class="review-date">${r.created_at.slice(0,10)}</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteReviewGlobal(${r.id})">Usuń</button>
+        </div>
+        ${r.text ? `<div class="review-text">${r.text}</div>` : ''}
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<p style="color:red">Błąd: ${e.message}</p>`; }
+}
+
+async function deleteReviewGlobal(id) {
+  if (!confirm('Usunąć opinię?')) return;
+  await api('DELETE', `/reviews/${id}`);
+  showToast('Opinia usunięta');
+  loadReviews();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+renderCakes();
+</script>
+</body>
+</html>

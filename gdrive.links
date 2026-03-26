@@ -1,0 +1,22 @@
+# AiWhisperers -- gdrivelinks
+# Navigacja po repo dla Claude
+# Format: [nazwa] DRIVE_ID  path: sczegka/path
+
+## Root
+
+[index] 1M46WRj8IiZpjCEAgsofGCW3m6tgxiHe3  path: index.html
+[readme] 1gki2IQnZI_U6tT7x8oaF5HcL-mPCDW  path: readme.html
+[remedy] 1gaWVT1fe_0krGIVs__V63YLEQe9kuRh  path: remedy.html
+
+## apps/aiwpass
+
+[AiWQuick] 1neNWrtk02t3aDC3AMSQ7UQeALhyAJnDJ  path: apps/aiwpass/quick.html
+
+## docs/
+
+# -- dodaj ID po wgraniu
+
+## Session
+context: mobile
+active: -
+notes: -

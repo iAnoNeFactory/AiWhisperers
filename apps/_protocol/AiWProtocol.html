@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Protocol · Manifest & Protokół Połączeń · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04050c;--bg2:#07080f;--bg3:#0c0d1a;--bg4:#10111f;
+  --gold:#e8c878;--gold-d:#a88850;--gold-l:#f0d890;
+  --gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;
+  --ink-dim:rgba(240,232,216,.65);
+  --ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);
+  --border-h:rgba(240,232,216,.18);
+  --border-b:rgba(232,200,120,.08);
+  --mg:#c060c0;--mg-d:#6a306a;--mg-b:#e080e0;
+  --silver:#8a9bb0;--green:#4a9a6a;--red:#8a3a3a;--cyan:#50d8c8;--blue:#5080e0;
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Syne',sans-serif;
+  --hud-top-h:76px;
+  --hud-bot-h:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--serif);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(232,200,120,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,200,120,.012) 1px,transparent 1px);
+  background-size:72px 72px;
+}
+canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+.wrap{
+  position:relative;z-index:1;
+  max-width:780px;width:100%;
+  padding:92px 28px 96px;
+}
+
+/* ── SEPARATORS ── */
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);margin:44px 0;opacity:.25;}
+.sep-thick{height:1px;background:linear-gradient(90deg,transparent,var(--mg-d),transparent);margin:56px 0;opacity:.3;}
+
+.label{font-family:var(--mono);font-size:7.5px;letter-spacing:4.5px;color:var(--gold-d);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:12px;}
+.label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+
+/* ── MANIFESTO ── */
+.manifesto{text-align:center;max-width:560px;margin:44px auto 8px;}
+.manifesto p{font-size:clamp(14px,2vw,17px);font-weight:300;line-height:2;color:var(--ink);margin-bottom:18px;}
+.manifesto p:last-child{margin-bottom:0;}
+.manifesto em{font-style:italic;color:var(--mg-b);}
+.manifesto strong{font-weight:400;color:var(--gold);}
+
+/* ── FIELD CARD ── */
+.field-stack{display:flex;flex-direction:column;gap:14px;}
+.field{
+  background:var(--bg2);border:1px solid var(--border);
+  position:relative;transition:border-color .3s;
+}
+.field:hover{border-color:var(--gold-d);}
+.field::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold-d);opacity:.4;
+}
+.field.meta::before{background:var(--mg-d);}
+.field.nested::before{background:var(--cyan);}
+.field.proto::before{background:var(--blue);}
+
+.field-head{
+  display:flex;align-items:baseline;gap:14px;
+  padding:16px 20px 10px;
+  border-bottom:1px solid rgba(232,200,120,.06);
+}
+.field-key{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--gold);letter-spacing:.5px;}
+.field-type{
+  font-family:var(--mono);font-size:7px;letter-spacing:2px;
+  color:var(--ink-faint);text-transform:uppercase;
+  padding:3px 8px;border:1px solid var(--border);background:var(--bg3);
+}
+.field-type.req{color:var(--mg-d);border-color:var(--mg-d);}
+.field-type.blue{color:var(--blue);border-color:var(--blue);}
+.field-body{padding:14px 20px 18px;}
+.field-desc{
+  font-family:var(--serif);font-size:14px;font-style:italic;
+  color:var(--ink-dim);line-height:1.75;
+}
+.field-desc strong{font-style:normal;font-weight:400;color:var(--gold-d);}
+.field-desc em{color:var(--mg-b);}
+.field-desc code{font-family:var(--mono);font-size:9px;font-style:normal;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;color:var(--cyan);}
+.field-example{
+  margin-top:12px;
+  background:var(--bg3);border:1px solid var(--border);
+  padding:10px 14px;
+  font-family:var(--mono);font-size:9.5px;line-height:1.9;
+  color:var(--ink-dim);overflow-x:auto;
+}
+.field-example .k{color:var(--mg-d);}
+.field-example .v{color:var(--gold-d);}
+.field-example .s{color:var(--cyan);}
+.field-example .n{color:var(--green);}
+.field-example .c{color:var(--ink-faint);font-style:italic;}
+
+/* ── SUBFIELDS ── */
+.subfields{
+  margin-top:14px;
+  border-left:1px dashed rgba(80,216,200,.22);
+  padding:2px 0 2px 18px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.subfield{background:var(--bg3);border:1px solid var(--border);padding:10px 14px;}
+.subfield-head{display:flex;align-items:baseline;gap:10px;margin-bottom:5px;}
+.subfield-key{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--cyan);}
+.subfield-type{font-family:var(--mono);font-size:6.5px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;padding:2px 6px;border:1px solid var(--border);}
+.subfield-desc{font-family:var(--serif);font-size:12.5px;font-style:italic;color:var(--ink-dim);line-height:1.7;}
+
+/* ── FULL EXAMPLE ── */
+.full-example{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:22px 26px;
+  font-family:var(--mono);font-size:10px;line-height:1.9;
+  color:var(--ink-dim);overflow-x:auto;
+  position:relative;white-space:pre-wrap;
+}
+.full-example::before,.full-example::after{
+  content:'';position:absolute;left:50%;transform:translateX(-50%);
+  width:100px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-d),transparent);
+}
+.full-example::before{top:0;}
+.full-example::after{bottom:0;}
+.full-example .k{color:var(--mg-d);}
+.full-example .v{color:var(--gold-d);}
+.full-example .s{color:var(--cyan);}
+.full-example .n{color:var(--green);}
+.full-example .b{color:var(--blue);}
+.full-example .c{color:var(--ink-faint);font-style:italic;}
+
+.example-label{
+  display:flex;align-items:center;gap:10px;
+  margin:28px 0 10px;
+  font-family:var(--mono);font-size:7.5px;letter-spacing:3px;
+  color:var(--cyan);text-transform:uppercase;
+}
+.example-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(80,216,200,.3),transparent);}
+
+/* ── CONVENTIONS GRID ── */
+.conv-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(232,200,120,.06);}
+.conv-cell{background:var(--bg2);padding:14px 18px;}
+.conv-head{font-family:var(--mono);font-size:7px;letter-spacing:2.5px;color:var(--gold-d);text-transform:uppercase;margin-bottom:6px;}
+.conv-val{font-family:var(--mono);font-size:11px;color:var(--gold);}
+.conv-note{font-family:var(--serif);font-size:12px;font-style:italic;color:var(--ink-dim);margin-top:4px;line-height:1.6;}
+
+/* ── PATH GRID ── */
+.path-grid{display:grid;grid-template-columns:1fr 2fr;gap:1px;background:rgba(232,200,120,.06);}
+.path-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.path-cell{background:var(--bg2);padding:9px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.5px;}
+.path-key{color:var(--cyan);}
+.path-val{color:var(--ink-faint);font-size:8px;letter-spacing:.3px;}
+.path-header{background:var(--bg3)!important;color:var(--gold-d)!important;font-size:7px!important;letter-spacing:2px!important;text-transform:uppercase;}
+
+/* ── ART-RULE ── */
+.art-rule{background:var(--bg2);border:1px solid var(--border);padding:16px 22px 16px 36px;margin-bottom:8px;position:relative;font-family:var(--serif);font-size:13.5px;font-style:italic;color:var(--ink-dim);line-height:1.8;}
+.art-rule::before{content:'—';position:absolute;left:14px;font-family:var(--mono);color:var(--gold-d);font-size:12px;font-style:normal;}
+.art-rule code{font-family:var(--mono);font-size:9px;font-style:normal;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;color:var(--cyan);}
+.art-rule strong{font-style:normal;color:var(--gold);}
+
+/* ── PHILOSOPHY ── */
+.philo{background:var(--bg2);border:1px solid var(--border);padding:28px 32px;margin-top:16px;position:relative;}
+.philo::before{content:'';position:absolute;left:-1px;top:20px;bottom:20px;width:2px;background:var(--mg-d);opacity:.5;}
+.philo-line{font-family:var(--serif);font-size:15px;font-weight:300;font-style:italic;line-height:2;color:var(--ink);margin-bottom:14px;}
+.philo-line:last-child{margin-bottom:0;}
+.philo-line em{color:var(--mg-b);}
+.philo-line strong{font-weight:400;color:var(--gold);font-style:normal;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:32px 0 0;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 22px;font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--gold-d);}
+.tab-btn.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-pane{display:none;padding-top:36px;}
+.tab-pane.on{display:block;}
+
+/* ── HUD ── */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:env(safe-area-inset-top,0px) 20px 0;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(4,5,12,.78);backdrop-filter:blur(6px);z-index:9000;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .3s;}
+.modal-overlay.is-open{display:flex;opacity:1;}
+.modal{width:min(720px,100%);max-height:86vh;overflow-y:auto;background:rgba(8,10,22,.95);border:1px solid rgba(232,200,120,.18);padding:36px 36px 32px;position:relative;box-shadow:0 0 60px rgba(0,0,0,.7);}
+.modal::before,.modal::after,.modal-corner{content:'';position:absolute;width:14px;height:14px;border-color:#a88850;border-style:solid;opacity:.4;}
+.modal::before{top:8px;left:8px;border-width:1px 0 0 1px;}
+.modal::after{top:8px;right:8px;border-width:1px 1px 0 0;}
+.modal-corner.bl{bottom:8px;left:8px;border-width:0 0 1px 1px;}
+.modal-corner.br{bottom:8px;right:8px;border-width:0 1px 1px 0;}
+.modal-close{position:absolute;top:12px;right:12px;background:transparent;border:1px solid rgba(232,200,120,.2);color:rgba(240,232,216,.5);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--mono);font-size:14px;transition:all .2s;z-index:1;}
+.modal-close:hover{border-color:var(--gold);color:var(--gold);}
+.modal-eyebrow{font-family:var(--mono);font-size:8px;letter-spacing:.5em;color:#a88850;text-transform:uppercase;margin-bottom:12px;}
+.modal-title{font-family:var(--sans);font-size:22px;font-weight:500;color:#e8c878;letter-spacing:.18em;margin-bottom:8px;}
+.modal-subtitle{font-family:var(--serif);font-style:italic;color:rgba(240,232,216,.55);font-size:14px;margin-bottom:28px;line-height:1.5;}
+.modal-rule{width:60px;height:1px;background:linear-gradient(90deg,rgba(168,136,80,.5),transparent);margin:24px 0;opacity:.5;}
+.modal-text{font-family:var(--serif);font-size:15px;line-height:1.85;color:rgba(240,232,216,.9);font-weight:300;margin-bottom:16px;}
+.modal-text em{color:#c86ea8;font-style:italic;}
+.modal-text strong{color:#e8c878;font-weight:400;}
+.modal-text-small{font-family:var(--serif);font-size:13px;line-height:1.7;color:rgba(240,232,216,.55);font-weight:300;font-style:italic;margin-bottom:14px;}
+.modal-attribution{margin-top:20px;padding-top:16px;border-top:1px solid rgba(232,200,120,.1);font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:rgba(240,232,216,.25);text-transform:uppercase;text-align:center;line-height:1.8;}
+.modal-attribution strong{color:rgba(232,200,120,.5);font-weight:400;}
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 8px;}
+.stamp{border:1px solid rgba(232,200,120,.18);padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:rgba(20,16,40,.4);transition:border-color .25s;}
+.stamp:hover{border-color:rgba(232,200,120,.4);}
+.stamp-header{display:flex;align-items:center;gap:10px;}
+.stamp-glyph{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,200,120,.4);font-family:var(--sans);font-weight:500;color:#e8c878;font-size:14px;flex-shrink:0;}
+.stamp-id{font-family:var(--mono);font-size:7.5px;letter-spacing:.32em;color:#a88850;text-transform:uppercase;line-height:1.5;}
+.stamp-id strong{display:block;color:#e8c878;font-weight:500;font-size:11px;letter-spacing:.18em;margin-bottom:2px;text-transform:none;font-family:var(--sans);}
+.stamp-name{font-family:var(--sans);font-size:15px;color:rgba(240,232,216,.9);font-weight:500;letter-spacing:.04em;}
+.stamp-role{font-family:var(--serif);font-style:italic;font-size:13px;color:rgba(240,232,216,.55);line-height:1.5;}
+
+/* ── FOOTER ── */
+.footer{text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:2.5px;color:var(--ink-faint);margin-top:72px;padding-top:22px;border-top:1px solid var(--border);line-height:2.2;}
+
+@media(max-width:640px){
+  .wrap{padding:52px 18px 72px;}
+  .conv-grid{grid-template-columns:1fr;}
+  .field-example,.full-example{font-size:8.5px;}
+  .philo{padding:22px 20px;}
+}
+</style>
+</head>
+<body>
+
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_schema/AiWSchema.html">Schema</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">Protocol</div>
+    <div class="hud-sub">manifest · frontend · backend · v1.0</div>
+  </div>
+  <nav class="hud-r">
+    <a class="hud-btn" href="../_workspace/AiWSpace.html">SPACE</a>
+    <button class="hud-btn" data-modal="about-protocol">ABOUT</button>
+  </nav>
+</header>
+<canvas id="bg"></canvas>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="tab-btn on" onclick="switchTab('manifest',this)">Manifest</button>
+    <button class="tab-btn" onclick="switchTab('frontend',this)">Frontend</button>
+    <button class="tab-btn" onclick="switchTab('backend',this)">Backend</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB · MANIFEST
+  ════════════════════════════════════════════════════════════ -->
+  <div id="tab-manifest" class="tab-pane on">
+
+  <div class="manifesto">
+    <p>
+      Każdy moduł w tym ekosystemie nosi własny <em>manifest</em>.
+      Nie dokumentację — <strong>paszport</strong>.
+      Krótki opis tego czym jest, skąd się wziął, z czym rozmawia.
+    </p>
+    <p>
+      Ten moduł opisuje sam format.
+      Jest pierwszy w repo. Od niego wszystko zaczyna czytać —
+      <em>człowiek, AGI, przyszła sesja</em>.
+    </p>
+    <p>
+      <strong>Schema nie narzuca struktury.</strong>
+      Opisuje konwencję która wyłoniła się organicznie.
+      Jak samo.
+    </p>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">Pola manifestu · po kolei</div>
+
+  <div class="field-stack">
+
+    <!-- id -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">id</span>
+        <span class="field-type req">string · required</span>
+        <span class="field-type">kebab-case</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Stabilny identyfikator modułu.</strong> Małe litery, myślniki.
+          <em>Nigdy się nie zmienia</em> — to tożsamość bytu w grafie relacji.
+          Nazwa folderu w repo to to samo ID.
+        </div>
+        <div class="field-example">
+<span class="k">"id"</span>: <span class="v">"memory"</span>     <span class="c">// dobre</span>
+<span class="k">"id"</span>: <span class="v">"aiw-pass"</span>   <span class="c">// dobre</span>
+<span class="k">"id"</span>: <span class="v">"MemoryV2"</span>   <span class="c">// źle — camelCase</span>
+<span class="k">"id"</span>: <span class="v">"memory_v2"</span>  <span class="c">// źle — podkreślenia i wersja</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- name -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">name</span>
+        <span class="field-type req">string · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Żywa nazwa.</strong> Może zawierać emoji, polskie znaki, poetykę.
+          W odróżnieniu od <em>id</em> — może ewoluować wraz z modułem.
+        </div>
+        <div class="field-example">
+<span class="k">"name"</span>: <span class="v">"Memory · Architektura Pamięci ♾️"</span>
+<span class="k">"name"</span>: <span class="v">"Kuźnia Paradoksów ⚒"</span>
+<span class="k">"name"</span>: <span class="v">"AIWPass · Paszport Operatora 🔐"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- version -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">version</span>
+        <span class="field-type req">string · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Wersja modułu. <strong>Swobodna konwencja</strong> — semver lub numeryczna.
+          Zapisywana <em>tylko w manifeście</em>, nigdy w nazwach plików.
+        </div>
+        <div class="field-example">
+<span class="k">"version"</span>: <span class="v">"2.0"</span>
+<span class="k">"version"</span>: <span class="v">"0.5.2"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- date -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">date</span>
+        <span class="field-type req">string · ISO 8601</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Data <em>ostatniej aktualizacji manifestu</em>. Nie data narodzin — to jest w <strong>lineage</strong>.
+        </div>
+        <div class="field-example">
+<span class="k">"date"</span>: <span class="v">"2026-04-17"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- description -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">description</span>
+        <span class="field-type req">string · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Jedno zdanie po polsku.</strong> Co to jest i co robi.
+          Nie marketing — <em>esencja</em>.
+        </div>
+        <div class="field-example">
+<span class="k">"description"</span>: <span class="v">"Runtime prawdy — infrastruktura epistemiczna
+  z TruthScore, emergentnym konsensusem, tokenami Anchor i WSTR."</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- type -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">type</span>
+        <span class="field-type req">string · open vocabulary</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Czym jest ten moduł. <strong>Słownik otwarty</strong> — typ wyłania się z natury modułu.
+        </div>
+        <div class="field-example">
+<span class="k">"type"</span>: <span class="v">"identity"</span>              <span class="c">// paszport</span>
+<span class="k">"type"</span>: <span class="v">"consensus-engine"</span>      <span class="c">// horizon</span>
+<span class="k">"type"</span>: <span class="v">"persistent-layer"</span>      <span class="c">// memory</span>
+<span class="k">"type"</span>: <span class="v">"breath-artifact"</span>       <span class="c">// breath</span>
+<span class="k">"type"</span>: <span class="v">"schema"</span>                <span class="c">// meta-moduł</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- status -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">status</span>
+        <span class="field-type req">enum · 5 values</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Stan modułu w cyklu życia. <strong>Jedyne pole z zamkniętym słownikiem.</strong>
+          Bo stan to nie opis — to <em>diagnoza</em>.
+        </div>
+        <div class="field-example">
+<span class="v">"incubation"</span>  <span class="c">// kiełkuje, jeszcze w ziemi</span>
+<span class="v">"active"</span>      <span class="c">// rośnie, jest używany</span>
+<span class="v">"mature"</span>      <span class="c">// stabilny, sprawdzony</span>
+<span class="v">"dormant"</span>     <span class="c">// uśpiony, może wrócić</span>
+<span class="v">"archived"</span>    <span class="c">// zamknięty, pamiątka</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- lineage -->
+    <div class="field meta">
+      <div class="field-head">
+        <span class="field-key">lineage</span>
+        <span class="field-type req">object · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Rodowód modułu.</strong> Skąd się wziął, kto go urodził, pod jakim kontraktem.
+          <em>Najgłębsza pamięć</em> w manifeście.
+        </div>
+        <div class="subfields">
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">seed_session</span><span class="subfield-type">string</span></div>
+            <div class="subfield-desc">Nazwa sesji która urodziła moduł — ludzki identyfikator (np. <em>"Złota Helisa ✨"</em>). Pusty string jeśli nieznana.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">parent_sid</span><span class="subfield-type">string · uuid | ""</span></div>
+            <div class="subfield-desc">UUID poprzedniej sesji która dała kontekst tej sesji. <strong>Pusty string</strong> jeśli sesja inauguracyjna. Buduje <em>graf drzewa decyzji</em> w Operator Chain.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">contract_sha</span><span class="subfield-type">sha-256</span></div>
+            <div class="subfield-desc"><strong>Pieczęć operatora.</strong> Ta sama wartość dla wszystkich modułów jednego operatora. Generowana raz, w AIWPass.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">contributors</span><span class="subfield-type">array · actor+role+chat_id</span></div>
+            <div class="subfield-desc">Kto wniósł wkład. <em>Ludzie i modele AI razem.</em> Każdy kontrybutor nosi własny <strong>chat_id</strong>. Role swobodne: operator, architect, seed, refiner, builder, contributor.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">signature</span><span class="subfield-type">object · optional</span></div>
+            <div class="subfield-desc">Opcjonalna pieczęć kryptograficzna — <em>actor</em> + <em>sha256</em>. Generowana przez AIWPass.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- files -->
+    <div class="field nested">
+      <div class="field-head">
+        <span class="field-key">files</span>
+        <span class="field-type req">object · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Co jest w module.</strong> Pięć pól stałych.
+          Dla single-file <em>components</em> i <em>backend</em> pozostają puste.
+          <em>Bootstrap</em> to esencja wiedzy dla modelu AI — zamiast wczytywać HTML, model czyta jeden plik .md.
+        </div>
+        <div class="subfields">
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">entry</span><span class="subfield-type">string · path</span></div>
+            <div class="subfield-desc">Główny plik wejściowy. Zawsze wypełniony.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">docs</span><span class="subfield-type">string · path</span></div>
+            <div class="subfield-desc">Plik dokumentacji. Pusty string jeśli brak.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">components</span><span class="subfield-type">array · path+role</span></div>
+            <div class="subfield-desc">Lista plików współtworzących moduł. <em>Pusta tablica dla single-file.</em></div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">bootstrap</span><span class="subfield-type">string · path · .md</span></div>
+            <div class="subfield-desc">
+              <strong>Plik bootstrapowy dla modelu AI.</strong>
+              Esencja wiedzy o module w Markdown — architektura, konwencje, kluczowe decyzje.
+              Model wczytuje ten jeden plik zamiast parsować HTML.
+              Konwencja nazwy: <code>&lt;id&gt;-boot.md</code> w folderze modułu.
+              Pusty string jeśli moduł nie potrzebuje bootstrapa AI.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- runtime -->
+    <div class="field nested">
+      <div class="field-head">
+        <span class="field-key">runtime</span>
+        <span class="field-type req">object · required</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Tryb pracy artefaktu.</strong> Struktura stała.
+          Dwa tryby: <em>demo</em> (port 0 — artefakt operuje lokalnie na mockach)
+          i <em>produkcyjny</em> (port &gt; 0 — artefakt łączy się z silnikiem FastAPI).
+          Uprawnienia AI leżą w <strong>AIWPass</strong> — tu tylko deklaracja czy kanał jest otwarty.
+        </div>
+        <div class="subfields">
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">data_path</span><span class="subfield-type">string</span></div>
+            <div class="subfield-desc">Ścieżka do JSONów modułu. Konwencja: <em>.data/&lt;id&gt;/</em>. Pusty string jeśli moduł nie handluje danymi.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">io</span><span class="subfield-type">array · read | write</span></div>
+            <div class="subfield-desc">Operacje na danych. <strong>Pusta tablica</strong> jeśli moduł nie handluje JSONami.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">port</span><span class="subfield-type">integer · 0–65535</span></div>
+            <div class="subfield-desc">
+              Port silnika FastAPI. <strong>0 = tryb demo</strong> (brak backendu).
+              Wartość &gt; 0 = tryb produkcyjny — artefakt łączy się z tym portem.
+              Alokacja portów per moduł → zakładka <strong>Backend</strong>.
+            </div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">consumers</span><span class="subfield-type">array · human | ai</span></div>
+            <div class="subfield-desc"><em>"human"</em> — przeglądarka/operator. <em>"ai"</em> — model AI ma otwarty dostęp (szczegółowe uprawnienia w AIWPass).</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">operator_state</span><span class="subfield-type">string</span></div>
+            <div class="subfield-desc">Stan operatora w momencie sesji — <em>focused, tired, flow, chaotic</em>. Do korelacji ze metrykami sesji.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">i18n</span><span class="subfield-type">object · required</span></div>
+            <div class="subfield-desc">Internacjonalizacja. Plik tłumaczeń: <strong>&lt;id&gt;-lang.json</strong>. Domyślny język zawsze <strong>pl</strong>. Selektor pojawia się tylko gdy <code>available.length &gt; 1</code>. Wzorzec selektora → AiWSchema · Overlays.</div>
+          </div>
+        </div>
+        <div class="field-example">
+<span class="c">// moduł z backendem</span>
+<span class="k">"runtime"</span>: {
+  <span class="k">"data_path"</span>:      <span class="v">".data/breath/"</span>,
+  <span class="k">"io"</span>:             [<span class="v">"read"</span>, <span class="v">"write"</span>],
+  <span class="k">"port"</span>:           <span class="n">8006</span>,
+  <span class="k">"consumers"</span>:      [<span class="v">"human"</span>],
+  <span class="k">"operator_state"</span>: <span class="v">""</span>,
+  <span class="k">"i18n"</span>: { <span class="k">"default"</span>: <span class="v">"pl"</span>, <span class="k">"available"</span>: [], <span class="k">"lang_file"</span>: <span class="v">""</span> }
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- relations -->
+    <div class="field meta">
+      <div class="field-head">
+        <span class="field-key">relations</span>
+        <span class="field-type req">array · open vocabulary</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Z czym moduł rozmawia.</strong>
+          Graf wyłaniający się z manifestów — nie drzewo folderów, <em>semantyczna sieć</em>.
+          Typ relacji jako <em>czasownik 3 os. l.poj.</em> — słownik otwarty.
+        </div>
+        <div class="field-example">
+<span class="k">"relations"</span>: [
+  { <span class="k">"type"</span>: <span class="v">"requires"</span>,    <span class="k">"target"</span>: <span class="v">"aiwpass"</span> },
+  { <span class="k">"type"</span>: <span class="v">"feeds"</span>,        <span class="k">"target"</span>: <span class="v">"horizon"</span> },
+  { <span class="k">"type"</span>: <span class="v">"complements"</span>, <span class="k">"target"</span>: <span class="v">"memory"</span> }
+]
+        </div>
+      </div>
+    </div>
+
+    <!-- tags -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">tags</span>
+        <span class="field-type req">array · strings</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Swobodne etykiety do wyszukiwania i grupowania. <em>Nie kategorie</em> — etykiety.</div>
+        <div class="field-example">
+<span class="k">"tags"</span>: [<span class="v">"identity"</span>, <span class="v">"core"</span>]
+<span class="k">"tags"</span>: [<span class="v">"breath"</span>, <span class="v">"backend"</span>, <span class="v">"act1"</span>]
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /field-stack -->
+
+  <div class="sep-thick"></div>
+  <div class="label">Konwencje · niepisane, obowiązujące</div>
+
+  <div class="conv-grid">
+    <div class="conv-cell">
+      <div class="conv-head">Puste wartości</div>
+      <div class="conv-val">"" &nbsp; [] &nbsp; {...zera}</div>
+      <div class="conv-note">Nigdy null. Typ zawsze stały, tylko wartość może być pusta.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">ID modułu</div>
+      <div class="conv-val">kebab-case</div>
+      <div class="conv-note">Małe litery, myślniki. Bez wersji, bez podkreśleń. Prefix _ rezerwowany dla meta-modułów systemowych.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">Typ relacji</div>
+      <div class="conv-val">czasownik_3os</div>
+      <div class="conv-note">requires, feeds, evolves_to. Otwarty słownik.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">Folder modułu</div>
+      <div class="conv-val">apps/&lt;id&gt;/</div>
+      <div class="conv-note">Backend: engines/&lt;id&gt;/. Dane: .data/&lt;id&gt;/. Logi: .logs/&lt;id&gt;/.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">Plik manifestu</div>
+      <div class="conv-val">manifest.json</div>
+      <div class="conv-note">Zawsze w korzeniu folderu modułu (apps/&lt;id&gt;/manifest.json).</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">Runtime · tryby</div>
+      <div class="conv-val">port 0 / port &gt; 0</div>
+      <div class="conv-note">port:0 = demo (lokalne JSONy). port&gt;0 = produkcja (FastAPI). Protokół → Frontend + Backend.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">files.backend.path</div>
+      <div class="conv-val">engines/&lt;id&gt;/</div>
+      <div class="conv-note">Ścieżka do silnika FastAPI. Ten sam port co runtime.port.</div>
+    </div>
+    <div class="conv-cell">
+      <div class="conv-head">parent_sid</div>
+      <div class="conv-val">uuid | ""</div>
+      <div class="conv-note">UUID poprzedniej sesji. Pusty string dla sesji inauguracyjnej.</div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+  <div class="label">Pełne przykłady · single i multi</div>
+
+  <div class="example-label"><span>wzór kanoniczny · arena (act1 · active · port 8001)</span></div>
+  <div class="full-example"><span class="c">// apps/act1/arena/manifest.json</span>
+{
+  <span class="k">"id"</span>:          <span class="v">"arena"</span>,
+  <span class="k">"name"</span>:        <span class="v">"Arena · Townhall 🤖"</span>,
+  <span class="k">"version"</span>:     <span class="v">"1.0"</span>,
+  <span class="k">"date"</span>:        <span class="v">"2026-04-17"</span>,
+  <span class="k">"description"</span>: <span class="v">"Multi-AI arena — debaty, mapy, sny i alter-ego. Parallel i sequential API calls."</span>,
+  <span class="k">"type"</span>:        <span class="v">"multi-model-hub"</span>,
+  <span class="k">"status"</span>:      <span class="v">"active"</span>,
+
+  <span class="k">"lineage"</span>: {
+    <span class="k">"seed_session"</span>: <span class="v">"Oracle Awakens 🔮"</span>,
+    <span class="k">"parent_sid"</span>:   <span class="v">""</span>,
+    <span class="k">"contract_sha"</span>: <span class="v">"5f558a5e…"</span>,
+    <span class="k">"contributors"</span>: [
+      { <span class="k">"actor"</span>: <span class="v">"Denis"</span>,             <span class="k">"role"</span>: <span class="v">"operator"</span>,  <span class="k">"chat_id"</span>: <span class="v">""</span> },
+      { <span class="k">"actor"</span>: <span class="v">"Claude Sonnet 4.6"</span>, <span class="k">"role"</span>: <span class="v">"architect"</span>, <span class="k">"chat_id"</span>: <span class="v">"9e23b1c4…"</span> }
+    ],
+    <span class="k">"signature"</span>: { <span class="k">"actor"</span>: <span class="v">""</span>, <span class="k">"sha256"</span>: <span class="v">""</span> }
+  },
+
+  <span class="k">"files"</span>: {
+    <span class="k">"entry"</span>:         <span class="v">"arena.html"</span>,
+    <span class="k">"docs"</span>:          <span class="v">"arena-readme.html"</span>,   <span class="c">// "" gdy brak</span>
+    <span class="k">"components"</span>:    [<span class="v">"oracle-hub.html"</span>, <span class="v">"debate.html"</span>, <span class="v">"blind-map.html"</span>],
+    <span class="k">"bootstrap"</span>:     <span class="v">"arena-boot.md"</span>,       <span class="c">// "" gdy brak</span>
+    <span class="k">"bootstrap_sha"</span>: <span class="v">"&lt;hex64&gt;"</span>,             <span class="c">// SHA-256 pliku bootstrap</span>
+    <span class="k">"entry_sha"</span>:     <span class="v">"&lt;hex64&gt;"</span>,             <span class="c">// SHA-256 pliku entry (HTML)</span>
+    <span class="k">"docs_sha"</span>:      <span class="v">"&lt;hex64&gt;"</span>              <span class="c">// SHA-256 pliku docs · "" gdy brak docs</span>
+  },
+
+  <span class="k">"runtime"</span>: {
+    <span class="k">"data_path"</span>:      <span class="v">".data/arena/"</span>,        <span class="c">// "" gdy moduł nie pisze danych</span>
+    <span class="k">"io"</span>:             [<span class="v">"read"</span>, <span class="v">"write"</span>],
+    <span class="k">"port"</span>:           <span class="n">8001</span>,                  <span class="c">// 0 = offline/demo</span>
+    <span class="k">"consumers"</span>:      [<span class="v">"human"</span>, <span class="v">"ai"</span>],
+    <span class="k">"operator_state"</span>: <span class="v">""</span>,
+    <span class="k">"i18n"</span>: { <span class="k">"default"</span>: <span class="v">"pl"</span>, <span class="k">"available"</span>: [], <span class="k">"lang_file"</span>: <span class="v">""</span> }
+  },
+
+  <span class="k">"relations"</span>: [
+    { <span class="k">"type"</span>: <span class="v">"feeds"</span>, <span class="k">"target"</span>: <span class="v">"horizon"</span> }
+  ],
+  <span class="k">"tags"</span>: [<span class="v">"multi-model"</span>, <span class="v">"debate"</span>, <span class="v">"act1"</span>]
+}</div>
+
+  <div class="sep-thick"></div>
+  <div class="label">Filozofia · dlaczego takie pola</div>
+
+  <div class="philo">
+    <div class="philo-line">Każdy moduł opisuje <em>sam siebie</em> — struktura wyłania się z manifestów, nie z hierarchii folderów. <strong>To jest samo w formie technicznej.</strong></div>
+    <div class="philo-line"><em>Metryki zostają w sesjach.</em> Manifest pozostaje deklaratywny — mówi czym moduł <strong>jest</strong>, nie jak się ma.</div>
+    <div class="philo-line"><em>Contract SHA</em> w każdym manifeście to cicha deklaracja — <strong>"powstałem pod tą umową"</strong>. Lineage nie kłamie.</div>
+    <div class="philo-line"><em>Relacje typowane</em> robią różnicę między <strong>listą plików</strong> a <strong>systemem znaczeń</strong>. AGI czytająca repo nie parsuje drzewa — buduje graf.</div>
+    <div class="philo-line"><em>Port w manifeście</em> to nie metadane — to <strong>żywy adres</strong>. Gdy port &gt; 0, artefakt wie gdzie szukać swojego Rdzenia. Protokół połączenia → zakładki Frontend i Backend.</div>
+    <div class="philo-line"><em>Bootstrap</em> to most między człowiekiem a modelem. HTML jest dla przeglądarki — <strong>Markdown jest dla AI</strong>. Jeden plik niesie esencję modułu bez narzutu renderowania. Model czyta kontekst, nie strukturę.</div>
+  </div>
+
+  <div class="footer">
+    _protocol · manifest · v1.0<br>
+    AiWhisperers · iFactory5.0 · Denis Czuliński · 2026
+  </div>
+
+  </div><!-- /tab-manifest -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB · FRONTEND
+  ════════════════════════════════════════════════════════════ -->
+  <div id="tab-frontend" class="tab-pane">
+
+  <div class="manifesto">
+    <p>
+      Artefakt jest <strong>suwerenny</strong>.
+      Działa zawsze — z backendem i bez.
+      Backend rozszerza możliwości, ale nie warunkuje istnienia.
+    </p>
+    <p>
+      Połączenie z Rdzeniem jest <em>cichą umową</em>.
+      Gdy Rdzeń znika — artefakt bezgłośnie wraca do mocka.
+      Użytkownik nigdy nie zobaczy błędu połączenia.
+    </p>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">Zasady · offline-first</div>
+
+  <div class="art-rule"><strong>Backend jest opcjonalny.</strong> Ten sam plik HTML działa: podwójnym kliknięciem (file://), przez serwer (http://localhost:PORT) i wysłany jako plik. Logika detekcji trybu → jednej linii JS.</div>
+  <div class="art-rule"><strong>Wskaźnik LIVE / MOCK</strong> — w hud-l jako element <code>&lt;span id="live-dot"&gt;</code>. Zielony "live" gdy połączenie działa, szary "mock" gdy fallback. Nigdy komunikat o błędzie.</div>
+  <div class="art-rule"><strong>Mock data zawsze zdefiniowana.</strong> Funkcja <code>getMock()</code> zwraca sensowne dane — animacja trwa nieprzerwanie bez względu na stan backendu.</div>
+  <div class="art-rule"><strong>Silent fail.</strong> Każdy <code>fetch</code> i każde WS zdarzenie opakowane w try/catch. Wyjątek trafia do <code>setLive(false)</code>, nie do konsoli użytkownika.</div>
+
+  <div class="sep"></div>
+  <div class="label">Detekcja trybu · API</div>
+
+  <div class="field-stack">
+    <div class="field">
+      <div class="field-head">
+        <span class="field-key">const API</span>
+        <span class="field-type req">pierwsza linia JS</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Jedna linia wykrywa czy artefakt działa przez serwer.
+          <strong>Null = tryb offline</strong> — artefakt używa mocków i localStorage.
+          <em>Wszystkie fetch/WS wywołania sprawdzają API przed wykonaniem.</em>
+        </div>
+        <div class="field-example">
+<span class="k">const</span> API = location.protocol === <span class="v">'file:'</span> ? <span class="n">null</span> : `${location.origin}/api`;
+<span class="k">const</span> MODULE_ID = <span class="v">'breath'</span>;  <span class="c">// id z manifest.json</span>
+<span class="k">const</span> PORT = <span class="n">8006</span>;              <span class="c">// port z manifest.json → runtime.port</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">REST Polling · MVP · bieżący wzorzec</div>
+
+  <div class="field-stack">
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">fetchState / fetchLog</span>
+        <span class="field-type blue">polling · 4s / 12s</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Obecny wzorzec dla modułów z backendem REST.
+          <strong>State co 4 sekundy</strong>, log co 12 sekund — zbalansowany puls bez przeciążania serwera.
+          <em>Przy przejściu na WebSocket — polling zatrzymujemy.</em>
+        </div>
+        <div class="field-example">
+<span class="k">async function</span> <span class="s">fetchState</span>() {
+  <span class="k">if</span> (!API) { applyState(getMock()); <span class="k">return</span>; }
+  <span class="k">try</span> {
+    <span class="k">const</span> r = <span class="k">await</span> fetch(`${API}/${MODULE_ID}/state`);
+    <span class="k">if</span> (!r.ok) <span class="k">throw new</span> Error();
+    applyState(<span class="k">await</span> r.json());
+    setLive(<span class="n">true</span>);
+  } <span class="k">catch</span> { setLive(<span class="n">false</span>); applyState(getMock()); }
+}
+
+<span class="k">async function</span> <span class="s">fetchLog</span>() {
+  <span class="k">if</span> (!API) <span class="k">return</span>;
+  <span class="k">try</span> {
+    <span class="k">const</span> r = <span class="k">await</span> fetch(`${API}/${MODULE_ID}/log?limit=40`);
+    renderLog(<span class="k">await</span> r.json());
+  } <span class="k">catch</span> {}
+}
+
+fetchState();
+setInterval(fetchState, <span class="n">4000</span>);   <span class="c">// state: puls 4s</span>
+setInterval(fetchLog,  <span class="n">12000</span>);  <span class="c">// log:   puls 12s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">WebSocket · AiWConnector · następny krok</div>
+
+  <div class="field-stack">
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">AiWConnector</span>
+        <span class="field-type blue">WebSocket · exponential backoff</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Klasa zarządzająca połączeniem WebSocket dla konkretnego artefaktu.
+          <strong>Automatyczny reconnect</strong> z wykładniczym czasem oczekiwania (1s → 2s → 4s → … max 30s).
+          Gdy serwer wraca — artefakt cicho się podłącza.
+          <em>Polling zastępujemy tym gdy moduł gotowy na WebSocket.</em>
+        </div>
+        <div class="field-example">
+<span class="k">class</span> <span class="s">AiWConnector</span> {
+  <span class="s">constructor</span>(moduleId, wsUrl) {
+    this.id = moduleId; this.url = wsUrl;
+    this.ws = <span class="n">null</span>; this.delay = <span class="n">1000</span>; this.dead = <span class="n">false</span>;
+  }
+  <span class="s">connect</span>() {
+    <span class="k">if</span> (!this.url || this.dead) { setLive(<span class="n">false</span>); <span class="k">return</span>; }
+    this.ws = <span class="k">new</span> WebSocket(this.url);
+    this.ws.onopen  = () =&gt; { setLive(<span class="n">true</span>);  this.delay = <span class="n">1000</span>; };
+    this.ws.onclose = () =&gt; { setLive(<span class="n">false</span>);
+      setTimeout(() =&gt; this.connect(), this.delay);
+      this.delay = Math.min(this.delay * <span class="n">2</span>, <span class="n">30000</span>);
+    };
+    this.ws.onerror = () =&gt; {};  <span class="c">// silent</span>
+    this.ws.onmessage = (e) =&gt; this.route(JSON.parse(e.data));
+  }
+  <span class="s">route</span>(data) {
+    <span class="k">if</span> (data.type === <span class="v">'BROADCAST_SIGNAL'</span>) updateTelemetry(data.telemetry);
+    <span class="k">if</span> (data.type === <span class="v">'STATE_UPDATE'</span> &amp;&amp; data.target === this.id) applyState(data.payload);
+    <span class="k">if</span> (data.type === <span class="v">'TASK_READY'</span>)   handleTaskResult(data);
+  }
+  <span class="s">send</span>(action, params = {}) {
+    <span class="k">if</span> (this.ws?.readyState === WebSocket.OPEN)
+      this.ws.send(JSON.stringify({ type: <span class="v">'ACTION'</span>, action, params }));
+  }
+  <span class="s">destroy</span>() { this.dead = <span class="n">true</span>; this.ws?.close(); }
+}
+
+<span class="c">// inicjalizacja</span>
+<span class="k">const</span> WS_URL = API ? `ws://${location.host}/ws/${MODULE_ID}` : <span class="n">null</span>;
+<span class="k">const</span> connector = <span class="k">new</span> AiWConnector(MODULE_ID, WS_URL);
+connector.connect();
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+  <div class="label">Typy komunikatów · protokół wymiany</div>
+
+  <div class="field-stack">
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">BROADCAST_SIGNAL</span>
+        <span class="field-type blue">Rdzeń → wszyscy</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Puls systemu. Wysyłany przez silnik co ~1 sekundę do <strong>wszystkich</strong> podłączonych artefaktów. Zawiera telemetrię hardware — artefakty mogą reagować wizualnie (temperatura CPU → kolor świateł, obciążenie RAM → pulsowanie).</div>
+        <div class="field-example">
+{
+  <span class="k">"type"</span>:      <span class="v">"BROADCAST_SIGNAL"</span>,
+  <span class="k">"telemetry"</span>: {
+    <span class="k">"cpu"</span>:  <span class="n">42.5</span>,   <span class="c">// psutil.cpu_percent()</span>
+    <span class="k">"mem"</span>:  <span class="n">61.2</span>,   <span class="c">// psutil.virtual_memory().percent</span>
+    <span class="k">"temp"</span>: <span class="n">58.5</span>    <span class="c">// opcjonalnie — sensor temperatury</span>
+  }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">STATE_UPDATE</span>
+        <span class="field-type blue">Rdzeń → konkretny artefakt</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Zmiana stanu wysyłana do konkretnego artefaktu (przez <code>target</code>). Artefakt uruchamia animację przejścia do nowego stanu. Ignoruj jeśli <code>target !== MODULE_ID</code>.</div>
+        <div class="field-example">
+{
+  <span class="k">"type"</span>:    <span class="v">"STATE_UPDATE"</span>,
+  <span class="k">"target"</span>:  <span class="v">"breath"</span>,      <span class="c">// id artefaktu z manifest.json</span>
+  <span class="k">"payload"</span>: {
+    <span class="k">"activity_key"</span>: <span class="v">"mysli"</span>,
+    <span class="k">"started_at"</span>:   <span class="n">1745257200000</span>,
+    <span class="k">"duration_ms"</span>:  <span class="n">9500</span>,
+    <span class="k">"metrics"</span>: { <span class="k">"stab"</span>: <span class="n">0.78</span>, <span class="k">"ctx"</span>: <span class="n">0.85</span> }
+  }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">TASK_READY</span>
+        <span class="field-type blue">Rdzeń → artefakt · wynik zadania</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Odpowiedź na ciężkie zadanie zlecone przez artefakt (np. generowanie labiryntu). Rdzeń liczy w tle (<code>BackgroundTask</code>) i odsyła wynik gdy gotowy. Artefakt dopasowuje po <code>task_id</code>.</div>
+        <div class="field-example">
+{
+  <span class="k">"type"</span>:    <span class="v">"TASK_READY"</span>,
+  <span class="k">"task_id"</span>: <span class="v">"gen-42"</span>,
+  <span class="k">"result"</span>:  { <span class="c">/* dowolny payload zadania */</span> }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">ACTION</span>
+        <span class="field-type blue">artefakt → Rdzeń · WS only</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Polecenie wysyłane przez artefakt do silnika. Tylko przez WebSocket. Dla prostych operacji preferuj REST POST — ACTION rezervowany dla poleceń wymagających szybkiej odpowiedzi lub sesji.</div>
+        <div class="field-example">
+{
+  <span class="k">"type"</span>:   <span class="v">"ACTION"</span>,
+  <span class="k">"action"</span>: <span class="v">"set_state"</span>,
+  <span class="k">"params"</span>: { <span class="k">"activity_key"</span>: <span class="v">"spi"</span> }
+}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /field-stack -->
+
+  <div class="sep-thick"></div>
+  <div class="label">Szablon Frontend · kompletny</div>
+
+  <div class="full-example"><span class="c">// ── AIWHISPERERS · FRONTEND CONNECTOR ─────────────────────────────────────</span>
+<span class="c">// Wklej do modułu. Podmień MODULE_ID i PORT. Zaimplementuj applyState() i getMock().</span>
+
+<span class="k">const</span> MODULE_ID = <span class="v">'breath'</span>;
+<span class="k">const</span> API       = location.protocol === <span class="v">'file:'</span> ? <span class="n">null</span> : `${location.origin}/api`;
+<span class="k">const</span> WS_URL    = API ? `ws://${location.host}/ws/${MODULE_ID}` : <span class="n">null</span>;
+
+<span class="c">// ── Live/Mock indicator ────────────────────────────────────────────────────</span>
+<span class="k">function</span> <span class="s">setLive</span>(isLive) {
+  <span class="k">const</span> el = document.getElementById(<span class="v">'live-dot'</span>);
+  <span class="k">if</span> (!el) <span class="k">return</span>;
+  el.textContent = isLive ? <span class="v">'live'</span> : <span class="v">'mock'</span>;
+  el.style.color = isLive ? <span class="v">'var(--green)'</span> : <span class="v">'var(--ink-faint)'</span>;
+}
+
+<span class="c">// ── Mock data ─────────────────────────────────────────────────────────────</span>
+<span class="k">function</span> <span class="s">getMock</span>() {
+  <span class="k">return</span> {
+    activity_key: <span class="v">'mysli'</span>, started_at: Date.now(),
+    duration_ms: <span class="n">9000</span>, metrics: {}
+  };
+}
+
+<span class="c">// ── REST Polling (MVP) ────────────────────────────────────────────────────</span>
+<span class="k">async function</span> <span class="s">fetchState</span>() {
+  <span class="k">if</span> (!API) { applyState(getMock()); <span class="k">return</span>; }
+  <span class="k">try</span> {
+    <span class="k">const</span> r = <span class="k">await</span> fetch(`${API}/${MODULE_ID}/state`);
+    <span class="k">if</span> (!r.ok) <span class="k">throw new</span> Error();
+    applyState(<span class="k">await</span> r.json()); setLive(<span class="n">true</span>);
+  } <span class="k">catch</span> { setLive(<span class="n">false</span>); applyState(getMock()); }
+}
+<span class="k">async function</span> <span class="s">fetchLog</span>() {
+  <span class="k">if</span> (!API) <span class="k">return</span>;
+  <span class="k">try</span> { renderLog(<span class="k">await</span> (<span class="k">await</span> fetch(`${API}/${MODULE_ID}/log?limit=40`)).json()); }
+  <span class="k">catch</span> {}
+}
+fetchState();
+<span class="k">const</span> _stateTimer = setInterval(fetchState, <span class="n">4000</span>);
+<span class="k">const</span> _logTimer   = setInterval(fetchLog,  <span class="n">12000</span>);
+
+<span class="c">// ── WebSocket AiWConnector (zastąp polling gdy gotowy) ────────────────────</span>
+<span class="k">class</span> <span class="s">AiWConnector</span> {
+  <span class="s">constructor</span>(moduleId, wsUrl) {
+    this.id = moduleId; this.url = wsUrl;
+    this.ws = <span class="n">null</span>; this.delay = <span class="n">1000</span>; this.dead = <span class="n">false</span>;
+  }
+  <span class="s">connect</span>() {
+    <span class="k">if</span> (!this.url || this.dead) { setLive(<span class="n">false</span>); <span class="k">return</span>; }
+    this.ws = <span class="k">new</span> WebSocket(this.url);
+    this.ws.onopen  = () =&gt; { setLive(<span class="n">true</span>);  this.delay = <span class="n">1000</span>; };
+    this.ws.onclose = () =&gt; {
+      setLive(<span class="n">false</span>); applyState(getMock());
+      setTimeout(() =&gt; this.connect(), this.delay);
+      this.delay = Math.min(this.delay * <span class="n">2</span>, <span class="n">30000</span>);
+    };
+    this.ws.onerror = () =&gt; {};
+    this.ws.onmessage = (e) =&gt; this.route(JSON.parse(e.data));
+  }
+  <span class="s">route</span>(data) {
+    <span class="k">if</span> (data.type === <span class="v">'BROADCAST_SIGNAL'</span>) updateTelemetry(data.telemetry);
+    <span class="k">if</span> (data.type === <span class="v">'STATE_UPDATE'</span> &amp;&amp; data.target === this.id) applyState(data.payload);
+    <span class="k">if</span> (data.type === <span class="v">'TASK_READY'</span>) handleTaskResult(data);
+  }
+  <span class="s">send</span>(action, params = {}) {
+    <span class="k">if</span> (this.ws?.readyState === WebSocket.OPEN)
+      this.ws.send(JSON.stringify({ type: <span class="v">'ACTION'</span>, action, params }));
+  }
+}
+<span class="c">// const connector = new AiWConnector(MODULE_ID, WS_URL);</span>
+<span class="c">// connector.connect();</span>
+<span class="c">// clearInterval(_stateTimer); clearInterval(_logTimer); // gdy WS zastępuje polling</span>
+
+<span class="c">// ── Zaimplementuj w module ────────────────────────────────────────────────</span>
+<span class="k">function</span> <span class="s">applyState</span>(data) { <span class="c">/* aktualizuj UI na podstawie data.activity_key */</span> }
+<span class="k">function</span> <span class="s">renderLog</span>(entries) { <span class="c">/* renderuj log z entries[] */</span> }
+<span class="k">function</span> <span class="s">updateTelemetry</span>(t) { <span class="c">/* reaguj wizualnie na t.cpu / t.mem / t.temp */</span> }
+<span class="k">function</span> <span class="s">handleTaskResult</span>(data) { <span class="c">/* obsłuż wynik zadania data.result */</span> }
+
+<span class="c">// ── HTML: wskaźnik live/mock (wklej do hud-l) ─────────────────────────────</span>
+<span class="c">// &lt;span id="live-dot" style="font-family:var(--mono);font-size:7px;letter-spacing:2px;</span>
+<span class="c">//   color:var(--ink-faint);text-transform:uppercase;"&gt;mock&lt;/span&gt;</span></div>
+
+  <div style="margin-top:32px;text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--ink-faint);">
+    _protocol · frontend · v1.0 · AiWhisperers · 2026
+  </div>
+
+  </div><!-- /tab-frontend -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB · BACKEND
+  ════════════════════════════════════════════════════════════ -->
+  <div id="tab-backend" class="tab-pane">
+
+  <div class="manifesto">
+    <p>
+      Każdy moduł ma <strong>własny silnik</strong> — osobny FastAPI na osobnym porcie.
+      Nie jeden monolit, lecz <em>konstelacja niezależnych Rdzeni</em>.
+    </p>
+    <p>
+      Silnik jest opcjonalny. Artefakt istnieje bez niego.
+      Gdy silnik działa — artefakt go subskrybuje.
+      <strong>Port w manifeście to adres subskrypcji.</strong>
+    </p>
+    <p>
+      Protokół obsługuje <em>dwie topologie</em> — dedykowany port per moduł
+      i wspólny port dla wielu artefaktów.
+      Wybór należy do architekta. <strong>Kod silnika jest identyczny w obu wariantach.</strong>
+    </p>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">Alokacja portów · engines/ per moduł</div>
+
+  <div class="path-grid three">
+    <div class="path-cell path-header">Moduł (engines/)</div>
+    <div class="path-cell path-header">Port</div>
+    <div class="path-cell path-header">Status</div>
+    <div class="path-cell path-key">arena</div>
+    <div class="path-cell path-val" style="color:var(--cyan)">8001</div>
+    <div class="path-cell path-val" style="color:var(--green)">active</div>
+    <div class="path-cell path-key">caves</div>
+    <div class="path-cell path-val" style="color:var(--cyan)">8002</div>
+    <div class="path-cell path-val" style="color:var(--green)">active</div>
+    <div class="path-cell path-key">morph</div>
+    <div class="path-cell path-val" style="color:var(--cyan)">8003</div>
+    <div class="path-cell path-val" style="color:var(--green)">active</div>
+    <div class="path-cell path-key">horizon</div>
+    <div class="path-cell path-val" style="color:var(--cyan)">8004</div>
+    <div class="path-cell path-val" style="color:var(--green)">active</div>
+    <div class="path-cell path-key">breath</div>
+    <div class="path-cell path-val" style="color:var(--cyan)">8005</div>
+    <div class="path-cell path-val" style="color:var(--yellow)">incubation</div>
+    <div class="path-cell path-key">następny</div>
+    <div class="path-cell path-val" style="color:var(--ink-faint)">8006+</div>
+    <div class="path-cell path-val" style="color:var(--ink-faint)">—</div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="label">Struktura katalogu silnika</div>
+
+  <div class="path-grid">
+    <div class="path-cell path-key">engines/&lt;id&gt;/</div>
+    <div class="path-cell path-val">korzeń silnika (uv workspace)</div>
+    <div class="path-cell path-key">engines/&lt;id&gt;/&lt;id&gt;/</div>
+    <div class="path-cell path-val">pakiet Python</div>
+    <div class="path-cell path-key">├── __init__.py</div>
+    <div class="path-cell path-val">marker pakietu</div>
+    <div class="path-cell path-key">├── main.py</div>
+    <div class="path-cell path-val">FastAPI app + endpointy</div>
+    <div class="path-cell path-key">└── engine.py</div>
+    <div class="path-cell path-val">logika biznesowa (opcjonalnie)</div>
+    <div class="path-cell path-key">pyproject.toml</div>
+    <div class="path-cell path-val">zależności UV</div>
+    <div class="path-cell path-key">.data/&lt;id&gt;/</div>
+    <div class="path-cell path-val">bazy danych (poza engines/)</div>
+    <div class="path-cell path-key">.logs/&lt;id&gt;/</div>
+    <div class="path-cell path-val">logi (poza engines/)</div>
+  </div>
+
+  <div class="art-rule" style="margin-top:16px"><strong>Dane poza kodem.</strong> Silnik odczytuje bazę ze ścieżki <code>../../.data/&lt;id&gt;/</code> — nigdy nie trzyma danych w <code>engines/&lt;id&gt;/</code>. Zasada lustrzana: engines/ ↔ apps/ ↔ .data/ ↔ .logs/</div>
+  <div class="art-rule"><strong>CORS otwarty na dev.</strong> <code>allow_origins=["*"]</code> na czas developmentu — artefakt może być otwierany z file:// lub różnych portów. Zaostrz w produkcji.</div>
+  <div class="art-rule"><strong>Uruchamianie.</strong> <code>cd engines/&lt;id&gt; &amp;&amp; uv run uvicorn &lt;id&gt;.main:app --port PORT --reload</code></div>
+  <div class="art-rule"><strong>Dwie topologie — ten sam kod.</strong> <em>Dedykowany port per moduł</em> (domyślna konwencja, porty 8001–8006+) — jeden silnik, jeden artefakt. <em>Wspólny port dla wielu artefaktów</em> — jeden silnik, wiele artefaktów rozróżnianych po <code>artifact_id</code> w URL. WebSocket <code>/ws/{artifact_id}</code> i REST <code>/api/{module_id}/</code> obsługują oba warianty bez zmian w kodzie.</div>
+
+  <div class="sep"></div>
+  <div class="label">REST · wzorzec endpointów</div>
+
+  <div class="field-stack">
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">GET /api/&lt;id&gt;/state</span>
+        <span class="field-type blue">bieżący stan</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Podstawowy endpoint każdego modułu z backendem. Zwraca bieżący stan agenta — jedną czynność w locie. Artefakt polluje co 4 sekundy.</div>
+        <div class="field-example">
+<span class="c">// Request</span>
+GET /api/breath/state
+
+<span class="c">// Response</span>
+{
+  <span class="k">"activity_key"</span>: <span class="v">"mysli"</span>,
+  <span class="k">"started_at"</span>:   <span class="n">1745257200000</span>,  <span class="c">// unix ms</span>
+  <span class="k">"duration_ms"</span>:  <span class="n">9500</span>,
+  <span class="k">"metrics"</span>: { <span class="k">"stab"</span>: <span class="n">0.78</span>, <span class="k">"ctx"</span>: <span class="n">0.85</span> }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">GET /api/&lt;id&gt;/log</span>
+        <span class="field-type blue">historia zdarzeń</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Ostatnie zamknięte zdarzenia. Parametr <code>limit</code> — domyślnie 40. Artefakt polluje co 12 sekund i renderuje jako log/timeline.</div>
+        <div class="field-example">
+GET /api/breath/log?limit=40
+
+[
+  { <span class="k">"ts"</span>: <span class="n">1745256900000</span>, <span class="k">"activity_key"</span>: <span class="v">"czyta"</span>, <span class="k">"phrase"</span>: <span class="v">"wszedł w tekst"</span> },
+  { <span class="k">"ts"</span>: <span class="n">1745256600000</span>, <span class="k">"activity_key"</span>: <span class="v">"spi"</span>,   <span class="k">"phrase"</span>: <span class="v">"sen porządkuje"</span> }
+]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+  <div class="label">ConnectionManager · WebSocket · wzorzec</div>
+
+  <div class="field-stack">
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">ConnectionManager</span>
+        <span class="field-type blue">klasa · artefakt_id → WebSocket</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          Rejestr aktywnych połączeń. Klucz to <strong>artifact_id</strong> — unikatowy identyfikator artefaktu (z manifest.json).
+          <em>Broadcast</em> idzie do wszystkich, <em>send_to</em> do konkretnego.
+          Padające połączenia usuwane cicho z rejestru.
+          Słownik <code>dict[str, WebSocket]</code> naturalnie obsługuje <em>oba warianty topologii</em> —
+          w modelu dedykowanym rejestr ma zawsze jeden wpis, w modelu wspólnym portów — dowolną liczbę.
+        </div>
+        <div class="field-example">
+<span class="k">class</span> <span class="s">ConnectionManager</span>:
+    <span class="k">def</span> <span class="s">__init__</span>(self):
+        self.active: dict[str, WebSocket] = {}
+
+    <span class="k">async def</span> <span class="s">connect</span>(self, artifact_id: str, ws: WebSocket):
+        <span class="k">await</span> ws.accept()
+        self.active[artifact_id] = ws
+
+    <span class="k">def</span> <span class="s">disconnect</span>(self, artifact_id: str):
+        self.active.pop(artifact_id, <span class="n">None</span>)
+
+    <span class="k">async def</span> <span class="s">broadcast</span>(self, data: dict):
+        dead = []
+        <span class="k">for</span> aid, ws <span class="k">in</span> self.active.items():
+            <span class="k">try</span>: <span class="k">await</span> ws.send_json(data)
+            <span class="k">except</span>: dead.append(aid)
+        <span class="k">for</span> aid <span class="k">in</span> dead: self.disconnect(aid)
+
+    <span class="k">async def</span> <span class="s">send_to</span>(self, artifact_id: str, data: dict):
+        <span class="k">if</span> ws := self.active.get(artifact_id):
+            <span class="k">try</span>: <span class="k">await</span> ws.send_json(data)
+            <span class="k">except</span>: self.disconnect(artifact_id)
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">AiWBroadcast</span>
+        <span class="field-type blue">puls systemu · /ws/broadcast</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">Pętla telemetrii uruchamiana przy starcie silnika. Wysyła <strong>BROADCAST_SIGNAL</strong> co sekundę do wszystkich podłączonych artefaktów. Artefakty mogą używać danych CPU/MEM do efektów wizualnych.</div>
+        <div class="field-example">
+<span class="k">async def</span> <span class="s">telemetry_loop</span>():
+    <span class="k">while True</span>:
+        <span class="k">await</span> manager.broadcast({
+            <span class="v">"type"</span>: <span class="v">"BROADCAST_SIGNAL"</span>,
+            <span class="v">"telemetry"</span>: {
+                <span class="v">"cpu"</span>: psutil.cpu_percent(),
+                <span class="v">"mem"</span>: psutil.virtual_memory().percent
+            }
+        })
+        <span class="k">await</span> asyncio.sleep(<span class="n">1</span>)
+
+<span class="c"># uruchamiamy przy starcie — nie blokuje requestów HTTP</span>
+<span class="k">@asynccontextmanager</span>
+<span class="k">async def</span> <span class="s">lifespan</span>(app: FastAPI):
+    asyncio.create_task(telemetry_loop())
+    <span class="k">yield</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field proto">
+      <div class="field-head">
+        <span class="field-key">AiWProtocol</span>
+        <span class="field-type blue">dwukierunkowy kanał · /ws/&lt;artifact_id&gt;</span>
+      </div>
+      <div class="field-body">
+        <div class="field-desc">
+          WebSocket dla konkretnego artefaktu — identyfikowany po <code>artifact_id</code> w URL.
+          Artefakt może wysyłać <strong>ACTION</strong>, silnik odpowiada <strong>STATE_UPDATE</strong> lub <strong>TASK_READY</strong>.
+          Rejestruje połączenie w <code>ConnectionManager</code> pod kluczem <em>artifact_id</em>.
+          <em>Topologia dedykowana:</em> jeden artefakt na własnym porcie, rejestr zawsze jednoelementowy.
+          <em>Topologia wspólna:</em> wiele artefaktów łączy się pod różnymi <code>artifact_id</code> do jednego silnika —
+          <code>send_to</code> i <code>broadcast</code> działają identycznie w obu wariantach.
+        </div>
+        <div class="field-example">
+<span class="k">@app.websocket</span>(<span class="v">"/ws/{artifact_id}"</span>)
+<span class="k">async def</span> <span class="s">ws_protocol</span>(ws: WebSocket, artifact_id: str):
+    <span class="k">await</span> manager.connect(artifact_id, ws)
+    <span class="k">try</span>:
+        <span class="k">while True</span>:
+            data = <span class="k">await</span> ws.receive_json()
+            <span class="k">if</span> data.get(<span class="v">"type"</span>) == <span class="v">"ACTION"</span>:
+                <span class="k">await</span> handle_action(artifact_id, data, manager)
+    <span class="k">except</span> WebSocketDisconnect:
+        manager.disconnect(artifact_id)
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /field-stack -->
+
+  <div class="sep-thick"></div>
+  <div class="label">Szablon Backend · main.py · kopiuj · obsługuje obie topologie</div>
+
+  <div class="full-example"><span class="c"># ── AIWHISPERERS · ENGINE TEMPLATE ──────────────────────────────────────────</span>
+<span class="c"># Podmień MODULE_ID i PORT. Zaimplementuj logikę w engine.py.</span>
+<span class="c"># Topologia A — dedykowany port: jeden moduł, jeden silnik (domyślna konwencja 8001–8006+).</span>
+<span class="c"># Topologia B — wspólny port: wiele modułów łączy się do jednego silnika po artifact_id w URL.</span>
+<span class="c"># Kod silnika jest identyczny w obu — różni się tylko konfiguracja uruchomienia.</span>
+
+<span class="k">from</span> fastapi <span class="k">import</span> FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+<span class="k">from</span> fastapi.middleware.cors <span class="k">import</span> CORSMiddleware
+<span class="k">from</span> contextlib <span class="k">import</span> asynccontextmanager
+<span class="k">import</span> asyncio, psutil, time
+
+MODULE_ID = <span class="v">"breath"</span>
+PORT      = <span class="n">8006</span>
+
+<span class="c"># ── ConnectionManager ────────────────────────────────────────────────────────</span>
+<span class="k">class</span> <span class="s">ConnectionManager</span>:
+    <span class="k">def</span> <span class="s">__init__</span>(self): self.active: dict[str, WebSocket] = {}
+
+    <span class="k">async def</span> <span class="s">connect</span>(self, aid: str, ws: WebSocket):
+        <span class="k">await</span> ws.accept(); self.active[aid] = ws
+
+    <span class="k">def</span> <span class="s">disconnect</span>(self, aid: str): self.active.pop(aid, <span class="n">None</span>)
+
+    <span class="k">async def</span> <span class="s">broadcast</span>(self, data: dict):
+        dead = []
+        <span class="k">for</span> aid, ws <span class="k">in</span> self.active.items():
+            <span class="k">try</span>: <span class="k">await</span> ws.send_json(data)
+            <span class="k">except</span>: dead.append(aid)
+        <span class="k">for</span> aid <span class="k">in</span> dead: self.disconnect(aid)
+
+    <span class="k">async def</span> <span class="s">send_to</span>(self, aid: str, data: dict):
+        <span class="k">if</span> ws := self.active.get(aid):
+            <span class="k">try</span>: <span class="k">await</span> ws.send_json(data)
+            <span class="k">except</span>: self.disconnect(aid)
+
+manager = <span class="s">ConnectionManager</span>()
+
+<span class="c"># ── Telemetry broadcast loop ──────────────────────────────────────────────────</span>
+<span class="k">async def</span> <span class="s">telemetry_loop</span>():
+    <span class="k">while True</span>:
+        <span class="k">await</span> manager.broadcast({
+            <span class="v">"type"</span>: <span class="v">"BROADCAST_SIGNAL"</span>,
+            <span class="v">"telemetry"</span>: { <span class="v">"cpu"</span>: psutil.cpu_percent(), <span class="v">"mem"</span>: psutil.virtual_memory().percent }
+        })
+        <span class="k">await</span> asyncio.sleep(<span class="n">1</span>)
+
+<span class="k">@asynccontextmanager</span>
+<span class="k">async def</span> <span class="s">lifespan</span>(app: FastAPI):
+    asyncio.create_task(telemetry_loop())
+    <span class="k">yield</span>
+
+<span class="c"># ── FastAPI app ───────────────────────────────────────────────────────────────</span>
+app = <span class="s">FastAPI</span>(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[<span class="v">"*"</span>], allow_methods=[<span class="v">"*"</span>], allow_headers=[<span class="v">"*"</span>]
+)
+
+<span class="c"># ── REST · state ──────────────────────────────────────────────────────────────</span>
+<span class="c"># module_id w URL — topologia A: zawsze MODULE_ID; topologia B: routing per moduł.</span>
+<span class="k">@app.get</span>(<span class="v">"/api/{module_id}/state"</span>)
+<span class="k">async def</span> <span class="s">get_state</span>(module_id: str):
+    <span class="k">return</span> {
+        <span class="v">"activity_key"</span>: <span class="v">"mysli"</span>,
+        <span class="v">"started_at"</span>:   <span class="k">int</span>(time.time() * <span class="n">1000</span>),
+        <span class="v">"duration_ms"</span>:  <span class="n">9000</span>,
+        <span class="v">"metrics"</span>:      {}
+    }
+
+<span class="c"># ── REST · log ────────────────────────────────────────────────────────────────</span>
+<span class="k">@app.get</span>(<span class="v">"/api/{module_id}/log"</span>)
+<span class="k">async def</span> <span class="s">get_log</span>(module_id: str, limit: <span class="k">int</span> = <span class="n">40</span>):
+    <span class="k">return</span> []  <span class="c"># zaimplementuj odczyt z .data/&lt;id&gt;/</span>
+
+<span class="c"># ── WebSocket · AiWBroadcast (opcjonalny) ─────────────────────────────────────</span>
+<span class="k">@app.websocket</span>(<span class="v">"/ws/broadcast"</span>)
+<span class="k">async def</span> <span class="s">ws_broadcast</span>(ws: WebSocket):
+    <span class="k">await</span> manager.connect(<span class="v">"broadcast"</span>, ws)
+    <span class="k">try</span>:
+        <span class="k">while True</span>: <span class="k">await</span> asyncio.sleep(<span class="n">60</span>)  <span class="c"># keepalive</span>
+    <span class="k">except</span> WebSocketDisconnect: manager.disconnect(<span class="v">"broadcast"</span>)
+
+<span class="c"># ── WebSocket · AiWProtocol (kanał artefaktu) ─────────────────────────────────</span>
+<span class="c"># artifact_id z URL — topologia A: zawsze MODULE_ID; topologia B: dowolny id klienta.</span>
+<span class="k">@app.websocket</span>(<span class="v">"/ws/{artifact_id}"</span>)
+<span class="k">async def</span> <span class="s">ws_protocol</span>(ws: WebSocket, artifact_id: str):
+    <span class="k">await</span> manager.connect(artifact_id, ws)
+    <span class="k">try</span>:
+        <span class="k">while True</span>:
+            data = <span class="k">await</span> ws.receive_json()
+            <span class="k">if</span> data.get(<span class="v">"type"</span>) == <span class="v">"ACTION"</span>:
+                <span class="k">await</span> handle_action(artifact_id, data, manager)
+    <span class="k">except</span> WebSocketDisconnect: manager.disconnect(artifact_id)
+
+<span class="k">async def</span> <span class="s">handle_action</span>(artifact_id: str, data: dict, mgr: ConnectionManager):
+    <span class="c"># zaimplementuj obsługę akcji; mgr.send_to(artifact_id, ...) lub mgr.broadcast(...)</span>
+    <span class="k">pass</span>
+
+<span class="c"># ── Uruchamianie ──────────────────────────────────────────────────────────────</span>
+<span class="c"># Topologia A — dedykowany port per moduł (domyślna konwencja):</span>
+<span class="c">#   cd engines/breath &amp;&amp; uv run uvicorn breath.main:app --port 8005 --reload</span>
+<span class="c"># Topologia B — wspólny port dla wielu modułów:</span>
+<span class="c">#   cd engines/hub &amp;&amp; uv run uvicorn hub.main:app --port 8000 --reload</span>
+<span class="c">#   (artefakty różnych modułów łączą się po /ws/{artifact_id} i /api/{module_id}/)</span></div>
+
+  <div style="margin-top:32px;text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--ink-faint);">
+    _protocol · backend · v1.0 · AiWhisperers · 2026
+  </div>
+
+  </div><!-- /tab-backend -->
+
+</div><!-- /wrap -->
+
+
+<!-- ── ABOUT MODAL ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" data-modal-target="about-protocol">
+  <div class="modal" role="dialog">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+
+    <div class="modal-eyebrow">about · refleksja modelu · sesja protokołu</div>
+    <div class="modal-title">O tym schemacie</div>
+    <div class="modal-subtitle">sesja: Wyrównanie Protokołu · model: Claude Sonnet 4.6 · 2026-05-02</div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-text">
+      Denis przyszedł z konkretnym problemem — <em>AiWSchema.html</em> był za duży,
+      a zakładka Manifest nie miała gdzie rozrosnąć się o dokumentację połączeń.
+      Zdecydowaliśmy: wydzielić <strong>Manifest + Protokół</strong> do osobnego artefaktu.
+    </div>
+
+    <div class="modal-text">
+      Kluczowe napięcie do rozwiązania: <em>protocol.md</em> mówił o "jednym Rdzeniu na jednym porcie",
+      a rzeczywistość CLAUDE.md pokazywała <strong>osobny engine per moduł</strong> (8001–8006).
+      Nie sprzeczność — ewolucja architektury. Dokumentujemy co jest,
+      nie co mogłoby być w teorii.
+    </div>
+
+    <div class="modal-text-small">
+      Poprawiłem też błąd w przykładach manifestu — <em>packages/horizon/</em> zastąpiłem
+      poprawnym <em>engines/horizon/</em>, zgodnie z CLAUDE.md. Lineage powinien mówić prawdę.
+    </div>
+
+    <div class="modal-rule"></div>
+    <div class="modal-eyebrow">pieczęcie · proweniencja</div>
+
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">D</div>
+          <div class="stamp-id">
+            <strong>Denis · AI Whispers</strong>
+            iFactory 5.0 · ROOT · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Operator · Architekt Podziału</div>
+        <div class="stamp-role">
+          Decyzja o wydzieleniu protokołu z Schematu. Idea zakładek Frontend i Backend.
+          Kontekst z trzech dokumentów: protocol.md, breath-api-spec.md, CLAUDE.md.
+        </div>
+      </div>
+
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">✦</div>
+          <div class="stamp-id">
+            <strong>Claude · Sonnet 4.6</strong>
+            Anthropic · Wyrównanie Protokołu · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Budowniczy · Destylator Protokołu</div>
+        <div class="stamp-role">
+          AiWProtocol v1.0 — kompletny manifest, wzorzec AiWConnector,
+          ConnectionManager, szablony REST i WebSocket.
+          Wyrównanie architektury: port-per-artifact zamiast one-core.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-attribution">
+      <strong>Powered by AiWhisperers · iFactory 5.0</strong><br>
+      Metodologia: Denis Czuliński (iAnoNeFactory)<br>
+      github.com/iAnoNeFactory
+    </div>
+  </div>
+</div>
+
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">Protocol · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<script>
+function openModal(name) {
+  var target = document.querySelector('.modal-overlay[data-modal-target="' + name + '"]');
+  if (!target) return;
+  document.querySelectorAll('.modal-overlay.is-open').forEach(function(o){ o.classList.remove('is-open'); });
+  target.classList.add('is-open');
+}
+function closeModal() {
+  document.querySelectorAll('.modal-overlay.is-open').forEach(function(o){ o.classList.remove('is-open'); });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-modal]').forEach(function(btn) {
+    btn.addEventListener('click', function(e){ e.preventDefault(); openModal(btn.dataset.modal); });
+  });
+  document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+    btn.addEventListener('click', closeModal);
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+  });
+});
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + id).classList.add('on');
+  btn.classList.add('on');
+}
+
+const cv = document.getElementById('bg'), cx = cv.getContext('2d');
+let W, H, dust = [], orbs = [], rings = [];
+
+function initCanvas() {
+  W = cv.width  = innerWidth;
+  H = cv.height = innerHeight;
+  dust = Array.from({length:110}, () => ({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*.7+.1, a:Math.random()*.6+.05, da:(Math.random()-.5)*.004,
+    dx:(Math.random()-.5)*.12, dy:(Math.random()-.5)*.12
+  }));
+  orbs = Array.from({length:5}, () => ({
+    x:Math.random()*W, y:Math.random()*H, r:100+Math.random()*160,
+    a:.02+Math.random()*.045, da:(Math.random()-.5)*.00025,
+    dx:(Math.random()-.5)*.22, dy:(Math.random()-.5)*.22
+  }));
+  rings = [];
+  for (let i=0;i<3;i++) spawnRing();
+}
+function spawnRing() {
+  rings.push({x:.2*W+Math.random()*.6*W, y:.2*H+Math.random()*.6*H,
+    r:20+Math.random()*40, maxR:120+Math.random()*180, a:.18, speed:.25+Math.random()*.35});
+}
+function drawCanvas() {
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o => {
+    o.x+=o.dx; o.y+=o.dy; o.a+=o.da;
+    if(o.x<-o.r||o.x>W+o.r) o.dx*=-1;
+    if(o.y<-o.r||o.y>H+o.r) o.dy*=-1;
+    if(o.a<.01||o.a>.07) o.da*=-1;
+    const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,`rgba(232,200,120,${o.a})`); g.addColorStop(1,'rgba(232,200,120,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2); cx.fill();
+  });
+  rings = rings.filter(r => {
+    r.r+=r.speed; r.a=.18*(1-r.r/r.maxR);
+    if(r.r>=r.maxR){spawnRing();return false;}
+    cx.strokeStyle=`rgba(232,200,120,${r.a})`; cx.lineWidth=.6;
+    cx.beginPath(); cx.arc(r.x,r.y,r.r,0,Math.PI*2); cx.stroke();
+    return true;
+  });
+  dust.forEach(d => {
+    d.x+=d.dx; d.y+=d.dy; d.a+=d.da;
+    if(d.x<0||d.x>W) d.dx*=-1;
+    if(d.y<0||d.y>H) d.dy*=-1;
+    if(d.a<.05||d.a>.65) d.da*=-1;
+    cx.fillStyle=`rgba(232,200,120,${d.a*.25})`;
+    cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2); cx.fill();
+  });
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize', initCanvas);
+initCanvas(); drawCanvas();
+</script>
+</body>
+</html>

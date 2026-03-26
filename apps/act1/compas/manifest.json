@@ -1,0 +1,70 @@
+{
+  "id": "compas",
+  "name": "Kompas Morficzny 🧭",
+  "version": "1.0",
+  "date": "2026-04-17",
+  "description": "Nawigacja w przestrzeni konceptualnej 3D — orbity wewnętrzne i zewnętrzne, osie przez przecięcia orbit, wypadkowa dynamiczna, dashboard spójności.",
+  "type": "spatial-navigation",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Kompas 🧭",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": "8e3e2025-2e31-4120-b246-b485215b3128"
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "kompas.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "moprh"
+    },
+    {
+      "type": "complements",
+      "target": "memory"
+    }
+  ],
+  "tags": [
+    "navigation",
+    "3d",
+    "standalone",
+    "threejs"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

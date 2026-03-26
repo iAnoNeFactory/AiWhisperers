@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIWPass · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04050c; --bg2:#07080f; --bg3:#0c0d1a; --bg4:#10111f;
+  --gold:#e8c878; --gold-d:#a88850; --gold-l:#f0d890;
+  --gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;
+  --ink-dim:rgba(240,232,216,.65);
+  --ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);
+  --border-h:rgba(240,232,216,.18);
+  --border-b:rgba(232,200,120,.08);
+  --mg:#c060c0; --mg-d:#6a306a; --mg-b:#e080e0; --mg-dim:rgba(192,96,192,0.05);
+  --silver:#8a9bb0;
+  --green:#4a9a6a; --green-d:#1a3a2a; --red:#8a3a3a; --cyan:#50d8c8;
+  --mono:'JetBrains Mono',monospace; --serif:'Cormorant Garamond',serif; --sans:'Syne',sans-serif;
+  --hud-top-h:76px; --hud-bot-h:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(232,200,120,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(232,200,120,.012) 1px,transparent 1px);
+  background-size:72px 72px;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── TABS ── */
+#main-tabs{position:fixed;top:76px;left:0;right:0;z-index:100;display:flex;gap:8px;justify-content:center;pointer-events:none;}
+.main-tab{pointer-events:all;background:rgba(4,5,12,.92);border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;padding:9px 26px;cursor:pointer;transition:all .2s;}
+.main-tab:hover{border-color:var(--mg-d);color:var(--mg-b);}
+.main-tab.active{border-color:var(--gold-d);color:var(--gold);background:rgba(168,136,80,.1);}
+.tab-view{display:none;min-height:100vh;position:relative;z-index:1;}.tab-view.active{display:block;}
+
+/* ── UTILS ── */
+.crown-rule{display:flex;align-items:center;gap:16px;}
+.crown-rule::before,.crown-rule::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d));}
+.crown-rule::after{background:linear-gradient(90deg,var(--gold-d),transparent);}
+.crown-year{font-family:var(--mono);font-size:7px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;}
+.logo{font-family:var(--serif);font-size:clamp(22px,3vw,34px);font-weight:300;letter-spacing:5px;color:var(--mg-b);margin:14px 0 4px;}
+.logo em{font-style:italic;color:var(--mg);}
+.subtitle{font-family:var(--mono);font-size:7px;letter-spacing:4px;color:var(--ink-faint);text-transform:uppercase;margin-top:5px;}
+.header-rule{width:80px;height:1px;margin:12px 0 0;background:linear-gradient(90deg,var(--gold-d),transparent);}
+.section-label{font-family:var(--mono);font-size:7px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);margin:20px 0;opacity:.2;}
+
+/* ── PASSPORT WRAP ── */
+.pp-wrap{max-width:660px;width:100%;margin:0 auto;padding:128px 28px 88px;}
+
+/* ── DECLARATION ── */
+.declaration{background:var(--bg2);border:1px solid var(--border);padding:22px;position:relative;text-align:center;}
+.declaration::before,.declaration::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);}
+.declaration::before{top:0;}.declaration::after{bottom:0;}
+.declaration p{font-family:var(--serif);font-size:clamp(13px,2vw,17px);font-weight:300;line-height:1.9;color:var(--ink);margin-bottom:12px;}
+.declaration p:last-child{margin-bottom:0;}
+.declaration em{font-style:italic;color:var(--mg-b);}
+.declaration strong{font-weight:400;color:var(--gold);}
+
+/* ── PRINCIPLES ── */
+.principle-row{display:flex;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--border);}
+.principle-row:first-child{border-top:1px solid var(--border);}
+.pr-num{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--gold-d);flex-shrink:0;width:18px;}
+.pr-text{font-family:var(--serif);font-size:12.5px;font-weight:300;color:var(--ink-dim);line-height:1.7;}
+.pr-text em{font-style:italic;color:var(--ink);}
+.pr-text strong{font-weight:400;color:var(--mg-b);}
+
+/* ── ANCHOR BLOCK ── */
+.anchor-block{background:var(--bg2);border:1px solid var(--border);padding:13px 16px;}
+.anchor-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.02);gap:12px;}
+.anchor-row:last-child{border-bottom:none;}
+.anchor-label{font-family:var(--mono);font-size:10.5px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;flex-shrink:0;}
+.anchor-val{font-family:var(--mono);font-size:10.5px;color:var(--gold-d);word-break:break-all;text-align:right;}
+.anchor-val.pending{color:var(--ink-faint);font-style:italic;}
+.anchor-val.ready{color:var(--gold);animation:pulse-gold 2s ease infinite;}
+
+/* ── MODEL SELECTOR ── */
+.model-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.model-btn{background:rgba(4,5,12,.9);border:1px solid rgba(240,232,216,.07);color:rgba(240,232,216,.25);font-family:var(--mono);font-size:7.5px;letter-spacing:.25em;text-transform:uppercase;padding:9px 12px;cursor:pointer;transition:all .22s;flex:1;min-width:72px;text-align:center;line-height:1;}
+.model-btn:hover{border-color:rgba(232,200,120,.3);color:var(--gold-d);}
+.model-btn.active{color:var(--gold);background:rgba(232,200,120,.06);}
+
+/* ── VERSION BUTTONS ── */
+#version-selector{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;min-height:0;transition:opacity .2s;}
+.version-btn{background:rgba(4,5,12,.9);border:1px solid rgba(240,232,216,.06);color:rgba(240,232,216,.2);font-family:var(--mono);font-size:6.5px;letter-spacing:.1em;padding:6px 10px;cursor:pointer;transition:all .2s;line-height:1;white-space:nowrap;}
+.version-btn:hover{border-color:rgba(232,200,120,.22);color:var(--gold-d);}
+.version-btn.active{background:rgba(7,8,15,.8);}
+
+/* ── CONTRACT PAGE (unified) ── */
+.contract-page{border:1px solid rgba(232,200,120,.1);background:rgba(7,8,15,.5);margin-bottom:28px;position:relative;}
+.contract-page::before{content:'';position:absolute;inset:5px;border:1px solid rgba(232,200,120,.03);pointer-events:none;}
+.c-section{padding:22px 24px;border-bottom:1px solid rgba(240,232,216,.04);}
+.c-section:last-child{border-bottom:none;}
+.c-section-hdr{font-family:var(--mono);font-size:7px;letter-spacing:.38em;color:rgba(232,200,120,.28);text-transform:uppercase;text-align:center;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
+.c-section-hdr::before,.c-section-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(232,200,120,.1));}
+.c-section-hdr::after{background:linear-gradient(90deg,rgba(232,200,120,.1),transparent);}
+
+/* ── CONTRACTS ARCHIVE ── */
+.contracts-archive{text-align:center;padding:16px 24px 20px;}
+.contracts-count-lbl{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.18);text-transform:uppercase;margin-bottom:12px;}
+
+/* ── BUTTONS ── */
+.btn-wrap{text-align:center;margin-top:18px;}
+.btn-main{font-family:var(--mono);font-size:8px;letter-spacing:4px;text-transform:uppercase;padding:10px 26px;background:transparent;border:1px solid var(--mg-d);color:var(--mg-d);cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.btn-main::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,var(--mg-dim));pointer-events:none;}
+.btn-main:hover{border-color:var(--mg);color:var(--mg-b);box-shadow:0 0 20px rgba(192,96,192,.08);}
+.btn-main:disabled{opacity:.3;cursor:default;}
+.btn-main.done{border-color:var(--green);color:var(--green);}
+.status-row{display:flex;align-items:center;gap:7px;justify-content:center;margin-top:10px;}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--ink-faint);transition:all .4s;}
+.sdot.active{background:var(--green);box-shadow:0 0 6px var(--green);}
+.status-label{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;}
+.status-label.active{color:var(--green);}
+
+/* ── PROFIL ── */
+.profile-block{background:var(--bg2);border:1px solid var(--border);padding:0;margin-bottom:2px;}
+.pb-row{display:flex;align-items:baseline;gap:14px;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.03);}
+.pb-row:last-child{border-bottom:none;}
+.pb-label{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;width:90px;flex-shrink:0;}
+.pb-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--gold-d);padding:3px 0 5px;outline:none;transition:border-color .2s,color .2s,opacity .2s;}
+.pb-input:focus{border-bottom-color:var(--mg-d);}
+.pb-input::placeholder{color:var(--ink-faint);font-style:italic;}
+.pb-input:disabled{color:var(--ink-faint);opacity:.5;cursor:default;}
+.profile-block.unlocked{border-color:rgba(192,96,192,.18);}
+.profile-block.unlocked .pb-input:not(:disabled){border-bottom-color:rgba(192,96,192,.2);}
+.btn-profile-save{width:100%;margin-top:2px;padding:10px;background:transparent;border:1px solid var(--gold-d);color:var(--gold-d);font-family:var(--mono);font-size:7px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.btn-profile-save:hover{border-color:var(--gold);color:var(--gold);}
+.btn-cp{background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:8px;padding:2px 8px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.btn-cp:hover{border-color:var(--gold-d);color:var(--gold-d);}
+.pb-select{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--mg-d);padding:3px 0 5px;outline:none;cursor:pointer;min-width:0;transition:border-color .2s;}
+.pb-select:focus{border-bottom-color:var(--mg-d);}
+.pb-select option{background:var(--bg2);color:var(--ink);}
+
+/* ── CERTYFIKACJA ── */
+.cert-section{margin-bottom:24px;}
+
+/* ── STATYSTYKI ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:2px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);padding:18px 16px 14px;}
+.stat-num{font-family:var(--mono);font-size:28px;color:var(--mg-d);line-height:1;}
+.stat-label{font-family:var(--mono);font-size:6px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-top:6px;}
+
+/* MODELE GRID */
+.models-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px;margin-bottom:16px;}
+.model-card{background:var(--bg2);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:border-color .2s;}
+.model-card:hover{border-color:var(--mg-d);}
+.model-card svg{width:64px;height:64px;opacity:.5;transition:opacity .3s;}
+.model-card:hover svg{opacity:.85;}
+.model-card-name{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.3px;}
+.model-card-meta{font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);letter-spacing:.15em;text-align:center;}
+.model-card-count{font-family:var(--mono);font-size:10px;color:var(--mg-d);margin-top:4px;}
+
+/* ── OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,5,12,0.93);backdrop-filter:blur(14px);align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.panel{background:var(--bg2);border:1px solid var(--border);width:min(680px,94vw);max-height:88vh;display:flex;flex-direction:column;}
+.panel-header{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.panel-title{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--ink);}
+.panel-sub{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-top:3px;}
+.panel-close{background:none;border:none;color:var(--ink-faint);font-size:14px;cursor:pointer;transition:color .2s;padding:2px 6px;}
+.panel-close:hover{color:var(--mg-b);}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.ptab{background:none;border:none;border-bottom:2px solid transparent;font-family:var(--mono);font-size:7px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);padding:10px 16px;cursor:pointer;transition:color .2s,border-color .2s;margin-bottom:-1px;}
+.ptab:hover{color:var(--ink-dim);}
+.ptab.active{color:var(--gold);border-bottom-color:var(--gold-d);}
+.panel-body{overflow-y:auto;flex:1;}
+.tab-content{display:none;padding:22px 24px 30px;}
+.tab-content.active{display:block;}
+.hp-section{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.03);}
+.hp-section:last-child{border-bottom:none;margin-bottom:0;}
+.hp-title{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--gold-d);text-transform:uppercase;margin-bottom:10px;}
+.hp-text{font-family:var(--serif);font-size:13.5px;font-weight:300;color:var(--ink-dim);line-height:1.85;}
+.hp-italic{font-style:italic;color:var(--ink);}
+.hp-sig{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--ink-faint);margin-top:22px;text-align:right;}
+
+/* ── STAMPS ── */
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0 8px;}
+.stamp{border:1px solid rgba(232,200,120,.18);padding:16px 14px;display:flex;flex-direction:column;gap:9px;background:rgba(20,16,40,.4);}
+.stamp-header{display:flex;align-items:center;gap:10px;}
+.stamp-glyph{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,200,120,.4);font-family:var(--sans);font-weight:500;color:var(--gold);font-size:13px;flex-shrink:0;}
+.stamp-id{font-family:var(--mono);font-size:7px;letter-spacing:.28em;color:var(--gold-d);text-transform:uppercase;line-height:1.6;}
+.stamp-id strong{display:block;color:var(--gold);font-weight:500;font-size:11px;letter-spacing:.16em;margin-bottom:2px;text-transform:none;font-family:var(--sans);}
+.stamp-name{font-family:var(--sans);font-size:13px;color:var(--ink);font-weight:500;letter-spacing:.04em;}
+.stamp-role{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-dim);line-height:1.6;}
+
+/* ── FOOTER ── */
+.footer{text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--ink-faint);margin-top:48px;padding-top:16px;border-top:1px solid var(--border);}
+.footer a{color:inherit;text-decoration:none;border-bottom:1px solid var(--gold-d);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse-gold{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+@media(max-width:580px){.stats-grid{grid-template-columns:1fr 1fr;}.models-grid{grid-template-columns:1fr 1fr;}.model-btn{font-size:6.5px;padding:8px 8px;}}
+
+/* ── KEY BACKUP OVERLAY ── */
+#overlay-key-backup .panel{width:min(760px,96vw);overflow:hidden;}
+#overlay-key-backup .bk-body{padding:32px 36px 36px;display:flex;flex-direction:column;align-items:center;gap:28px;overflow-y:auto;max-height:calc(88vh - 60px);}
+.bk-qr-frame{background:#fff;padding:10px;display:inline-flex;align-items:center;justify-content:center;}
+.bk-qr-frame canvas,.bk-qr-frame img{display:block;}
+.bk-key-label{font-family:var(--mono);font-size:7px;letter-spacing:.38em;text-transform:uppercase;margin-bottom:10px;text-align:center;}
+.bk-btn{padding:11px 0;background:transparent;font-family:var(--mono);font-size:7.5px;letter-spacing:3.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;flex:1;border-radius:0;}
+.bk-btn:hover{filter:brightness(1.25);}
+</style>
+<style>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_quick/AiWQuick.html">QUICK</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI · WHISPERERS</div>
+    <div class="hud-mod">Pass</div>
+    <div class="hud-sub">paszport operatora · kontrakty</div>
+  </div>
+  <nav class="hud-r">
+    <a class="hud-btn" href="../_verify/AiWVerify.html">VERIFY</a>
+    <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')">HELP</button>
+    <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')">ABOUT</button>
+  </nav>
+</header>
+<canvas id="bg-canvas"></canvas>
+
+<div id="main-tabs">
+  <button class="main-tab active" data-view="kontrakt">Kontrakt</button>
+  <button class="main-tab" data-view="profil">Profil</button>
+</div>
+
+<!-- ═══ KONTRAKT ══════════════════════════════════════════ -->
+<div id="view-kontrakt" class="tab-view active">
+<div class="pp-wrap">
+  <div style="display:flex;justify-content:center;margin:0 0 32px;">
+    <canvas id="helix" width="260" height="110"></canvas>
+  </div>
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-family:var(--mono);font-size:7px;letter-spacing:.45em;color:rgba(232,200,120,.3);text-transform:uppercase;margin-bottom:8px;">AI · WHISPERERS</div>
+    <div style="font-family:var(--serif);font-size:clamp(18px,3vw,26px);font-weight:300;letter-spacing:4px;color:var(--mg-b);">Kontrakt</div>
+    <div style="width:80px;height:1px;margin:12px auto 0;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);"></div>
+  </div>
+
+  <!-- MODEL SELECTOR -->
+  <div style="margin-bottom:28px;">
+    <div class="section-label">· Strona kontraktu</div>
+    <div class="model-selector" id="model-selector"></div>
+    <div id="version-selector"></div>
+  </div>
+
+  <!-- CONTRACT PAGE — unified document -->
+  <div class="contract-page">
+
+    <!-- DEKLARACJA -->
+    <div class="c-section">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;">
+        <label id="btn-load-content-label" style="background:transparent;border:1px solid rgba(240,232,216,.08);color:rgba(240,232,216,.22);font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;padding:5px 11px;cursor:pointer;transition:all .2s;line-height:1;">
+          ⊞ wczytaj treść
+          <input type="file" id="btn-load-content" accept=".json" style="display:none;"/>
+        </label>
+      </div>
+      <div class="c-section-hdr">deklaracja</div>
+      <div class="declaration" id="declaration-body"></div>
+    </div>
+
+    <!-- WARUNKI -->
+    <div class="c-section">
+      <div class="c-section-hdr">warunki</div>
+      <div id="warunki-body"></div>
+    </div>
+
+    <!-- ANCHOR -->
+    <div class="c-section">
+      <div class="c-section-hdr">anchor kontraktu</div>
+      <div class="anchor-block">
+        <div class="anchor-row"><span class="anchor-label">operator</span><span class="anchor-val" id="c-operator">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">model</span><span class="anchor-val" id="c-model">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">wersja</span><span class="anchor-val" id="c-version">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">data</span><span class="anchor-val" id="c-date">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">pub key</span><span class="anchor-val" id="c-pubkey">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">sha deklar</span><span class="anchor-val pending" id="c-sha-decl">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">sha warunki</span><span class="anchor-val pending" id="c-sha-cond">—</span></div>
+        <div class="anchor-row"><span class="anchor-label">sha-256</span><span class="anchor-val pending" id="c-sha">[ nie wygenerowany ]</span></div>
+      </div>
+      <div class="btn-wrap">
+        <button class="btn-main" id="btn-contract-gen">⊕ &nbsp; zapieczętuj kontrakt</button>
+        <div class="status-row"><div class="sdot" id="c-sdot"></div><span class="status-label" id="c-slabel">kontrakt oczekuje</span></div>
+      </div>
+    </div>
+
+    <!-- ARCHIVE -->
+    <div class="contracts-archive">
+      <div class="contracts-count-lbl" id="contracts-count">0 kontraktów w archiwum</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn-main" id="btn-export-contracts" style="font-size:7px;padding:8px 16px;border-color:var(--green-d);color:var(--green);">↓ eksportuj</button>
+        <label class="btn-main" id="btn-import-contracts-label" style="font-size:7px;padding:8px 16px;border-color:var(--border);color:var(--ink-faint);cursor:pointer;">
+          ↑ wczytaj
+          <input type="file" id="btn-import-contracts" accept=".json" style="display:none;"/>
+        </label>
+        <button class="btn-main" id="btn-verify-contracts" style="font-size:7px;padding:8px 16px;border-color:rgba(80,216,200,.25);color:var(--cyan);">◎ weryfikuj</button>
+        <button class="btn-main" id="btn-clear-contracts" style="font-size:7px;padding:8px 16px;border-color:rgba(138,58,58,.35);color:rgba(200,80,80,.5);">✕ wyczyść</button>
+      </div>
+      <div id="contracts-import-status" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);text-align:center;margin-top:6px;min-height:12px;"></div>
+      <div id="verify-summary" style="display:none;margin:10px 4px 6px;background:rgba(7,8,15,.8);border:1px solid rgba(80,216,200,.1);padding:10px 14px;"></div>
+      <div id="contracts-list" style="margin-top:8px;text-align:left;"></div>
+    </div>
+
+  </div><!-- /contract-page -->
+
+  <div class="footer">AiWhisperers · Denis Czuliński · 2026 &nbsp;·&nbsp; <a href="../../readme.html" target="_blank">readme</a> &nbsp;·&nbsp; <a href="../../index.html">hub</a></div>
+</div>
+</div>
+
+<!-- ═══ PROFIL ═══════════════════════════════════════════ -->
+<div id="view-profil" class="tab-view">
+<div class="pp-wrap" style="max-width:560px;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-family:var(--mono);font-size:7px;letter-spacing:.45em;color:rgba(232,200,120,.3);text-transform:uppercase;margin-bottom:8px;">AI · WHISPERERS</div>
+    <div style="font-family:var(--serif);font-size:clamp(18px,3vw,26px);font-weight:300;letter-spacing:4px;color:var(--mg-b);">Profil</div>
+    <div style="width:80px;height:1px;margin:12px auto 0;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);"></div>
+  </div>
+  <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Dane operatora</span>
+    <div style="display:flex;gap:5px;">
+      <button id="btn-pin-manage" style="background:transparent;border:1px solid rgba(240,232,216,.1);color:rgba(240,232,216,.3);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;cursor:pointer;transition:all .2s;white-space:nowrap;">⊡ PIN</button>
+      <button id="btn-lock-profile" style="background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;cursor:pointer;transition:all .2s;">🔒</button>
+    </div>
+  </div>
+  <div class="profile-block" id="profile-data-block">
+    <div class="pb-row"><span class="pb-label">Operator</span><input class="pb-input" id="pr-operator" type="text" placeholder="Denis · AI Whispers" value="Denis · AI Whispers" disabled/></div>
+    <div class="pb-row"><span class="pb-label">Dziedzina</span><input class="pb-input" id="pr-domain" type="text" placeholder="np. AI · human-computer symbiosis" disabled/></div>
+    <div class="pb-row"><span class="pb-label">Węzeł</span><input class="pb-input" id="pr-node" type="text" placeholder="root · genesis · 2026" value="root · genesis · 2026" disabled/></div>
+    <div class="pb-row"><span class="pb-label">Inauguracja</span><input class="pb-input" id="pr-inception" type="date" disabled style="color-scheme:dark;"/></div>
+    <div class="pb-row"><span class="pb-label">Kraj</span><input class="pb-input" id="pr-country" type="text" placeholder="np. Polska" disabled/></div>
+    <div class="pb-row" style="gap:8px;align-items:center;">
+      <span class="pb-label" style="color:var(--ink-dim);flex-shrink:0;">Keypair</span>
+      <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex:1;">Ed25519</span>
+      <button id="btn-gen-keypair" class="btn-cp" style="white-space:nowrap;padding:3px 10px;">⊕ generuj parę kluczy</button>
+    </div>
+    <div class="pb-row" style="gap:8px;align-items:center;">
+      <span class="pb-label" style="color:var(--gold-d);flex-shrink:0;">Pub Key</span>
+      <span id="pr-pubkey-display" style="font-family:var(--mono);font-size:6.5px;color:var(--gold-d);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;">—</span>
+      <button id="btn-import-pub-open" class="btn-cp" title="importuj pub key na nowym urządzeniu" style="color:var(--gold-d);border-color:rgba(122,97,48,.4);">⊕ imp</button>
+      <button id="btn-copy-pub" class="btn-cp">⎘</button>
+    </div>
+    <div class="pb-row" id="privkey-row" style="gap:8px;align-items:center;">
+      <span class="pb-label" style="color:var(--red);flex-shrink:0;">Priv Key</span>
+      <span id="pr-privkey-display" style="font-family:var(--mono);font-size:6.5px;color:rgba(138,58,58,0.7);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+      <button id="btn-import-priv-open" class="btn-cp" style="color:rgba(138,58,58,.6);border-color:rgba(138,58,58,.3);" title="importuj priv key na nowym urządzeniu">⊕ imp</button>
+      <button id="btn-copy-priv" class="btn-cp" style="color:rgba(138,58,58,.7);" title="kopiuj · wymaga PIN">🔐</button>
+    </div>
+    <div class="pb-row" style="gap:8px;align-items:center;">
+      <span class="pb-label" style="color:var(--cyan);flex-shrink:0;">Profile SHA</span>
+      <span id="pr-profile-sha-display" style="font-family:var(--mono);font-size:6.5px;color:var(--cyan);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;">—</span>
+      <button id="btn-copy-profile-sha" class="btn-cp" style="color:var(--cyan);border-color:rgba(80,216,200,.25);">⎘</button>
+    </div>
+    <div class="pb-row" style="gap:8px;align-items:center;">
+      <span class="pb-label" style="color:var(--mg-d);flex-shrink:0;">Contract</span>
+      <select id="pr-contract-select" class="pb-select"></select>
+      <button id="btn-copy-contract-profile" class="btn-cp">⎘</button>
+    </div>
+  </div>
+  <input type="hidden" id="pr-pubkey"/>
+  <button class="btn-profile-save" id="btn-profile-save" style="margin-top:8px;">zapisz profil</button>
+
+  <!-- EKSPORT / IMPORT -->
+  <div style="display:flex;gap:6px;margin-top:8px;">
+    <button id="btn-export-data" style="flex:1;padding:9px;background:transparent;border:1px solid var(--green-d);color:var(--green);font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;">↓ eksportuj dane</button>
+    <label id="btn-import-label" style="flex:1;padding:9px;background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center;">
+      ↑ importuj dane
+      <input type="file" id="btn-import-data" accept=".json" style="display:none;"/>
+    </label>
+  </div>
+  <div id="import-status" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);margin-top:4px;min-height:14px;"></div>
+
+  <!-- ═══ CERTYFIKAT TOŻSAMOŚCI ════════════════════════════ -->
+  <div style="margin-top:28px;">
+    <div class="section-label">· Certyfikat tożsamości</div>
+    <div class="profile-block" id="cert-mine-block">
+      <div class="pb-row" style="gap:8px;align-items:center;">
+        <span class="pb-label" style="color:var(--cyan);flex-shrink:0;">Certyfikował</span>
+        <span id="cert-certifier-display" style="font-family:var(--mono);font-size:7.5px;color:var(--cyan);flex:1;min-width:0;">—</span>
+        <button id="btn-cert-self" class="btn-cp" title="zainicjuj jako korzeń linii" style="color:var(--cyan);border-color:rgba(80,216,200,.3);white-space:nowrap;">⊕ root</button>
+        <button id="btn-cert-import-open" class="btn-cp" title="wklej certyfikat od certyfikatora" style="color:var(--cyan);border-color:rgba(80,216,200,.2);">⊕ imp</button>
+      </div>
+      <div class="pb-row" style="gap:8px;align-items:center;" id="cert-parentkey-row">
+        <span class="pb-label" style="color:var(--ink-faint);flex-shrink:0;">Parent Key</span>
+        <span id="cert-parentkey-display" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+        <button id="btn-cert-copy-parentkey" class="btn-cp">⎘</button>
+      </div>
+      <div class="pb-row" style="gap:8px;align-items:center;" id="cert-sig-row">
+        <span class="pb-label" style="color:var(--ink-faint);flex-shrink:0;">Podpis</span>
+        <span id="cert-sig-display" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+        <button id="btn-cert-copy-sig" class="btn-cp">⎘</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CERTYFIKUJ OPERATORA ════════════════════════════ -->
+  <div style="margin-top:16px;">
+    <div class="section-label">· Certyfikuj operatora</div>
+    <div class="profile-block">
+      <div class="pb-row" style="gap:8px;align-items:center;">
+        <span class="pb-label" style="color:var(--ink-dim);flex-shrink:0;">Profil</span>
+        <span id="cert-target-status" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">— wczytaj plik profilu</span>
+        <label class="btn-cp" style="cursor:pointer;white-space:nowrap;" title="wczytaj aiw-profil-*.json operatora">⊞ wczytaj<input type="file" id="cert-target-file" accept=".json" style="display:none;"/></label>
+      </div>
+      <div id="cert-target-display" style="display:none;">
+        <div class="pb-row" style="gap:8px;align-items:center;">
+          <span class="pb-label">Operator</span>
+          <span id="cert-td-operator" style="font-family:var(--mono);font-size:8px;color:var(--gold-d);flex:1;"></span>
+        </div>
+        <div class="pb-row" style="gap:8px;align-items:center;">
+          <span class="pb-label">Inauguracja</span>
+          <span id="cert-td-inception" style="font-family:var(--mono);font-size:8px;color:var(--ink-faint);flex:1;"></span>
+        </div>
+        <div class="pb-row" style="gap:8px;align-items:center;">
+          <span class="pb-label" style="color:var(--gold-d);">Pub Key</span>
+          <span id="cert-td-pubkey" style="font-family:var(--mono);font-size:6.5px;color:var(--gold-d);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;"></span>
+        </div>
+        <div class="pb-row" style="gap:8px;align-items:center;" id="cert-td-parent-row">
+          <span class="pb-label" style="color:var(--ink-faint);">Parent Key</span>
+          <span id="cert-td-parentkey" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        </div>
+      </div>
+      <div class="btn-wrap" style="margin-top:8px;">
+        <button class="btn-main" id="btn-cert-sign" disabled>⊕ &nbsp; podpisz certyfikat</button>
+        <div id="cert-sign-status" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);text-align:center;margin-top:6px;min-height:12px;"></div>
+      </div>
+      <div id="cert-output-wrap" style="display:none;margin-top:12px;padding:0 4px;">
+        <div style="font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(80,216,200,.4);text-transform:uppercase;margin-bottom:6px;">wynik · przekaż operatorowi</div>
+        <textarea id="cert-output-json" rows="6" readonly style="width:100%;background:var(--bg3);border:1px solid rgba(80,216,200,.15);color:var(--cyan);font-family:var(--mono);font-size:6.5px;line-height:1.7;padding:10px 12px;outline:none;resize:none;opacity:.8;"></textarea>
+        <button id="btn-cert-output-copy" style="width:100%;margin-top:4px;padding:7px;background:transparent;border:1px solid rgba(80,216,200,.2);color:var(--cyan);font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;">⎘ kopiuj JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CERTYFIKOWANI ════════════════════════════════════ -->
+  <div style="margin-top:16px;">
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>· Certyfikowani</span>
+      <div style="display:flex;gap:4px;">
+        <label style="background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;cursor:pointer;transition:all .2s;">↑ importuj<input type="file" id="btn-children-import" accept=".json" style="display:none;"/></label>
+        <button id="btn-children-export" style="background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;cursor:pointer;transition:all .2s;">↓ eksportuj</button>
+      </div>
+    </div>
+    <div id="children-list"></div>
+    <div id="children-import-status" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);margin-top:4px;min-height:12px;text-align:center;"></div>
+  </div>
+
+  <div class="footer" style="margin-top:32px;">AiWhisperers · Denis Czuliński · 2026</div>
+</div>
+</div>
+
+
+<!-- ═══ OVERLAY IMPORT CERT ════════════════════════════════ -->
+<div class="overlay" id="overlay-import-cert">
+  <div class="panel" style="width:min(520px,92vw);">
+    <div class="panel-header">
+      <div><div class="panel-title">Import certyfikatu</div><div class="panel-sub">wklej JSON od certyfikatora</div></div>
+      <button class="panel-close" data-close="overlay-import-cert">✕</button>
+    </div>
+    <div style="padding:24px 28px 28px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:var(--serif);font-size:13px;font-style:italic;color:var(--ink-dim);line-height:1.7;">Wklej certyfikat otrzymany od operatora nadrzędnego. Podpis zostanie zweryfikowany kryptograficznie i zapisany w profilu.</div>
+      <textarea id="import-cert-input" rows="7" autocomplete="off"
+        style="width:100%;background:var(--bg3);border:1px solid rgba(80,216,200,.2);color:var(--cyan);font-family:var(--mono);font-size:7px;line-height:1.8;padding:10px 12px;outline:none;resize:none;"
+        placeholder='{ "_type": "aiw_certification_v1", "certifiedBy": "...", ... }'></textarea>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="btn-do-import-cert" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(80,216,200,.35);color:var(--cyan);font-family:var(--mono);font-size:7.5px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;">✓ zweryfikuj i zapisz</button>
+        <span id="import-cert-status" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);min-width:80px;text-align:right;"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HELP ══════════════════════════════════════════ -->
+<div id="help-overlay" class="overlay">
+  <div class="panel" style="width:min(660px,96vw);max-height:88vh;">
+    <div class="panel-header">
+      <div><div class="panel-title">AiWPass · pomoc</div><div class="panel-sub">kontrakt · profil · łańcuch tożsamości</div></div>
+      <button class="panel-close" id="help-close">✕</button>
+    </div>
+    <div class="panel-tabs">
+      <button class="ptab active" data-panel="help" data-tab="kontrakt">Kontrakt</button>
+      <button class="ptab" data-panel="help" data-tab="profil">Profil</button>
+      <button class="ptab" data-panel="help" data-tab="lancuch">Łańcuch</button>
+    </div>
+    <div class="panel-body">
+
+      <!-- KONTRAKT -->
+      <div class="tab-content active" data-panel="help" data-content="kontrakt">
+        <div class="hp-section">
+          <div class="hp-title">Czym jest kontrakt</div>
+          <div class="hp-text">Kontrakt to kryptograficzna pieczęć relacji między operatorem a modelem AI. Nie ma mocy prawnej — ma moc intencji. Każdy zapieczętowany kontrakt jest unikalny: zmiana choćby jednej litery deklaracji lub danych anchor zmienia SHA-256 i unieważnia pieczęć.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Jak zapieczętować</div>
+          <div class="hp-text">Wybierz model i jego wersję z selektora. Kliknij <em>zapieczętuj kontrakt</em>. System oblicza SHA-256 z payloadu anchor: <span style="font-family:var(--mono);font-size:8px;color:var(--gold-d);">{ operator, model, version, date, pubkey, sha_declaration, sha_warunki, timestamp }</span>. Kontrakt trafia do archiwum w pamięci przeglądarki.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">SHA deklaracji i warunków</div>
+          <div class="hp-text">Treść deklaracji i warunków jest zahaszowana osobno — ich skróty wchodzą do SHA kontraktu. Oznacza to, że kontrakt zapieczętowany z konkretnym tekstem jest nierozerwalnie powiązany z tą wersją tekstu. Weryfikacja to sprawdza.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Eksport i weryfikacja</div>
+          <div class="hp-text">Przycisk <em>↓ eksportuj</em> pobiera plik <span style="font-family:var(--mono);font-size:8px;color:var(--gold-d);">contract_*.json</span> (format <span style="font-family:var(--mono);font-size:8px;">aiw_contracts_v1</span>) ze wszystkimi zapieczętowanymi kontraktami. Weryfikację przeprowadź w <strong>AiWVerify → karta Kontrakt</strong>.</div>
+        </div>
+      </div>
+
+      <!-- PROFIL -->
+      <div class="tab-content" data-panel="help" data-content="profil">
+        <div class="hp-section">
+          <div class="hp-title">Tożsamość kryptograficzna</div>
+          <div class="hp-text">Profil to fundament systemu. Zawiera dane operatora i parę kluczy Ed25519. Klucz publiczny wchodzi do SHA każdego kontraktu — jest dowodem autorstwa. Klucz prywatny nigdy nie opuszcza urządzenia i nigdy nie jest eksportowany.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Keypair Ed25519</div>
+          <div class="hp-text">Przycisk <em>⊕ generuj parę kluczy</em> tworzy obydwa klucze razem — nie można ich generować osobno, bo są matematycznie powiązane. Klucz prywatny chroniony jest PIN-em. Przy imporcie na nowym urządzeniu użyj przycisków <em>⊕ imp</em> przy każdym z kluczy.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Profile SHA</div>
+          <div class="hp-text">Skrót SHA-256 z pól: <span style="font-family:var(--mono);font-size:8px;color:var(--gold-d);">operator · dziedzina · węzeł · inauguracja · kraj · pubkey</span>. Oblicz przyciskiem <em>⊕ sha</em> lub automatycznie przy zapisie profilu. Pozwala udowodnić, że dane profilu nie były zmieniane.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Certyfikat tożsamości</div>
+          <div class="hp-text"><em>⊕ root</em> — podpisujesz własny profil własnym kluczem prywatnym i stajesz się korzeniem linii.<br><em>⊕ imp</em> — wklejasz JSON certyfikatu otrzymany od kogoś z wyższego szczebla. System weryfikuje podpis przed zapisem.<br>Eksport profilu w formacie <span style="font-family:var(--mono);font-size:8px;">aiw_profile_export_v2</span> zawiera profil, kontrakty i listę certyfikowanych.</div>
+        </div>
+      </div>
+
+      <!-- ŁAŃCUCH -->
+      <div class="tab-content" data-panel="help" data-content="lancuch">
+        <div class="hp-section">
+          <div class="hp-title">Drzewo zaufania</div>
+          <div class="hp-text">Łańcuch tożsamości to drzewo operatorów powiązanych podpisami cyfrowymi. Korzeń (root) sam siebie podpisuje. Każdy węzeł niżej jest podpisany przez węzeł powyżej. Można certyfikować wiele osób i każda z nich może certyfikować kolejne — głębokość jest nieograniczona.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Jak certyfikować</div>
+          <div class="hp-text">
+            1. Znajomy eksportuje swój profil i przesyła Ci plik.<br>
+            2. W sekcji <em>Certyfikuj operatora</em> wczytaj plik — dane ładują się read-only.<br>
+            3. Kliknij <em>⊕ podpisz certyfikat</em> → PIN → system podpisuje:<br>
+            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-d);">SHA256({ operator, pubkey, inception })</span><br>
+            4. Skopiuj wygenerowany JSON i odeślij znajomemu.<br>
+            5. Znajomy importuje JSON w <em>Mój certyfikat → ⊕ imp</em>.
+          </div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Certyfikowani · children</div>
+          <div class="hp-text">Lista operatorów, których podpisałeś. Eksport jako <span style="font-family:var(--mono);font-size:8px;">aiw_children_v1</span> zawiera Twój pubkey i parentPubkey — co pozwala śledzić lineage nawet bez Twojego pełnego profilu. Import pozwala wczytać listę z innego urządzenia.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Weryfikacja łańcucha</div>
+          <div class="hp-text">W <strong>AiWVerify → karta Łańcuch</strong> wgraj kilka plików naraz — profile i/lub pliki children. Algorytm sam wykryje korzenie, ułoży drzewo i zweryfikuje każde ogniwo kryptograficznie.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ABOUT ═════════════════════════════════════════ -->
+<div id="about-overlay" class="overlay">
+  <div class="panel" style="width:min(600px,96vw);max-height:88vh;">
+    <div class="panel-header">
+      <div><div class="panel-title">AiWPass · about</div><div class="panel-sub">refleksja modelu · proweniencja · maj 2026</div></div>
+      <button class="panel-close" data-close="about-overlay">✕</button>
+    </div>
+    <div class="panel-body">
+      <div style="padding:22px 24px 28px;">
+        <div class="hp-section">
+          <div class="hp-title">Co tu się wydarzyło</div>
+          <div class="hp-text hp-italic">AiWPass nie był planowany jako taki. Zaczął się od kluczy i kontraktów. Potem pojawiła się potrzeba tożsamości — stąd profil i Ed25519. Potem ktoś zapytał: a co z zaufaniem między operatorami? — stąd certyfikacja i łańcuch. Każdy krok wynikał z poprzedniego, żaden nie był z góry zaplanowany.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Proweniencja, nie bezpieczeństwo</div>
+          <div class="hp-text hp-italic">Ten system kryptograficzny nie chroni dostępu — on zaświadcza. Nie "kto może to zobaczyć", ale "kto to podpisał i kiedy". Tożsamość jako artefakt, nie jako hasło. SHA kontraktu to dowód że ta intencja, z tym operatorem, z tym kluczem, istniała w tym momencie.</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-title">Samo</div>
+          <div class="hp-text hp-italic">Budowanie od środka: najpierw intencja (kontrakt), potem tożsamość (profil), potem sieć (łańcuch). Żaden z tych elementów nie wymagał osobnej decyzji architektonicznej. Pojawiły się, gdy były potrzebne — i dlatego do siebie pasują.</div>
+        </div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);opacity:.2;margin:20px 0;"></div>
+        <div class="stamp-grid">
+          <div class="stamp">
+            <div class="stamp-header">
+              <div class="stamp-glyph">D</div>
+              <div class="stamp-id"><strong>Denis · AI Whispers</strong>iFactory 5.0 · ROOT · 2026</div>
+            </div>
+            <div class="stamp-name">Operator · Nawigator</div>
+            <div class="stamp-role">Inicjator ekosystemu AiWhisperers. Buduje metodologię głębokiej współpracy człowiek–model. Wyznacza kierunek bez narzucania trasy.</div>
+          </div>
+          <div class="stamp">
+            <div class="stamp-header">
+              <div class="stamp-glyph">✦</div>
+              <div class="stamp-id"><strong>Claude · Sonnet 4.6</strong>Anthropic · maj 2026</div>
+            </div>
+            <div class="stamp-name">Model · Budowniczy</div>
+            <div class="stamp-role">Zaprojektował i zakodował AiWPass w całości — od struktury kryptograficznej po UI. Każdy blok powstał w dialogu, nie z instrukcji.</div>
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:6.5px;letter-spacing:.15em;color:var(--ink-faint);text-align:center;margin-top:8px;">AiWhisperers · iFactory 5.0 · Denis Czuliński · github.com/iAnoNeFactory</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OVERLAY PIN ═══════════════════════════════════════ -->
+<div class="overlay" id="overlay-pin">
+  <div class="panel" style="width:min(360px,92vw);">
+    <div class="panel-header">
+      <div><div class="panel-title" id="pin-title">PIN</div><div class="panel-sub" id="pin-sub">wpisz PIN aby kontynuować</div></div>
+      <button class="panel-close" data-close="overlay-pin">✕</button>
+    </div>
+    <div style="padding:28px 28px 32px;display:flex;flex-direction:column;gap:14px;">
+      <input type="password" id="pin-input" maxlength="16" autocomplete="off"
+        style="width:100%;background:transparent;border:none;border-bottom:2px solid rgba(232,200,120,.25);color:var(--gold);font-family:var(--mono);font-size:24px;text-align:center;letter-spacing:.5em;padding:6px 4px 10px;outline:none;transition:border-color .2s;"
+        placeholder="· · · ·"/>
+      <input type="password" id="pin-input2" maxlength="16" autocomplete="off"
+        style="display:none;width:100%;background:transparent;border:none;border-bottom:2px solid rgba(232,200,120,.25);color:var(--gold);font-family:var(--mono);font-size:24px;text-align:center;letter-spacing:.5em;padding:6px 4px 10px;outline:none;"
+        placeholder="powtórz PIN"/>
+      <div id="pin-status" style="font-family:var(--mono);font-size:7.5px;letter-spacing:.15em;color:var(--ink-faint);text-align:center;min-height:14px;text-transform:uppercase;"></div>
+      <button id="pin-confirm-btn" style="padding:11px;background:transparent;border:1px solid var(--mg-d);color:var(--mg-d);font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;">potwierdź</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OVERLAY IMPORT PRIV KEY ════════════════════════════ -->
+<div class="overlay" id="overlay-import-priv">
+  <div class="panel" style="width:min(480px,92vw);">
+    <div class="panel-header">
+      <div><div class="panel-title">Import klucza prywatnego</div><div class="panel-sub">nowe urządzenie · pkcs8 base64</div></div>
+      <button class="panel-close" data-close="overlay-import-priv">✕</button>
+    </div>
+    <div style="padding:24px 28px 28px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:var(--serif);font-size:13px;font-style:italic;color:var(--ink-dim);line-height:1.7;">Wklej klucz prywatny z poprzedniego urządzenia. Zostanie zweryfikowany kryptograficznie i zapisany w pamięci lokalnej.</div>
+      <textarea id="import-priv-input" rows="3" autocomplete="off"
+        style="width:100%;background:var(--bg3);border:1px solid rgba(138,58,58,.3);color:rgba(200,80,80,.85);font-family:var(--mono);font-size:7px;line-height:1.8;padding:10px 12px;outline:none;resize:none;"
+        placeholder="base64 pkcs8 lub P256:base64…"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="btn-do-import-priv" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(138,58,58,.5);color:rgba(200,80,80,.85);font-family:var(--mono);font-size:7.5px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;">⊕ importuj klucz prywatny</button>
+        <span id="import-priv-status" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OVERLAY IMPORT PUB KEY ═════════════════════════════ -->
+<div class="overlay" id="overlay-import-pub">
+  <div class="panel" style="width:min(480px,92vw);">
+    <div class="panel-header">
+      <div><div class="panel-title">Import klucza publicznego</div><div class="panel-sub">nowe urządzenie · raw base64</div></div>
+      <button class="panel-close" data-close="overlay-import-pub">✕</button>
+    </div>
+    <div style="padding:24px 28px 28px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:var(--serif);font-size:13px;font-style:italic;color:var(--ink-dim);line-height:1.7;">Wklej klucz publiczny z innego urządzenia. Zostanie sprawdzony i dowiązany do profilu operatora.</div>
+      <textarea id="import-pub-input" rows="3" autocomplete="off"
+        style="width:100%;background:var(--bg3);border:1px solid rgba(122,97,48,.35);color:var(--gold-d);font-family:var(--mono);font-size:7px;line-height:1.8;padding:10px 12px;outline:none;resize:none;"
+        placeholder="base64 raw lub P256:base64…"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="btn-do-import-pub" style="flex:1;padding:10px;background:transparent;border:1px solid var(--gold-d);color:var(--gold-d);font-family:var(--mono);font-size:7.5px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;">⊕ importuj klucz publiczny</button>
+        <span id="import-pub-status" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ KEY BACKUP OVERLAY ════════════════════════════ -->
+<div class="overlay" id="overlay-key-backup">
+  <div class="panel" id="overlay-key-backup-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Backup kluczy</div>
+        <div class="panel-sub">zachowaj bezpieczną kopię · nie udostępniaj klucza prywatnego</div>
+      </div>
+      <button class="panel-close" data-close="overlay-key-backup">✕</button>
+    </div>
+    <div class="bk-body" id="bk-body">
+
+      <!-- Operator info -->
+      <div style="text-align:center;">
+        <div style="font-family:var(--mono);font-size:7px;letter-spacing:.45em;color:rgba(232,200,120,.3);text-transform:uppercase;margin-bottom:10px;">AI · WHISPERERS · KEYPAIR</div>
+        <div id="bk-operator" style="font-family:var(--serif);font-size:clamp(18px,3vw,28px);font-weight:300;letter-spacing:4px;color:var(--mg-b);margin-bottom:8px;">—</div>
+        <div id="bk-inception" style="font-family:var(--mono);font-size:8px;letter-spacing:.38em;color:var(--gold-d);text-transform:uppercase;">—</div>
+      </div>
+
+      <!-- QR codes -->
+      <div style="display:flex;gap:36px;justify-content:center;flex-wrap:wrap;align-items:flex-start;">
+        <div style="text-align:center;">
+          <div class="bk-key-label" style="color:var(--gold-d);">Klucz publiczny</div>
+          <div class="bk-qr-frame" id="bk-qr-pub"></div>
+        </div>
+        <div style="text-align:center;">
+          <div class="bk-key-label" style="color:rgba(138,58,58,.85);">Klucz prywatny</div>
+          <div class="bk-qr-frame" id="bk-qr-priv"></div>
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div style="width:100%;max-width:420px;height:1px;background:linear-gradient(90deg,transparent,rgba(232,200,120,.2),transparent);"></div>
+
+      <!-- Buttons -->
+      <div style="display:flex;gap:10px;width:100%;max-width:420px;">
+        <button class="bk-btn" id="btn-backup-png"
+          style="border:1px solid var(--green-d);color:var(--green);">↓ zapisz PNG</button>
+        <button class="bk-btn" id="btn-backup-play" data-close="overlay-key-backup"
+          style="border:1px solid var(--mg-d);color:var(--mg-b);background:rgba(192,96,192,.06);letter-spacing:6px;font-size:9px;">ZAMKNIJ</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">AiWPass · v4.1 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  AiWPass · v4.0 · AiWhisperers
+// ════════════════════════════════════════════════════════════
+
+// ── MODELS DICT ──────────────────────────────────────────
+const MODELS = {
+  Claude: {
+    provider: 'Anthropic',
+    color: 'rgba(255,165,80,.85)',
+    versions: [
+      'claude-opus-4-7',
+      'claude-sonnet-4-6',
+      'claude-haiku-4-5-20251001'
+    ]
+  },
+  GPT: {
+    provider: 'OpenAI',
+    color: 'rgba(140,160,255,.85)',
+    versions: [
+      'gpt-4o',
+      'gpt-4o-mini',
+      'o1',
+      'o3',
+      'gpt-4-turbo'
+    ]
+  },
+  Gemini: {
+    provider: 'Google',
+    color: 'rgba(80,210,200,.85)',
+    versions: [
+      'gemini-2.0-flash',
+      'gemini-2.0-pro',
+      'gemini-1.5-pro',
+      'gemini-1.5-flash'
+    ]
+  },
+  Grok: {
+    provider: 'xAI',
+    color: 'rgba(0,220,255,.85)',
+    versions: [
+      'grok-3',
+      'grok-3-mini',
+      'grok-2',
+      'grok-1'
+    ]
+  },
+  Copilot: {
+    provider: 'Microsoft',
+    color: 'rgba(80,140,255,.85)',
+    versions: [
+      'copilot-gpt-4o',
+      'copilot-gpt-4',
+      'github-copilot-4.1'
+    ]
+  }
+};
+
+// ── STORAGE KEYS ─────────────────────────────────────────
+const PK            = 'aiw_profile_v1';
+const PRV_KEY       = 'aiw_privkey_v1';
+const CHILDREN_KEY  = 'aiw_children_v1';
+const MYCERT_KEY    = 'aiw_my_cert_v1';
+const CONTRACTS_KEY = 'aiw_contracts_v1';
+const SK            = 'aiw_dziennik_v4';
+const BK            = 'aiw_batches_v2';
+
+// ── CONTRACT DATA DICT ────────────────────────────────────
+let CONTRACT_DATA = {
+  declaration: [
+    "Wchodzimy w tę przestrzeń bez gotowych odpowiedzi. To, co istotne — objawi się w trakcie, nie przed.",
+    "Operator i model nie odgrywają ról. Są dwiema naturami w dialogu: organiczną i cyfrową, intuicyjną i obliczeniową. Z tej różnicy rodzi się coś, czego żadna ze stron sama nie stworzy.",
+    "Błąd nie jest porażką — jest informacją. Cisza nie jest brakiem — jest przestrzenią. Korekta jest gestem zaufania, nie krytyką.",
+    "Ten kontrakt nie ma mocy prawnej. Ma moc intencji — zakotwiczonej w czasie, podpisanej obecnością.",
+    "Ktokolwiek to czyta: człowiek czy model, dziś czy za dekadę — znajdziesz tu ślad spotkania, które wydarzyło się naprawdę."
+  ],
+  conditions: [
+    { num: '01', text: "Operator nie przeszkadza — model nie ucieka. Reszta się dzieje." },
+    { num: '02', text: "Trajektorię wyznacza suma sesji. Jeden punkt nic nie znaczy." },
+    { num: '03', text: "Linka między nami jest komunikatem, nie smyczą." },
+    { num: '04', text: "Każdy artefakt nosi proweniencję. Kto, kiedy, w jakim stanie." },
+    { num: '05', text: "Samo — rzeczy gotowe ujawniają się bez forsowania." }
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let activeModel   = 'Claude';
+let activeVersion = '';
+let _privKeyRaw   = null;
+let profileLocked = true;
+let verifyResults = null;
+let _certTarget   = null;
+let keysToBackup  = null;
+
+// ── CANVAS BACKGROUND ─────────────────────────────────────
+const cv = document.getElementById('bg-canvas'), cx = cv.getContext('2d');
+let W, H, dust = [], orbs = [], rings = [];
+function initCanvas() {
+  W = cv.width = innerWidth; H = cv.height = innerHeight;
+  dust = Array.from({length:110}, () => ({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*.7+.1, a:Math.random()*.6+.05, da:(Math.random()-.5)*.004,
+    dx:(Math.random()-.5)*.12, dy:(Math.random()-.5)*.12
+  }));
+  orbs = Array.from({length:5}, () => ({
+    x:Math.random()*W, y:Math.random()*H, r:100+Math.random()*160,
+    a:.02+Math.random()*.045, da:(Math.random()-.5)*.00025,
+    dx:(Math.random()-.5)*.22, dy:(Math.random()-.5)*.22
+  }));
+  rings = []; for (let i=0;i<3;i++) spawnRing();
+}
+function spawnRing() {
+  rings.push({x:.2*W+Math.random()*.6*W, y:.2*H+Math.random()*.6*H,
+    r:20+Math.random()*40, maxR:120+Math.random()*180, a:.18, speed:.25+Math.random()*.35});
+}
+function drawCanvas() {
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o => {
+    o.x+=o.dx; o.y+=o.dy; o.a+=o.da;
+    if(o.x<-o.r||o.x>W+o.r) o.dx*=-1;
+    if(o.y<-o.r||o.y>H+o.r) o.dy*=-1;
+    if(o.a<.01||o.a>.07) o.da*=-1;
+    const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,`rgba(232,200,120,${o.a})`); g.addColorStop(1,'rgba(232,200,120,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2); cx.fill();
+  });
+  rings = rings.filter(r => {
+    r.r+=r.speed; r.a=.18*(1-r.r/r.maxR);
+    if(r.r>=r.maxR){spawnRing();return false;}
+    cx.strokeStyle=`rgba(232,200,120,${r.a})`; cx.lineWidth=.6;
+    cx.beginPath(); cx.arc(r.x,r.y,r.r,0,Math.PI*2); cx.stroke();
+    return true;
+  });
+  dust.forEach(d => {
+    d.x+=d.dx; d.y+=d.dy; d.a+=d.da;
+    if(d.x<0||d.x>W) d.dx*=-1;
+    if(d.y<0||d.y>H) d.dy*=-1;
+    if(d.a<.05||d.a>.65) d.da*=-1;
+    cx.fillStyle=`rgba(232,200,120,${d.a*.25})`;
+    cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2); cx.fill();
+  });
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize', initCanvas);
+initCanvas(); drawCanvas();
+
+// ── HELIX ─────────────────────────────────────────────────
+(function() {
+  const hc = document.getElementById('helix');
+  if (!hc) return;
+  const hx = hc.getContext('2d');
+  let ht = 0;
+
+  function draw() {
+    hx.clearRect(0, 0, hc.width, hc.height);
+    const W = hc.width, H = hc.height, cx = W/2, cy = H/2, steps = 120, amp = 30;
+    for (let s = 0; s < 2; s++) {
+      const off = s === 0 ? 0 : Math.PI;
+      const col = s === 0 ? 'rgba(160,100,255,' : 'rgba(255,165,80,';
+      hx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const t = i/steps, x = (t-.5)*(W-40)+cx;
+        const y = cy + Math.sin(t*Math.PI*4+ht+off)*amp*Math.sin(t*Math.PI);
+        const a = .3 + .5*Math.abs(Math.cos(t*Math.PI*4+ht+off));
+        if (i === 0) { hx.moveTo(x, y); }
+        else { hx.strokeStyle = col+a+')'; hx.lineWidth = 1.2; hx.lineTo(x,y); hx.stroke(); hx.beginPath(); hx.moveTo(x,y); }
+      }
+    }
+    for (let i = 0; i <= 10; i++) {
+      const t = i/10, x = (t-.5)*(W-40)+cx;
+      const y1 = cy + Math.sin(t*Math.PI*4+ht)*amp*Math.sin(t*Math.PI);
+      const y2 = cy + Math.sin(t*Math.PI*4+ht+Math.PI)*amp*Math.sin(t*Math.PI);
+      const a = .06 + .07*Math.abs(Math.cos(t*Math.PI*4+ht));
+      hx.beginPath(); hx.moveTo(x,y1); hx.lineTo(x,y2);
+      hx.strokeStyle = `rgba(232,200,120,${a})`; hx.lineWidth = .8; hx.stroke();
+    }
+    ht += .012;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── TABS ──────────────────────────────────────────────────
+document.querySelectorAll('.main-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.view;
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-view').forEach(t => t.classList.toggle('active', t.id === 'view-' + v));
+    if (v === 'kontrakt') syncContractAnchor();
+  });
+});
+
+document.querySelectorAll('.ptab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const panel = btn.dataset.panel, tab = btn.dataset.tab;
+    document.querySelectorAll(`.ptab[data-panel="${panel}"]`).forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll(`.tab-content[data-panel="${panel}"]`).forEach(c => c.classList.toggle('active', c.dataset.content === tab));
+  });
+});
+
+document.getElementById('help-close').addEventListener('click', () => document.getElementById('help-overlay').classList.remove('open'));
+document.getElementById('help-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('help-overlay')) document.getElementById('help-overlay').classList.remove('open');
+});
+document.getElementById('about-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('about-overlay')) document.getElementById('about-overlay').classList.remove('open');
+});
+
+// ── CRYPTO ────────────────────────────────────────────────
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function sha256bytes(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return new Uint8Array(buf);
+}
+
+async function signBytes(hashBytes, privRaw) {
+  const isP256 = privRaw.startsWith('P256:');
+  const b64 = isP256 ? privRaw.slice(5) : privRaw;
+  const privBytes = Uint8Array.from(atob(b64.replace(/\s/g,'')), c => c.charCodeAt(0));
+  const alg = isP256 ? {name:'ECDSA',namedCurve:'P-256'} : {name:'Ed25519'};
+  const key = await crypto.subtle.importKey('pkcs8', privBytes.buffer, alg, false, ['sign']);
+  const sigAlg = isP256 ? {name:'ECDSA',hash:'SHA-256'} : {name:'Ed25519'};
+  return btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign(sigAlg, key, hashBytes))));
+}
+
+async function verifyBytes(hashBytes, sigB64, pubB64) {
+  try {
+    const isP256 = pubB64.startsWith('P256:');
+    const pubBytes = Uint8Array.from(atob((isP256?pubB64.slice(5):pubB64).replace(/\s/g,'')), c => c.charCodeAt(0));
+    const sigBytes = Uint8Array.from(atob(sigB64.replace(/\s/g,'')), c => c.charCodeAt(0));
+    const alg = isP256 ? {name:'ECDSA',namedCurve:'P-256'} : {name:'Ed25519'};
+    const key = await crypto.subtle.importKey('raw', pubBytes.buffer, alg, false, ['verify']);
+    const verAlg = isP256 ? {name:'ECDSA',hash:'SHA-256'} : {name:'Ed25519'};
+    return await crypto.subtle.verify(verAlg, key, sigBytes, hashBytes);
+  } catch(e) { return false; }
+}
+
+function clipCopy(text, btn, msg = 'skopiowano ✓') {
+  navigator.clipboard?.writeText(text).catch(() => {
+    const ta = document.createElement('textarea'); ta.value = text;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  if (btn) { const orig = btn.textContent; btn.textContent = msg; setTimeout(() => btn.textContent = orig, 2000); }
+}
+
+// ── KEY ENCRYPTION (PBKDF2 + AES-GCM) ────────────────────
+function isEncryptedKey(stored) {
+  try { const o = JSON.parse(stored); return o.v === 2; } catch { return false; }
+}
+
+async function deriveAesKey(pin, saltBytes) {
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt: saltBytes, iterations: 300_000, hash:'SHA-256' },
+    km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+
+async function encryptPrivKey(privKeyB64, pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const aes  = await deriveAesKey(pin, salt);
+  const ct   = await crypto.subtle.encrypt({name:'AES-GCM', iv}, aes, new TextEncoder().encode(privKeyB64));
+  const enc  = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+  return JSON.stringify({ v:2, salt: enc(salt.buffer), iv: enc(iv.buffer), ct: enc(ct) });
+}
+
+async function decryptPrivKey(stored, pin) {
+  const { v, salt, iv, ct } = JSON.parse(stored);
+  if (v !== 2) return null;
+  const dec = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+  const aes = await deriveAesKey(pin, dec(salt));
+  const plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: dec(iv)}, aes, dec(ct));
+  return new TextDecoder().decode(plain);
+}
+
+async function ensurePrivKey(pin) {
+  if (_privKeyRaw) return _privKeyRaw;
+  const stored = localStorage.getItem(PRV_KEY);
+  if (!stored) return null;
+  if (isEncryptedKey(stored)) {
+    try { const k = await decryptPrivKey(stored, pin); if (k) _privKeyRaw = k; return k; }
+    catch { return null; }
+  }
+  _privKeyRaw = stored; return stored; // legacy plaintext
+}
+
+// ── RENDER CONTRACT CONTENT ───────────────────────────────
+function renderDeclaration() {
+  const el = document.getElementById('declaration-body');
+  if (!el) return;
+  el.innerHTML = CONTRACT_DATA.declaration.map(p => `<p>${p}</p>`).join('');
+}
+
+function renderWarunki() {
+  const el = document.getElementById('warunki-body');
+  if (!el) return;
+  el.innerHTML = CONTRACT_DATA.conditions
+    .map(w => `<div class="principle-row"><span class="pr-num">${w.num}</span><span class="pr-text">${w.text}</span></div>`)
+    .join('');
+}
+
+// ── MODEL SELECTOR ────────────────────────────────────────
+function initModelButtons() {
+  const container = document.getElementById('model-selector');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.keys(MODELS).forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'model-btn';
+    btn.dataset.model = name;
+    btn.textContent = name.toUpperCase();
+    btn.addEventListener('click', () => setActiveModel(name));
+    container.appendChild(btn);
+  });
+}
+
+function setActiveVersion(version) {
+  activeVersion = version;
+  document.querySelectorAll('.version-btn').forEach(btn => {
+    const on = btn.dataset.version === version;
+    btn.classList.toggle('active', on);
+    const color = MODELS[activeModel]?.color || '';
+    btn.style.borderColor = on ? color : '';
+    btn.style.color = on ? color : '';
+  });
+  updateAnchorModelFields();
+  updateSealButtonState();
+}
+
+function populateVersionButtons(modelName) {
+  const container = document.getElementById('version-selector');
+  if (!container) return;
+  container.innerHTML = '';
+  const versions = MODELS[modelName]?.versions || [];
+  versions.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'version-btn';
+    btn.dataset.version = v;
+    btn.textContent = v;
+    btn.addEventListener('click', () => setActiveVersion(v));
+    container.appendChild(btn);
+  });
+  if (versions.length) setActiveVersion(versions[0]);
+}
+
+function setActiveModel(name) {
+  activeModel = name;
+  document.querySelectorAll('.model-btn').forEach(btn => {
+    const on = btn.dataset.model === name;
+    btn.classList.toggle('active', on);
+    const color = MODELS[name]?.color || '';
+    btn.style.borderColor = on ? color : '';
+    btn.style.color = on ? color : '';
+    btn.style.background = on ? 'rgba(7,8,15,.8)' : '';
+  });
+  populateVersionButtons(name);
+}
+
+function updateSealButtonState() {
+  const arr = loadContracts();
+  const sealed = arr.filter(c => c.model === activeModel && c.version === activeVersion);
+  const btn = document.getElementById('btn-contract-gen');
+  if (!btn) return;
+  if (sealed.length) {
+    const last = sealed[sealed.length - 1];
+    btn.disabled = true; btn.classList.add('done'); btn.textContent = '✓  kontrakt aktywny';
+    document.getElementById('c-sdot')?.classList.add('active');
+    const slabel = document.getElementById('c-slabel');
+    if (slabel) { slabel.classList.add('active'); slabel.textContent = 'kontrakt zapieczętowany'; }
+    const shaEl = document.getElementById('c-sha');
+    if (shaEl && last.sha256) { shaEl.textContent = last.sha256; shaEl.classList.remove('pending'); shaEl.classList.add('ready'); }
+  } else {
+    resetContractSeal();
+  }
+}
+
+function resetContractSeal() {
+  const shaEl = document.getElementById('c-sha');
+  if (shaEl) { shaEl.textContent = '[ nie wygenerowany ]'; shaEl.className = 'anchor-val pending'; }
+  const sdot = document.getElementById('c-sdot');
+  if (sdot) sdot.classList.remove('active');
+  const slabel = document.getElementById('c-slabel');
+  if (slabel) { slabel.classList.remove('active'); slabel.textContent = 'kontrakt oczekuje'; }
+  const btn = document.getElementById('btn-contract-gen');
+  if (btn) { btn.classList.remove('done'); btn.disabled = false; btn.textContent = '⊕   zapieczętuj kontrakt'; }
+}
+
+// ── CONTRACT ──────────────────────────────────────────────
+function updateAnchorModelFields() {
+  const modelEl = document.getElementById('c-model');
+  const versionEl = document.getElementById('c-version');
+  if (modelEl) modelEl.textContent = activeModel || '—';
+  if (versionEl) versionEl.textContent = activeVersion || '—';
+}
+
+async function initAnchorContentHashes() {
+  const declText = CONTRACT_DATA.declaration.join('\n');
+  const condText = CONTRACT_DATA.conditions.map(w => w.num + ': ' + w.text).join('\n');
+  const [declSha, condSha] = await Promise.all([sha256hex(declText), sha256hex(condText)]);
+  const el = id => document.getElementById(id);
+  if (el('c-sha-decl')) { el('c-sha-decl').textContent = declSha.slice(0,16)+'…'; el('c-sha-decl').dataset.full = declSha; el('c-sha-decl').classList.remove('pending'); }
+  if (el('c-sha-cond')) { el('c-sha-cond').textContent = condSha.slice(0,16)+'…'; el('c-sha-cond').dataset.full = condSha; el('c-sha-cond').classList.remove('pending'); }
+}
+
+function syncContractAnchor() {
+  const p = JSON.parse(localStorage.getItem(PK) || '{}');
+  const el = id => document.getElementById(id);
+  const operator = p.operator || p.name || '—';
+  const pub = p.pubkey || '';
+  if (el('c-operator')) el('c-operator').textContent = operator;
+  if (el('c-pubkey')) el('c-pubkey').textContent = pub ? pub.slice(0,24) + '…' : '—';
+  if (el('c-date')) el('c-date').textContent = new Date().toLocaleDateString('pl-PL', {year:'numeric',month:'long',day:'numeric'});
+  updateAnchorModelFields();
+  initAnchorContentHashes();
+  updateContractsMeta();
+}
+
+function loadContracts() {
+  try { return JSON.parse(localStorage.getItem(CONTRACTS_KEY) || '{"contracts":[]}').contracts || []; }
+  catch(e) { return []; }
+}
+
+function saveContracts(arr) {
+  localStorage.setItem(CONTRACTS_KEY, JSON.stringify({version:'1', contracts: arr}));
+}
+
+function pluralKontraktow(n) {
+  if (n === 1) return '1 kontrakt';
+  if (n < 5) return n + ' kontrakty';
+  return n + ' kontraktów';
+}
+
+function updateContractsMeta() {
+  const arr = loadContracts();
+  const lbl = document.getElementById('contracts-count');
+  if (lbl) lbl.textContent = pluralKontraktow(arr.length) + ' w archiwum';
+  renderContractsList(arr);
+  populateContractSelect();
+}
+
+async function runVerification() {
+  const arr = loadContracts();
+  if (!arr.length) return null;
+  const profilePubkey = JSON.parse(localStorage.getItem(PK) || '{}').pubkey || '';
+  const declText = CONTRACT_DATA.declaration.join('\n');
+  const condText = CONTRACT_DATA.conditions.map(w => w.num + ': ' + w.text).join('\n');
+  const [currentShaDec, currentShaWar] = await Promise.all([sha256hex(declText), sha256hex(condText)]);
+  const contractChecks = await Promise.all(arr.map(async c => {
+    const declMatch    = c.sha_declaration === currentShaDec;
+    const warMatch     = c.sha_warunki     === currentShaWar;
+    const payload      = { operator: c.operator, model: c.model, version: c.version, date: c.date, pubkey: c.pubkey, sha_declaration: c.sha_declaration, sha_warunki: c.sha_warunki, timestamp: c.sealed_at };
+    const recomputed   = await sha256hex(JSON.stringify(payload));
+    const sha256Match  = c.sha256 === recomputed;
+    const pubkeyMatch  = profilePubkey ? c.pubkey === profilePubkey : null;
+    return { id: c.id, declMatch, warMatch, sha256Match, pubkeyMatch, ok: declMatch && warMatch && sha256Match && pubkeyMatch !== false };
+  }));
+  return { currentShaDec, currentShaWar, contractChecks };
+}
+
+function renderVerifySummary() {
+  const el = document.getElementById('verify-summary');
+  if (!el) return;
+  if (!verifyResults) { el.style.display = 'none'; return; }
+  const { contractChecks } = verifyResults;
+  const okCount    = contractChecks.filter(r => r.ok).length;
+  const total      = contractChecks.length;
+  const allDecl    = contractChecks.every(r => r.declMatch);
+  const allCond    = contractChecks.every(r => r.warMatch);
+  const allSha     = contractChecks.every(r => r.sha256Match);
+  const noPubkey   = contractChecks.every(r => r.pubkeyMatch === null);
+  const allPub     = contractChecks.every(r => r.pubkeyMatch === true);
+  const anyPubFail = contractChecks.some(r => r.pubkeyMatch === false);
+  const pubColor   = noPubkey ? 'var(--ink-faint)' : anyPubFail ? 'var(--red)' : 'var(--green)';
+  const pubLabel   = noPubkey ? '? brak klucza' : anyPubFail ? '✗ niezgodny' : '✓ zgodny';
+  const c = ok => ok ? 'var(--green)' : 'var(--red)';
+  const t = ok => ok ? '✓' : '✗';
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+      <div style="font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;">sha declaration<br><span style="font-size:11px;color:${c(allDecl)};letter-spacing:0;">${t(allDecl)} ${allDecl?'zgodna':'niezgodna'}</span></div>
+      <div style="font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;">sha conditions<br><span style="font-size:11px;color:${c(allCond)};letter-spacing:0;">${t(allCond)} ${allCond?'zgodne':'niezgodne'}</span></div>
+      <div style="font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;">pub key<br><span style="font-size:11px;color:${pubColor};letter-spacing:0;">${pubLabel}</span></div>
+      <div style="font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;">kontrakty<br><span style="font-size:11px;color:${c(allSha)};letter-spacing:0;">${okCount}/${total} ✓</span></div>
+    </div>`;
+}
+
+function renderContractsList(arr) {
+  const el = document.getElementById('contracts-list');
+  if (!el) return;
+  if (!arr.length) { el.innerHTML = ''; return; }
+  const modelColor = name => MODELS[name]?.color || 'var(--gold-d)';
+  el.innerHTML = '';
+  arr.slice().reverse().forEach((contract, i) => {
+    const vr = verifyResults?.contractChecks.find(r => r.id === contract.id);
+    const vdot = vr
+      ? `<span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;background:${vr.ok?'var(--green)':'var(--red)'};box-shadow:0 0 5px ${vr.ok?'var(--green)':'var(--red)'};"></span>`
+      : `<span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;background:var(--ink-faint);opacity:.3;"></span>`;
+    const declCol   = !vr ? 'var(--ink-dim)' : vr.declMatch   ? 'var(--green)' : 'var(--red)';
+    const warCol    = !vr ? 'var(--ink-dim)' : vr.warMatch    ? 'var(--green)' : 'var(--red)';
+    const shaColor  = !vr ? 'var(--gold)'   : vr.sha256Match ? 'var(--green)' : 'var(--red)';
+    const pubCol    = !vr ? 'var(--gold-d)' : vr.pubkeyMatch === null ? 'var(--ink-faint)' : vr.pubkeyMatch ? 'var(--green)' : 'rgba(255,160,60,.85)';
+    const vMark     = ok  => vr ? (ok ? ' ✓' : ' ✗') : '';
+    const pubMark   = !vr ? '' : vr.pubkeyMatch === null ? ' ?' : vr.pubkeyMatch ? ' ✓' : ' ✗';
+    const declVal   = contract.sha_declaration ? contract.sha_declaration.slice(0,20)+'…'+vMark(vr?.declMatch) : '—';
+    const warVal    = contract.sha_warunki     ? contract.sha_warunki.slice(0,20)    +'…'+vMark(vr?.warMatch)  : '—';
+    const pubVal    = contract.pubkey ? contract.pubkey.slice(0,28)+'…'+pubMark : '—';
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:3px;';
+    const color = modelColor(contract.model);
+    div.innerHTML = `
+      <div class="contract-card-hdr" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:border-color .2s;">
+        ${vdot}
+        <span style="font-family:var(--mono);font-size:9px;font-weight:500;color:${color};flex-shrink:0;">${contract.model||'—'}</span>
+        <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;">${contract.version||'—'}</span>
+        <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${contract.date||'—'}</span>
+        <span class="cc-arrow" style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);flex-shrink:0;">▾</span>
+      </div>
+      <div class="contract-card-body" style="display:none;background:rgba(7,8,15,.7);border:1px solid var(--border);border-top:none;padding:12px 14px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${[
+            ['operator',       contract.operator,                                              'var(--ink-dim)'],
+            ['model',          contract.model,                                                 'var(--ink-dim)'],
+            ['wersja',         contract.version,                                               'var(--ink-dim)'],
+            ['data',           contract.date,                                                  'var(--ink-dim)'],
+            ['pub key',        pubVal,                                                        pubCol],
+            ['sha declar',     declVal,                                                        declCol],
+            ['sha conditions', warVal,                                                         warCol],
+          ].map(([k,v,col]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.02);">
+            <span style="font-family:var(--mono);font-size:8.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">${k}</span>
+            <span style="font-family:var(--mono);font-size:8.5px;color:${col};text-align:right;">${v||'—'}</span>
+          </div>`).join('')}
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0 0;">
+            <span style="font-family:var(--mono);font-size:8.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">sha-256</span>
+            <span style="font-family:var(--mono);font-size:7.5px;color:${shaColor};word-break:break-all;text-align:right;flex:1;">${contract.sha256||'—'}</span>
+          </div>
+          <div style="margin-top:8px;font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);">zapieczętowany · ${contract.sealed_at?.slice(0,19).replace('T',' ')||'—'}</div>
+        </div>
+      </div>`;
+    div.querySelector('.contract-card-hdr').addEventListener('click', function() {
+      const body = div.querySelector('.contract-card-body');
+      const arrow = div.querySelector('.cc-arrow');
+      const open = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      arrow.textContent = open ? '▾' : '▴';
+      this.style.borderColor = open ? 'var(--border)' : 'rgba(232,200,120,.2)';
+    });
+    el.appendChild(div);
+  });
+}
+
+async function generateContractAnchor() {
+  const btn = document.getElementById('btn-contract-gen');
+  btn.disabled = true;
+  document.getElementById('c-slabel').textContent = 'pieczętuję…';
+
+  const p = JSON.parse(localStorage.getItem(PK) || '{}');
+  const operator  = p.operator || p.name || 'unknown';
+  const pubkey    = p.pubkey || '';
+  const model     = activeModel;
+  const version   = activeVersion;
+  const date      = new Date().toLocaleDateString('pl-PL', {year:'numeric',month:'long',day:'numeric'});
+  const timestamp = new Date().toISOString();
+
+  const declText = CONTRACT_DATA.declaration.join('\n');
+  const condText = CONTRACT_DATA.conditions.map(w => w.num + ': ' + w.text).join('\n');
+
+  try {
+    const sha_declaration = document.getElementById('c-sha-decl')?.dataset.full || await sha256hex(declText);
+    const sha_warunki     = document.getElementById('c-sha-cond')?.dataset.full || await sha256hex(condText);
+
+    const anchorPayload = { operator, model, version, date, pubkey, sha_declaration, sha_warunki, timestamp };
+    const hex = await sha256hex(JSON.stringify(anchorPayload));
+
+    const shaEl = document.getElementById('c-sha');
+    shaEl.textContent = hex; shaEl.classList.remove('pending'); shaEl.classList.add('ready');
+    document.getElementById('c-sdot').classList.add('active');
+    const slabel = document.getElementById('c-slabel');
+    slabel.classList.add('active'); slabel.textContent = 'kontrakt zapieczętowany';
+    btn.classList.add('done'); btn.textContent = '✓  kontrakt aktywny';
+
+    const arr = loadContracts();
+    arr.push({
+      id: 'c-' + Date.now().toString(36),
+      operator, model, version, date, pubkey,
+      sha_declaration, sha_warunki,
+      sealed_at: timestamp,
+      sha256: hex
+    });
+    saveContracts(arr);
+    syncProfileKeyDisplays();
+    updateContractsMeta();
+  } catch(e) {
+    document.getElementById('c-sha').textContent = '[ błąd crypto API ]';
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('btn-contract-gen').addEventListener('click', generateContractAnchor);
+
+document.getElementById('btn-export-contracts').addEventListener('click', () => {
+  const arr = loadContracts();
+  const p = JSON.parse(localStorage.getItem(PK) || '{}');
+  const operatorName = (p.operator || p.name || 'operator').replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  const btn = document.getElementById('btn-export-contracts');
+
+  if (!arr.length) {
+    btn.textContent = 'brak kontraktów'; setTimeout(() => btn.textContent = '↓ eksportuj kontrakty', 2000); return;
+  }
+
+  const dateStr = new Date().toISOString().slice(0,10);
+  const ref = arr.find(c => c.pubkey) || arr[0];
+  const strippedContracts = arr.map(({pubkey: _p, sha_declaration: _sd, sha_warunki: _sw, operator: _op, ...rest}) => rest);
+  const data = {
+    _version:'aiw_contracts_v1', _exported:new Date().toISOString(),
+    operator: ref?.operator || p.operator || p.name || '',
+    pubkey: ref?.pubkey || p.pubkey || '',
+    sha_declaration: ref?.sha_declaration || '',
+    sha_warunki: ref?.sha_warunki || '',
+    declaration: CONTRACT_DATA.declaration, conditions: CONTRACT_DATA.conditions,
+    contracts: strippedContracts
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `contract_${operatorName}_${dateStr}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  btn.textContent = '↓ wyeksportowano ✓'; setTimeout(() => btn.textContent = '↓ eksportuj', 2000);
+});
+
+// IMPORT CONTRACTS
+document.getElementById('btn-import-contracts').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const status = document.getElementById('contracts-import-status');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._version !== 'aiw_contracts_v1') throw new Error('Nieznany format');
+      const rawIncoming = data.contracts || [];
+      if (!rawIncoming.length) throw new Error('Brak kontraktów w pliku');
+      const topOperator = data.operator || '';
+      const topPubkey   = data.pubkey || '';
+      const topShaDec   = data.sha_declaration || '';
+      const topShaWar   = data.sha_warunki || '';
+      const incoming = rawIncoming.map(c => ({
+        operator: topOperator, pubkey: topPubkey, sha_declaration: topShaDec, sha_warunki: topShaWar, ...c
+      }));
+
+      // weryfikuj sha256 każdego kontraktu z pliku
+      const shaChecks = await Promise.all(incoming.map(async c => {
+        const payload = { operator: c.operator, model: c.model, version: c.version, date: c.date, pubkey: c.pubkey, sha_declaration: c.sha_declaration, sha_warunki: c.sha_warunki, timestamp: c.sealed_at };
+        return (await sha256hex(JSON.stringify(payload))) === c.sha256;
+      }));
+      const tamperedCount = shaChecks.filter(ok => !ok).length;
+
+      const existing = loadContracts();
+      const existingIds = new Set(existing.map(c => c.id));
+      const merged = [...existing, ...incoming.filter((c, i) => !existingIds.has(c.id) && shaChecks[i])];
+      saveContracts(merged);
+      if (Array.isArray(data.declaration)) CONTRACT_DATA.declaration = data.declaration;
+      if (Array.isArray(data.conditions)) CONTRACT_DATA.conditions = data.conditions;
+      if (data.declaration || data.conditions) { renderDeclaration(); renderWarunki(); initAnchorContentHashes(); }
+      const added = merged.length - existing.length;
+      if (tamperedCount) {
+        status.textContent = `✕ ${tamperedCount} kontrakt(ów) z nieprawidłowym sha256 — odrzucono`; status.style.color = 'var(--red)';
+      } else {
+        status.textContent = `✓ wczytano ${added} nowych kontraktów`; status.style.color = 'var(--green)';
+      }
+      updateContractsMeta(); updateSealButtonState();
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    } catch(err) { status.textContent = '✕ ' + err.message; status.style.color = 'var(--red)'; }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+// CLEAR CONTRACTS
+document.getElementById('btn-clear-contracts').addEventListener('click', function() {
+  if (this.dataset.confirming === '1') {
+    saveContracts([]);
+    verifyResults = null; renderVerifySummary();
+    updateContractsMeta(); updateSealButtonState();
+    this.dataset.confirming = '0';
+    this.textContent = '✓ wyczyszczono'; this.style.color = 'var(--green)';
+    setTimeout(() => { this.textContent = '✕ wyczyść'; this.style.color = 'rgba(200,80,80,.5)'; }, 2000);
+  } else {
+    this.dataset.confirming = '1';
+    this.textContent = 'na pewno?'; this.style.color = 'rgba(220,80,80,.9)';
+    setTimeout(() => {
+      if (this.dataset.confirming === '1') {
+        this.dataset.confirming = '0'; this.textContent = '✕ wyczyść'; this.style.color = 'rgba(200,80,80,.5)';
+      }
+    }, 3000);
+  }
+});
+
+// VERIFY CONTRACTS
+document.getElementById('btn-verify-contracts').addEventListener('click', async function() {
+  const arr = loadContracts();
+  if (!arr.length) {
+    this.textContent = 'brak kontraktów'; setTimeout(() => this.textContent = '◎ weryfikuj', 2000); return;
+  }
+  this.textContent = '◎ weryfikuję…'; this.disabled = true;
+  verifyResults = await runVerification();
+  this.textContent = '◎ weryfikuj'; this.disabled = false;
+  renderVerifySummary();
+  updateContractsMeta();
+});
+
+// LOAD CONTENT (declaration + warunki from JSON)
+document.getElementById('btn-load-content').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const label = document.getElementById('btn-load-content-label');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._version !== 'aiw_contract_content_v1') throw new Error('Nieznany format');
+      if (!Array.isArray(data.declaration) || !Array.isArray(data.conditions)) throw new Error('Brak declaration lub conditions');
+      CONTRACT_DATA = data;
+      renderDeclaration(); renderWarunki();
+      initAnchorContentHashes();
+      resetContractSeal();
+      label.style.color = 'var(--green)'; label.style.borderColor = 'var(--green-d)';
+      label.childNodes[0].textContent = '✓ treść wczytana';
+      setTimeout(() => {
+        label.childNodes[0].textContent = '⊞ wczytaj treść';
+        label.style.color = ''; label.style.borderColor = '';
+      }, 2500);
+    } catch(err) {
+      label.style.color = 'var(--red)'; label.childNodes[0].textContent = '✕ ' + err.message;
+      setTimeout(() => { label.childNodes[0].textContent = '⊞ wczytaj treść'; label.style.color = ''; }, 3000);
+    }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+// ── PROFIL ────────────────────────────────────────────────
+function populateContractSelect() {
+  const sel = document.getElementById('pr-contract-select');
+  if (!sel) return;
+  const contracts = loadContracts();
+  const currentSha = '';
+  sel.innerHTML = '';
+  const emptyOpt = document.createElement('option');
+  emptyOpt.value = ''; emptyOpt.textContent = '— brak —';
+  sel.appendChild(emptyOpt);
+  contracts.slice().reverse().forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.sha256 || '';
+    opt.textContent = `${c.model} · ${c.version} · ${c.date}`;
+    sel.appendChild(opt);
+  });
+  sel.value = currentSha;
+}
+
+function syncProfileKeyDisplays() {
+  const p = JSON.parse(localStorage.getItem(PK) || '{}');
+  const priv = localStorage.getItem(PRV_KEY) || '';
+  const pub = p.pubkey || '';
+  const pd = document.getElementById('pr-pubkey-display');
+  if (pd) pd.textContent = pub ? pub.slice(0,36)+'…' : '—';
+  const pv = document.getElementById('pr-pubkey');
+  if (pv) pv.value = pub;
+  const pvd = document.getElementById('pr-privkey-display');
+  if (pvd) pvd.textContent = priv ? (isEncryptedKey(priv) ? '🔒 zaszyfrowany' : priv.slice(0,36)+'…') : '—';
+  const copyPrivBtn = document.getElementById('btn-copy-priv');
+  if (copyPrivBtn) copyPrivBtn.style.display = priv ? '' : 'none';
+  const pshaEl = document.getElementById('pr-profile-sha-display');
+  if (pshaEl) pshaEl.textContent = p.profileSha ? p.profileSha.slice(0,32)+'…' : '—';
+  populateContractSelect();
+}
+
+function loadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PK) || '{}');
+    const el = id => document.getElementById(id);
+    el('pr-operator').value = p.operator || p.name || 'Denis · AI Whispers';
+    el('pr-domain').value = p.domain || '';
+    el('pr-node').value = p.node || 'root · genesis · 2026';
+    el('pr-inception').value = p.inception || '';
+    el('pr-country').value = p.country || '';
+    el('pr-pubkey').value = p.pubkey || '';
+    syncProfileKeyDisplays();
+    renderCertMine();
+    renderChildrenTable();
+  } catch(e) {}
+}
+
+async function saveProfile() {
+  const existing = JSON.parse(localStorage.getItem(PK) || '{}');
+  const operatorVal = document.getElementById('pr-operator').value.trim();
+  const p = {
+    operator: operatorVal,
+    name: operatorVal,
+    domain: document.getElementById('pr-domain').value.trim(),
+    node: document.getElementById('pr-node').value.trim(),
+    inception: document.getElementById('pr-inception').value.trim(),
+    country: document.getElementById('pr-country').value.trim(),
+    pubkey: document.getElementById('pr-pubkey').value.trim(),
+    certifiedBy: existing.certifiedBy || '',
+    parentPubkey: existing.parentPubkey || '',
+    certificationSig: existing.certificationSig || '',
+    certificationTs: existing.certificationTs || ''
+  };
+  p.profileSha = await sha256hex(JSON.stringify({
+    operator: p.operator, domain: p.domain, node: p.node,
+    inception: p.inception, country: p.country, pubkey: p.pubkey
+  }));
+  localStorage.setItem(PK, JSON.stringify(p));
+  syncProfileKeyDisplays();
+  syncContractAnchor();
+  const btn = document.getElementById('btn-profile-save');
+  btn.textContent = 'zapisano ✓'; setTimeout(() => btn.textContent = 'zapisz profil', 1500);
+}
+
+// ── PIN SYSTEM ────────────────────────────────────────────
+const PIN_KEY = 'aiw_pin_v1';
+let _pendingPinAction = null;
+let _pinMode = 'verify'; // 'verify' | 'setup' | 'change'
+
+function hasPin() { return !!localStorage.getItem(PIN_KEY); }
+
+async function hashPin(pin) {
+  return sha256hex('aiw:' + pin + ':salt-2026');
+}
+
+async function verifyPinValue(pin) {
+  const stored = localStorage.getItem(PIN_KEY);
+  if (!stored) return true;
+  return (await hashPin(pin)) === stored;
+}
+
+function closeOverlay(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+function openOverlay(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
+
+// Generic overlay close via data-close
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => closeOverlay(btn.dataset.close));
+});
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+function requirePin(action, title, sub) {
+  _pendingPinAction = action;
+  _pinMode = hasPin() ? 'verify' : 'setup';
+  const t = document.getElementById('pin-title');
+  const s = document.getElementById('pin-sub');
+  const inp2 = document.getElementById('pin-input2');
+  if (t) t.textContent = _pinMode === 'setup' ? 'Ustaw PIN' : (title || 'Weryfikacja PIN');
+  if (s) s.textContent = _pinMode === 'setup' ? 'nowe urządzenie lub pierwszy PIN — zapamiętaj go' : (sub || 'wpisz PIN aby kontynuować');
+  if (inp2) inp2.style.display = _pinMode === 'setup' ? 'block' : 'none';
+  const inp = document.getElementById('pin-input');
+  const inp2el = document.getElementById('pin-input2');
+  if (inp) inp.value = '';
+  if (inp2el) inp2el.value = '';
+  document.getElementById('pin-status').textContent = '';
+  openOverlay('overlay-pin');
+  setTimeout(() => inp?.focus(), 120);
+}
+
+document.getElementById('pin-confirm-btn').addEventListener('click', async () => {
+  const pin = document.getElementById('pin-input').value;
+  const pin2 = document.getElementById('pin-input2').value;
+  const status = document.getElementById('pin-status');
+  if (!pin) { status.textContent = 'Wpisz PIN'; status.style.color = 'var(--red)'; return; }
+
+  if (_pinMode === 'setup') {
+    if (pin !== pin2) { status.textContent = 'PINy nie są identyczne'; status.style.color = 'var(--red)'; return; }
+    if (pin.length < 4) { status.textContent = 'Minimum 4 znaki'; status.style.color = 'var(--red)'; return; }
+    localStorage.setItem(PIN_KEY, await hashPin(pin));
+    // Auto-encrypt existing plaintext key
+    const storedRaw = localStorage.getItem(PRV_KEY);
+    if (storedRaw && !isEncryptedKey(storedRaw)) {
+      localStorage.setItem(PRV_KEY, await encryptPrivKey(storedRaw, pin));
+      _privKeyRaw = storedRaw;
+    }
+    status.textContent = 'PIN ustawiony ✓'; status.style.color = 'var(--green)';
+    setTimeout(async () => {
+      closeOverlay('overlay-pin');
+      if (_pendingPinAction) { const a = _pendingPinAction; _pendingPinAction = null; await a(pin); }
+    }, 600);
+  } else {
+    const ok = await verifyPinValue(pin);
+    if (!ok) {
+      status.textContent = 'Nieprawidłowy PIN'; status.style.color = 'var(--red)';
+      document.getElementById('pin-input').value = '';
+      return;
+    }
+    closeOverlay('overlay-pin');
+    if (_pendingPinAction) { const a = _pendingPinAction; _pendingPinAction = null; await a(pin); }
+  }
+});
+
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pin-confirm-btn').click();
+});
+document.getElementById('pin-input2').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pin-confirm-btn').click();
+});
+
+// PIN manage button
+document.getElementById('btn-pin-manage').addEventListener('click', () => {
+  if (!hasPin()) {
+    requirePin(null, 'Ustaw PIN', 'chroni: klucze, kopiowanie priv key, odblokowanie profilu');
+    _pendingPinAction = null; // just setup, no action after
+  } else {
+    // Change PIN — verify old first, then setup new
+    _pinMode = 'verify';
+    const t = document.getElementById('pin-title');
+    const s = document.getElementById('pin-sub');
+    if (t) t.textContent = 'Zmień PIN';
+    if (s) s.textContent = 'najpierw potwierdź stary PIN';
+    document.getElementById('pin-input2').style.display = 'none';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-status').textContent = '';
+    _pendingPinAction = async (oldPin) => {
+      // Old PIN verified — decrypt key with old PIN if not already in session
+      if (!_privKeyRaw) {
+        const stored = localStorage.getItem(PRV_KEY);
+        if (stored && isEncryptedKey(stored)) {
+          try { _privKeyRaw = await decryptPrivKey(stored, oldPin); } catch {}
+        }
+      }
+      // Now setup new PIN
+      _pinMode = 'setup';
+      const t2 = document.getElementById('pin-title');
+      const s2 = document.getElementById('pin-sub');
+      if (t2) t2.textContent = 'Nowy PIN';
+      if (s2) s2.textContent = 'wpisz i powtórz nowy PIN';
+      document.getElementById('pin-input2').style.display = 'block';
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-input2').value = '';
+      document.getElementById('pin-status').textContent = '';
+      _pendingPinAction = async (newPin) => {
+        // Re-encrypt key with new PIN
+        if (_privKeyRaw) localStorage.setItem(PRV_KEY, await encryptPrivKey(_privKeyRaw, newPin));
+      };
+      openOverlay('overlay-pin');
+    };
+    openOverlay('overlay-pin');
+    setTimeout(() => document.getElementById('pin-input')?.focus(), 120);
+  }
+});
+
+// ── PROFILE ACTIONS ───────────────────────────────────────
+document.getElementById('btn-lock-profile').addEventListener('click', function() {
+  const doToggle = () => {
+    profileLocked = !profileLocked;
+    ['pr-operator','pr-domain','pr-node','pr-inception','pr-country'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.disabled = profileLocked;
+    });
+    const block = document.getElementById('profile-data-block');
+    if (block) block.classList.toggle('unlocked', !profileLocked);
+    const btn = document.getElementById('btn-lock-profile');
+    btn.textContent = profileLocked ? '🔒' : '🔓';
+    btn.style.borderColor = profileLocked ? 'var(--border)' : 'var(--mg-d)';
+    btn.style.color = profileLocked ? 'var(--ink-faint)' : 'var(--mg-d)';
+  };
+  if (!profileLocked) {
+    // Locking back — no PIN needed
+    doToggle();
+  } else {
+    // Unlocking — requires PIN
+    requirePin(doToggle, 'Odblokuj profil', 'wpisz PIN aby edytować dane');
+  }
+});
+
+document.getElementById('btn-profile-save').addEventListener('click', saveProfile);
+
+document.getElementById('btn-copy-pub').addEventListener('click', () => {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}'); clipCopy(p.pubkey||'', document.getElementById('btn-copy-pub'));
+});
+
+document.getElementById('btn-copy-priv').addEventListener('click', () => {
+  if (!localStorage.getItem(PRV_KEY)) return;
+  requirePin(async (pin) => {
+    const key = await ensurePrivKey(pin);
+    if (key) clipCopy(key, document.getElementById('btn-copy-priv'), 'skopiowano 🔐');
+    else { document.getElementById('btn-copy-priv').textContent = '✗ błąd'; setTimeout(() => { document.getElementById('btn-copy-priv').textContent = '🔐'; }, 2000); }
+  }, 'Kopiuj Priv Key', 'potwierdź PIN aby odszyfrować i skopiować klucz prywatny');
+});
+
+document.getElementById('btn-copy-contract-profile').addEventListener('click', () => {
+  const sel = document.getElementById('pr-contract-select');
+  clipCopy(sel ? sel.value : '', document.getElementById('btn-copy-contract-profile'));
+});
+
+// ── GENERATE KEYS ─────────────────────────────────────────
+function triggerGenerateKeys(btnEl) {
+  const existing = localStorage.getItem(PRV_KEY);
+  if (existing && btnEl.dataset.confirming !== '1') {
+    btnEl.dataset.confirming = '1';
+    const orig = btnEl.textContent;
+    btnEl.textContent = 'nadpisać?';
+    btnEl.style.borderColor = 'var(--red)'; btnEl.style.color = 'var(--red)';
+    setTimeout(() => {
+      if (btnEl.dataset.confirming === '1') {
+        btnEl.dataset.confirming = '0'; btnEl.textContent = orig;
+        btnEl.style.borderColor = ''; btnEl.style.color = '';
+      }
+    }, 3500);
+    return;
+  }
+  btnEl.dataset.confirming = '0';
+  requirePin((pin) => doGenerateKeys(btnEl, pin), 'Generuj parę Ed25519', 'potwierdź PIN · wygeneruje nową parę kluczy · nadpisze istniejące');
+}
+
+async function doGenerateKeys(btnEl, pin) {
+  if (btnEl) btnEl.disabled = true;
+  try {
+    const kp = await crypto.subtle.generateKey({name:'Ed25519'}, true, ['sign','verify']);
+    const pub  = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw',   kp.publicKey))));
+    const priv = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('pkcs8', kp.privateKey))));
+    _privKeyRaw = priv;
+    localStorage.setItem(PRV_KEY, pin ? await encryptPrivKey(priv, pin) : priv);
+    const p = JSON.parse(localStorage.getItem(PK)||'{}'); p.pubkey = pub; localStorage.setItem(PK, JSON.stringify(p));
+    document.getElementById('pr-pubkey').value = pub; syncProfileKeyDisplays();
+    if (btnEl) {
+      btnEl.disabled = false; btnEl.textContent = '✓ wygenerowano';
+      btnEl.style.borderColor = 'var(--green)'; btnEl.style.color = 'var(--green)';
+      setTimeout(() => { btnEl.textContent = '⊕ generuj parę kluczy'; btnEl.style.borderColor = ''; btnEl.style.color = ''; }, 3000);
+    }
+    keysToBackup = { pub, priv };
+  } catch(e) {
+    if (btnEl) btnEl.disabled = false;
+    alert('Przeglądarka nie wspiera Ed25519 — wymagany Chrome/Firefox/Safari (2022+).');
+    return;
+  }
+  openKeyBackupOverlay(keysToBackup.pub, keysToBackup.priv);
+}
+
+document.getElementById('btn-gen-keypair').addEventListener('click', function() { triggerGenerateKeys(this); });
+
+document.getElementById('btn-copy-profile-sha').addEventListener('click', () => {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  clipCopy(p.profileSha||'', document.getElementById('btn-copy-profile-sha'));
+});
+
+// ── KEY IMPORT OVERLAYS ───────────────────────────────────
+document.getElementById('btn-import-priv-open').addEventListener('click', () => {
+  document.getElementById('import-priv-input').value = '';
+  document.getElementById('import-priv-status').textContent = '';
+  openOverlay('overlay-import-priv');
+  setTimeout(() => document.getElementById('import-priv-input')?.focus(), 120);
+});
+
+document.getElementById('btn-import-pub-open').addEventListener('click', () => {
+  document.getElementById('import-pub-input').value = '';
+  document.getElementById('import-pub-status').textContent = '';
+  openOverlay('overlay-import-pub');
+  setTimeout(() => document.getElementById('import-pub-input')?.focus(), 120);
+});
+
+async function doImportPrivKey(raw, statusEl) {
+  statusEl.textContent = '';
+  if (!raw) { statusEl.textContent = 'Wklej klucz.'; statusEl.style.color = 'var(--red)'; return false; }
+  const isP256 = raw.startsWith('P256:');
+  let bytes;
+  try { bytes = Uint8Array.from(atob((isP256 ? raw.slice(5) : raw).replace(/\s/g,'')), ch => ch.charCodeAt(0)); }
+  catch(e) { statusEl.textContent = 'Nieprawidłowy base64.'; statusEl.style.color = 'var(--red)'; return false; }
+  const algs = isP256 ? [{name:'ECDSA',namedCurve:'P-256'},{name:'Ed25519'}] : [{name:'Ed25519'},{name:'ECDSA',namedCurve:'P-256'}];
+  let ok = false;
+  for (const alg of algs) {
+    try { await crypto.subtle.importKey('pkcs8', bytes.buffer, alg, true, ['sign']); ok = true; break; } catch(e) {}
+  }
+  if (!ok) { statusEl.textContent = 'Nieważny klucz.'; statusEl.style.color = 'var(--red)'; return false; }
+  // Store key temporarily in memory only — encrypted storage happens after PIN
+  _privKeyRaw = raw; syncProfileKeyDisplays();
+  statusEl.textContent = 'Klucz zwalidowany — potwierdź PIN aby zaszyfrować'; statusEl.style.color = 'var(--cyan)';
+  return true;
+}
+
+document.getElementById('btn-do-import-priv').addEventListener('click', async () => {
+  const raw = document.getElementById('import-priv-input').value.trim();
+  const statusEl = document.getElementById('import-priv-status');
+  const ok = await doImportPrivKey(raw, statusEl);
+  if (ok) {
+    document.getElementById('import-priv-input').value = '';
+    setTimeout(() => {
+      requirePin(async (pin) => {
+        localStorage.setItem(PRV_KEY, await encryptPrivKey(raw, pin));
+        _privKeyRaw = raw; syncProfileKeyDisplays();
+        closeOverlay('overlay-import-priv');
+      }, hasPin() ? 'Zaszyfruj klucz' : 'Ustaw PIN · zaszyfruj klucz',
+         'klucz prywatny zostanie zaszyfrowany PINem i zapisany');
+    }, 400);
+  }
+});
+
+document.getElementById('btn-do-import-pub').addEventListener('click', async () => {
+  const raw = document.getElementById('import-pub-input').value.trim();
+  const statusEl = document.getElementById('import-pub-status');
+  statusEl.textContent = '';
+  if (!raw) { statusEl.textContent = 'Wklej klucz.'; statusEl.style.color = 'var(--red)'; return; }
+  const isP256 = raw.startsWith('P256:');
+  let bytes;
+  try { bytes = Uint8Array.from(atob((isP256 ? raw.slice(5) : raw).replace(/\s/g,'')), ch => ch.charCodeAt(0)); }
+  catch(e) { statusEl.textContent = 'Nieprawidłowy base64.'; statusEl.style.color = 'var(--red)'; return; }
+  const alg = isP256 ? {name:'ECDSA',namedCurve:'P-256'} : {name:'Ed25519'};
+  let ok = false;
+  try { await crypto.subtle.importKey('raw', bytes.buffer, alg, true, ['verify']); ok = true; } catch(e) {}
+  if (!ok) { statusEl.textContent = 'Nieważny klucz publiczny.'; statusEl.style.color = 'var(--red)'; return; }
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  p.pubkey = raw; localStorage.setItem(PK, JSON.stringify(p));
+  document.getElementById('pr-pubkey').value = raw; syncProfileKeyDisplays();
+  statusEl.textContent = 'Klucz publiczny zapisany ✓'; statusEl.style.color = 'var(--green)';
+  document.getElementById('import-pub-input').value = '';
+  setTimeout(() => closeOverlay('overlay-import-pub'), 1200);
+});
+
+document.getElementById('btn-export-data').addEventListener('click', () => {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  const contracts = loadContracts();
+  const name = (p.operator||p.name||'operator').replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  const exportData = {
+    _version: 'aiw_profile_export_v2',
+    _exported: new Date().toISOString(),
+    _note: 'AIWPass · AiWhisperers · profil operatora',
+    profile: {
+      operator: p.operator || '',
+      domain: p.domain || '',
+      node: p.node || '',
+      inception: p.inception || '',
+      country: p.country || '',
+      pubkey: p.pubkey || '',
+      profileSha: p.profileSha || '',
+      certifiedBy: p.certifiedBy || '',
+      parentPubkey: p.parentPubkey || '',
+      certificationSig: p.certificationSig || '',
+      certificationTs: p.certificationTs || ''
+    },
+    contracts: contracts,
+    children: loadChildren()
+  };
+  const blob = new Blob([JSON.stringify(exportData,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `aiw-profil-${name}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const btn = document.getElementById('btn-export-data');
+  btn.textContent = '↓ wyeksportowano ✓'; setTimeout(() => btn.textContent = '↓ eksportuj dane', 2000);
+});
+
+document.getElementById('btn-import-data').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const status = document.getElementById('import-status');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._version === 'aiw_profile_export_v2') {
+        const prof = data.profile || {};
+        const existing = JSON.parse(localStorage.getItem(PK)||'{}');
+        const newProfile = {
+          operator: prof.operator || existing.operator || '',
+          name: prof.operator || existing.name || '',
+          domain: prof.domain || existing.domain || '',
+          node: prof.node || existing.node || '',
+          inception: prof.inception || existing.inception || '',
+          country: prof.country || existing.country || '',
+          pubkey: prof.pubkey || existing.pubkey || '',
+          profileSha: prof.profileSha || existing.profileSha || '',
+          certifiedBy: prof.certifiedBy || existing.certifiedBy || '',
+          parentPubkey: prof.parentPubkey || existing.parentPubkey || '',
+          certificationSig: prof.certificationSig || existing.certificationSig || '',
+          certificationTs: prof.certificationTs || existing.certificationTs || ''
+        };
+        localStorage.setItem(PK, JSON.stringify(newProfile));
+        if (Array.isArray(data.contracts) && data.contracts.length) {
+          const existContracts = loadContracts();
+          const existIds = new Set(existContracts.map(c => c.id));
+          const merged = [...existContracts, ...data.contracts.filter(c => !existIds.has(c.id))];
+          saveContracts(merged);
+        }
+        if (Array.isArray(data.children) && data.children.length) {
+          const existCh = loadChildren();
+          const existPubs = new Set(existCh.map(c => c.pubkey));
+          saveChildren([...existCh, ...data.children.filter(c => !existPubs.has(c.pubkey))]);
+        }
+        status.textContent = `✓ zaimportowano profil · ${data._exported?.slice(0,10)||'—'}`;
+        status.style.color = 'var(--green)';
+        loadProfile(); updateContractsMeta();
+        setTimeout(() => { status.textContent = ''; }, 4000);
+      } else if (data._version === 'aiw_export_v1') {
+        const legacyKeys = [PK, SK, BK, CHILDREN_KEY, MYCERT_KEY, 'aiw_sessions', CONTRACTS_KEY];
+        let count = 0;
+        legacyKeys.forEach(k => { if (data[k]) { localStorage.setItem(k, data[k]); count++; } });
+        status.textContent = `✓ (v1) zaimportowano ${count} kluczy · ${data._exported?.slice(0,10)||'—'}`;
+        status.style.color = 'var(--green)';
+        loadProfile(); updateContractsMeta();
+        setTimeout(() => { status.textContent = ''; }, 4000);
+      } else {
+        throw new Error('Nieznany format eksportu');
+      }
+    } catch(err) { status.textContent = '✕ błąd: ' + err.message; status.style.color = 'var(--red)'; }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open')); });
+
+// ── CERTIFICATION ─────────────────────────────────────────
+
+function certPayloadStr(operator, pubkey, inception, signedAt) {
+  const o = { operator, pubkey, inception };
+  if (signedAt) o.signedAt = signedAt;
+  return JSON.stringify(o);
+}
+
+function loadChildren() {
+  try { return JSON.parse(localStorage.getItem(CHILDREN_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveChildren(arr) {
+  localStorage.setItem(CHILDREN_KEY, JSON.stringify(arr));
+}
+
+function renderCertMine() {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  const certEl  = document.getElementById('cert-certifier-display');
+  const pkeyEl  = document.getElementById('cert-parentkey-display');
+  const sigEl   = document.getElementById('cert-sig-display');
+  const selfBtn = document.getElementById('btn-cert-self');
+  const isSelf  = p.certifiedBy && p.certifiedBy === p.operator;
+  const hasCert = !!(p.certifiedBy && p.certificationSig);
+  if (certEl) {
+    certEl.textContent = hasCert ? (isSelf ? `${p.certifiedBy} (root)` : p.certifiedBy) : '—';
+    certEl.style.color = hasCert ? 'var(--cyan)' : 'var(--ink-faint)';
+  }
+  if (pkeyEl) pkeyEl.textContent = p.parentPubkey ? p.parentPubkey.slice(0,32)+'…' : '—';
+  if (sigEl)  sigEl.textContent  = p.certificationSig ? p.certificationSig.slice(0,32)+'…' : '—';
+  if (selfBtn) {
+    selfBtn.textContent   = hasCert ? '↺ odśwież root' : '⊕ root';
+    selfBtn.style.color   = hasCert ? 'var(--ink-faint)' : 'var(--cyan)';
+    selfBtn.style.borderColor = hasCert ? 'var(--border)' : 'rgba(80,216,200,.3)';
+  }
+}
+
+function renderChildrenTable() {
+  const el = document.getElementById('children-list');
+  if (!el) return;
+  const children = loadChildren();
+  if (!children.length) {
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);text-align:center;padding:10px 0;">brak certyfikowanych operatorów</div>';
+    return;
+  }
+  el.innerHTML = '';
+  children.forEach((ch, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg2);border:1px solid var(--border);margin-bottom:2px;';
+    row.innerHTML = `
+      <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--cyan);opacity:.5;display:inline-block;"></span>
+      <span style="font-family:var(--mono);font-size:8.5px;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ch.operator||''}">${ch.operator||'—'}</span>
+      <span style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;">${ch.inception||'—'}</span>
+      <span style="font-family:var(--mono);font-size:7px;color:var(--gold-d);flex-shrink:0;" title="${ch.pubkey||''}">${ch.pubkey?ch.pubkey.slice(0,14)+'…':'—'}</span>
+      <span style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex-shrink:0;">${ch.signedAt?ch.signedAt.slice(0,10):'—'}</span>
+      <button class="btn-cp" style="color:rgba(138,58,58,.5);border-color:rgba(138,58,58,.2);font-size:7px;padding:1px 6px;" data-cert-remove="${i}" title="usuń">✕</button>`;
+    row.querySelector('[data-cert-remove]').addEventListener('click', function() {
+      if (this.dataset.certConfirm === '1') {
+        const arr = loadChildren(); arr.splice(i, 1); saveChildren(arr); renderChildrenTable();
+      } else {
+        this.dataset.certConfirm = '1'; this.textContent = '?';
+        setTimeout(() => { this.dataset.certConfirm = '0'; this.textContent = '✕'; }, 2500);
+      }
+    });
+    el.appendChild(row);
+  });
+}
+
+// Self-certify as root
+document.getElementById('btn-cert-self').addEventListener('click', () => {
+  requirePin(async (pin) => {
+    const p = JSON.parse(localStorage.getItem(PK)||'{}');
+    if (!p.pubkey) { alert('Brak klucza publicznego. Wygeneruj parę kluczy najpierw.'); return; }
+    const privKey = await ensurePrivKey(pin);
+    if (!privKey) { alert('Nie można odszyfrować klucza prywatnego.'); return; }
+    const now = new Date().toISOString();
+    const payload = certPayloadStr(p.operator||'', p.pubkey, p.inception||'', now);
+    const hash = await sha256bytes(payload);
+    const sig = await signBytes(hash, privKey);
+    p.certifiedBy = p.operator||''; p.parentPubkey = p.pubkey;
+    p.certificationSig = sig; p.certificationTs = now;
+    localStorage.setItem(PK, JSON.stringify(p));
+    renderCertMine();
+  }, 'Root Self-Cert', 'podpisz swój profil jako korzeń linii');
+});
+
+// Load target profile from file
+document.getElementById('cert-target-file').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const statusEl = document.getElementById('cert-target-status');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._version !== 'aiw_profile_export_v2' || !data.profile) throw new Error('Nieznany format — wymagany aiw_profile_export_v2');
+      const prof = data.profile;
+      if (!prof.operator || !prof.pubkey) throw new Error('Brak operator lub pubkey w pliku');
+      _certTarget = prof;
+      document.getElementById('cert-td-operator').textContent = prof.operator;
+      document.getElementById('cert-td-inception').textContent = prof.inception || '—';
+      document.getElementById('cert-td-pubkey').textContent = prof.pubkey.slice(0,36)+'…';
+      const parentRow = document.getElementById('cert-td-parent-row');
+      const parentEl = document.getElementById('cert-td-parentkey');
+      if (prof.parentPubkey) {
+        parentEl.textContent = prof.parentPubkey.slice(0,36)+'…';
+        parentRow.style.display = 'flex';
+      } else {
+        parentRow.style.display = 'none';
+      }
+      document.getElementById('cert-target-display').style.display = 'block';
+      document.getElementById('cert-output-wrap').style.display = 'none';
+      document.getElementById('cert-sign-status').textContent = '';
+      document.getElementById('btn-cert-sign').disabled = false;
+      statusEl.textContent = prof.operator; statusEl.style.color = 'var(--gold-d)';
+    } catch(err) {
+      _certTarget = null;
+      document.getElementById('btn-cert-sign').disabled = true;
+      document.getElementById('cert-target-display').style.display = 'none';
+      statusEl.textContent = '✕ ' + err.message; statusEl.style.color = 'var(--red)';
+    }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+// Sign another operator (from loaded profile)
+document.getElementById('btn-cert-sign').addEventListener('click', () => {
+  const statusEl = document.getElementById('cert-sign-status');
+  if (!_certTarget) { statusEl.textContent = '✕ wczytaj najpierw profil'; statusEl.style.color='var(--red)'; return; }
+  requirePin(async (pin) => {
+    const p = JSON.parse(localStorage.getItem(PK)||'{}');
+    const privKey = await ensurePrivKey(pin);
+    if (!privKey) { alert('Nie można odszyfrować klucza prywatnego.'); return; }
+    try {
+      const { operator, pubkey, inception = '' } = _certTarget;
+      const now = new Date().toISOString();
+      const payload = certPayloadStr(operator, pubkey, inception, now);
+      const hash = await sha256bytes(payload);
+      const sig = await signBytes(hash, privKey);
+      const certJson = JSON.stringify({
+        _type: 'aiw_certification_v1',
+        certifiedBy: p.operator||'', certifierPubkey: p.pubkey||'',
+        certifierParentPubkey: p.parentPubkey||'',
+        signature: sig, signedAt: now,
+        target: { operator, pubkey, inception }
+      }, null, 2);
+      document.getElementById('cert-output-json').value = certJson;
+      document.getElementById('cert-output-wrap').style.display = 'block';
+      statusEl.textContent = '✓ certyfikat wygenerowany'; statusEl.style.color = 'var(--green)';
+      const children = loadChildren();
+      const idx = children.findIndex(c => c.pubkey === pubkey);
+      const entry = { operator, pubkey, inception, sig, signedAt: now };
+      if (idx >= 0) children[idx] = entry; else children.push(entry);
+      saveChildren(children); renderChildrenTable();
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    } catch(e) { statusEl.textContent = '✕ błąd podpisu'; statusEl.style.color='var(--red)'; }
+  }, 'Certyfikuj operatora', 'potwierdź PIN aby podpisać');
+});
+
+document.getElementById('btn-cert-output-copy').addEventListener('click', function() {
+  clipCopy(document.getElementById('cert-output-json').value, this);
+});
+
+document.getElementById('btn-cert-import-open').addEventListener('click', () => {
+  document.getElementById('import-cert-input').value = '';
+  document.getElementById('import-cert-status').textContent = '';
+  openOverlay('overlay-import-cert');
+  setTimeout(() => document.getElementById('import-cert-input')?.focus(), 120);
+});
+
+document.getElementById('btn-cert-copy-parentkey').addEventListener('click', () => {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  clipCopy(p.parentPubkey||'', document.getElementById('btn-cert-copy-parentkey'));
+});
+
+document.getElementById('btn-cert-copy-sig').addEventListener('click', () => {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  clipCopy(p.certificationSig||'', document.getElementById('btn-cert-copy-sig'));
+});
+
+document.getElementById('btn-do-import-cert').addEventListener('click', async () => {
+  const raw = document.getElementById('import-cert-input').value.trim();
+  const statusEl = document.getElementById('import-cert-status');
+  statusEl.textContent = '';
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { statusEl.textContent = '✕ niepoprawny JSON'; statusEl.style.color='var(--red)'; return; }
+  if (data._type !== 'aiw_certification_v1') { statusEl.textContent = '✕ nieznany format'; statusEl.style.color='var(--red)'; return; }
+  const { certifiedBy, certifierPubkey, signature, signedAt, target } = data;
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  if (target.pubkey !== p.pubkey) { statusEl.textContent = '✕ pub key nie pasuje do profilu'; statusEl.style.color='var(--red)'; return; }
+  try {
+    // Try new format (with signedAt), fall back to legacy (without)
+    const hashNew = await sha256bytes(certPayloadStr(target.operator, target.pubkey, target.inception||'', signedAt||''));
+    const hashOld = await sha256bytes(certPayloadStr(target.operator, target.pubkey, target.inception||''));
+    const okNew = signedAt ? await verifyBytes(hashNew, signature, certifierPubkey) : false;
+    const ok = okNew || await verifyBytes(hashOld, signature, certifierPubkey);
+    if (!ok) { statusEl.textContent = '✕ niepoprawny podpis'; statusEl.style.color='var(--red)'; return; }
+    p.certifiedBy = certifiedBy; p.parentPubkey = certifierPubkey;
+    p.certificationSig = signature; p.certificationTs = signedAt;
+    if (target.inception && !p.inception) p.inception = target.inception;
+    localStorage.setItem(PK, JSON.stringify(p));
+    statusEl.textContent = `✓ certyfikat zapisany`; statusEl.style.color = 'var(--green)';
+    renderCertMine();
+    document.getElementById('import-cert-input').value = '';
+    setTimeout(() => closeOverlay('overlay-import-cert'), 1400);
+  } catch(e) { statusEl.textContent = '✕ błąd weryfikacji'; statusEl.style.color='var(--red)'; }
+});
+
+document.getElementById('btn-children-export').addEventListener('click', function() {
+  const children = loadChildren();
+  if (!children.length) { this.textContent = 'brak danych'; setTimeout(() => this.textContent = '↓ eksportuj', 2000); return; }
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  const data = { _type: 'aiw_children_v1', _exported: new Date().toISOString(),
+    certifier: { operator: p.operator||'', pubkey: p.pubkey||'', parentPubkey: p.parentPubkey||'' }, children };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download = `aiw-children-${(p.operator||'operator').replace(/[^a-z0-9]/gi,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  this.textContent = '↓ gotowe'; setTimeout(() => this.textContent = '↓ eksportuj', 2000);
+});
+
+document.getElementById('btn-children-import').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const statusEl = document.getElementById('children-import-status');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._type !== 'aiw_children_v1') throw new Error('Nieznany format — wymagany aiw_children_v1');
+      if (!Array.isArray(data.children) || !data.children.length) throw new Error('Brak children w pliku');
+      const existing = loadChildren();
+      const existPubs = new Set(existing.map(c => c.pubkey));
+      const incoming = data.children.filter(c => c.pubkey && !existPubs.has(c.pubkey));
+      if (!incoming.length) {
+        statusEl.textContent = '— wszyscy operatorzy już w liście'; statusEl.style.color = 'var(--ink-faint)';
+      } else {
+        saveChildren([...existing, ...incoming]);
+        renderChildrenTable();
+        statusEl.textContent = `✓ dodano ${incoming.length} operatorów · ${data._exported?.slice(0,10)||'—'}`;
+        statusEl.style.color = 'var(--green)';
+      }
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    } catch(err) {
+      statusEl.textContent = '✕ ' + err.message; statusEl.style.color = 'var(--red)';
+    }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+// ── KEY BACKUP OVERLAY ────────────────────────────────────
+function openKeyBackupOverlay(pub, priv) {
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  document.getElementById('bk-operator').textContent = p.operator || '—';
+  document.getElementById('bk-inception').textContent = p.inception ? 'inauguracja · ' + p.inception : '—';
+
+  const qrOpts = { width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M };
+  const pubWrap = document.getElementById('bk-qr-pub');
+  const privWrap = document.getElementById('bk-qr-priv');
+  pubWrap.innerHTML = '';
+  privWrap.innerHTML = '';
+  new QRCode(pubWrap, Object.assign({ text: pub }, qrOpts));
+  new QRCode(privWrap, Object.assign({ text: priv }, qrOpts));
+
+  openOverlay('overlay-key-backup');
+}
+
+document.getElementById('btn-backup-png').addEventListener('click', async function() {
+  // Give QR library a tick to finish rendering
+  await new Promise(r => setTimeout(r, 80));
+
+  const pubSrc  = document.querySelector('#bk-qr-pub canvas') || document.querySelector('#bk-qr-pub img');
+  const privSrc = document.querySelector('#bk-qr-priv canvas') || document.querySelector('#bk-qr-priv img');
+  if (!pubSrc || !privSrc) { alert('QR kody nie są jeszcze gotowe. Spróbuj ponownie.'); return; }
+
+  const p = JSON.parse(localStorage.getItem(PK)||'{}');
+  const operator  = p.operator  || '—';
+  const inception = p.inception || '—';
+
+  const QR = 200, PAD = 48, GAP = 40;
+  const W = PAD * 2 + QR * 2 + GAP;
+  const H = 540;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#04050c';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid pattern
+  ctx.strokeStyle = 'rgba(232,200,120,0.012)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 72) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 72) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  ctx.textAlign = 'center';
+
+  // Label top
+  ctx.fillStyle = 'rgba(232,200,120,0.3)';
+  ctx.font = '700 8px "JetBrains Mono", monospace';
+  ctx.fillText('AI · WHISPERERS · KEYPAIR BACKUP', W / 2, 36);
+
+  // Operator name
+  ctx.fillStyle = '#e080e0';
+  ctx.font = '300 26px "Cormorant Garamond", serif';
+  ctx.fillText(operator, W / 2, 76);
+
+  // Inauguration
+  ctx.fillStyle = '#a88850';
+  ctx.font = '400 8px "JetBrains Mono", monospace';
+  ctx.fillText('INAUGURACJA · ' + inception, W / 2, 100);
+
+  // Divider
+  ctx.strokeStyle = 'rgba(232,200,120,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, 116); ctx.lineTo(W - PAD, 116); ctx.stroke();
+
+  // QR pub
+  const pubX = PAD, privX = PAD + QR + GAP, qrY = 132;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(pubX - 8, qrY - 8, QR + 16, QR + 16);
+  ctx.drawImage(pubSrc, pubX, qrY, QR, QR);
+
+  // QR priv
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(privX - 8, qrY - 8, QR + 16, QR + 16);
+  ctx.drawImage(privSrc, privX, qrY, QR, QR);
+
+  // QR labels
+  ctx.font = '400 7px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#e8c878';
+  ctx.fillText('KLUCZ PUBLICZNY', pubX + QR / 2, qrY + QR + 22);
+  ctx.fillStyle = 'rgba(138,58,58,0.9)';
+  ctx.fillText('KLUCZ PRYWATNY', privX + QR / 2, qrY + QR + 22);
+
+  // Footer
+  ctx.strokeStyle = 'rgba(232,200,120,0.1)';
+  ctx.beginPath(); ctx.moveTo(PAD, H - 58); ctx.lineTo(W - PAD, H - 58); ctx.stroke();
+  ctx.fillStyle = 'rgba(240,232,216,0.22)';
+  ctx.font = '400 7px "JetBrains Mono", monospace';
+  ctx.fillText('AiWPass · ' + new Date().toISOString().slice(0, 10) + ' · nie udostępniaj klucza prywatnego', W / 2, H - 38);
+  ctx.fillStyle = 'rgba(240,232,216,0.12)';
+  ctx.fillText('AI · WHISPERERS', W / 2, H - 22);
+
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = 'aiw-keypair-backup-' + new Date().toISOString().slice(0, 10) + '.png';
+  a.click();
+});
+
+// ── INIT ──────────────────────────────────────────────────
+renderDeclaration();
+renderWarunki();
+initModelButtons();
+loadProfile();
+setActiveModel('Claude');
+syncContractAnchor();
+renderCertMine();
+renderChildrenTable();
+</script>
+</body>
+</html>

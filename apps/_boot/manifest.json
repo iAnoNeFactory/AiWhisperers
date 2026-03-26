@@ -1,0 +1,82 @@
+{
+  "id": "boot",
+  "name": "AiWBoot · punkt startowy ekosystemu 🌐",
+  "version": "2.0",
+  "date": "2026-05-02",
+  "description": "Bootstrap projektu — historia, zasady, artefakty, struktura i manifest.json ekosystemu AiWhisperers.",
+  "type": "bootstrap",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Strukturyzacja Warsztatu",
+    "parent_sid": "",
+    "contract_sha": "",
+    "contributors": [
+      {
+        "actor": "Denis Czuliński",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWBoot.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "_boot-boot.md",
+    "bootstrap_sha": "2508e09e83a7f60eae9b1d977f4052e4edd59bfd3d24e57bf1df68aef361f574",
+    "entry_sha": "10b4b1702e4b2b650bca24a23b6e6dde462217bba313e33e20cda9c5291e9988",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "ai",
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "feeds",
+      "target": "quick"
+    },
+    {
+      "type": "feeds",
+      "target": "remedy"
+    },
+    {
+      "type": "feeds",
+      "target": "pass"
+    },
+    {
+      "type": "feeds",
+      "target": "schema"
+    },
+    {
+      "type": "feeds",
+      "target": "protocol"
+    }
+  ],
+  "tags": [
+    "bootstrap",
+    "meta",
+    "system",
+    "onboarding"
+  ]
+}

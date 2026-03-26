@@ -1,0 +1,73 @@
+{
+  "id": "index",
+  "name": "AiWhisperers · Mapa Poznania 🗺️",
+  "version": "2.1",
+  "date": "2026-05-09",
+  "description": "Główna mapa ekosystemu AiWhisperers — konstelacja modułów AI, dolny bar narzędzi operatora, live indicator breath, animowane glyphe canvas.",
+  "type": "standalone",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Kosmiczna Mapa ① 🌌",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "readme.html",
+    "components": [],
+    "bootstrap": "_index-boot.md",
+    "bootstrap_sha": "fbf47a59c16237ab6e4a82e4e934714c35857d555e88e59572b80f477e9a6c15",
+    "entry_sha": "c0736f196e42d11b959a694642406b005bcfdcdffbaa02aaedab04a19a31eee5",
+    "docs_sha": "67c705325566fcfac4650c559633cb5a5836ef9e506ca5e85ed5b7ce370ed532"
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [
+      "read"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "feeds",
+      "target": "_boot"
+    },
+    {
+      "type": "complements",
+      "target": "_verify"
+    }
+  ],
+  "tags": [
+    "map",
+    "canvas",
+    "glyphs",
+    "constellation",
+    "main",
+    "root"
+  ]
+}

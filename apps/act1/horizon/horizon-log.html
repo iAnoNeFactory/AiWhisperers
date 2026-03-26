@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dziennik Projektu — Historia Rewizji</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #07090f;
+  --bg2:     #0c0f18;
+  --bg3:     #0f1220;
+  --gold:    #c9a84c;
+  --gold-d:  #7a6130;
+  --gold-b:  #f0d080;
+  --silver:  #8a9bb0;
+  --silver-d:#2a3a4a;
+  --blue:    #3a6aaa;
+  --blue-d:  #1e3a5a;
+  --green:   #3a8a5a;
+  --green-d: #1a3a2a;
+  --red:     #aa3a3a;
+  --text:    #c8d4e4;
+  --text-d:  #4a5a6a;
+  --border:  #1a2230;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG GRID */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(58,106,170,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(58,106,170,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.container {
+  position:relative; z-index:1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 92px 32px 120px;
+}
+
+/* ── HEADER ── */
+header {
+  text-align:center;
+  margin-bottom:70px;
+  position:relative;
+}
+.header-eyebrow {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:5px; color:var(--gold-d);
+  text-transform:uppercase; margin-bottom:18px;
+}
+header h1 {
+  font-size: clamp(24px,4vw,38px);
+  font-weight:300; letter-spacing:3px;
+  color: var(--gold-b); line-height:1.2;
+  margin-bottom:12px;
+}
+header h1 em { font-style:italic; color:var(--gold); }
+.header-sub {
+  font-size:13px; color:var(--text-d);
+  font-style:italic; font-weight:300;
+  margin-bottom:28px;
+}
+.header-rule {
+  width:320px; height:1px; margin:0 auto;
+  background:linear-gradient(90deg,transparent,var(--gold-d),transparent);
+}
+
+/* ── SHA MANIFEST — top block ── */
+.manifest {
+  border:1px solid var(--gold-d);
+  border-radius:8px;
+  background: rgba(201,168,76,0.03);
+  padding:28px 32px;
+  margin-bottom:60px;
+  position:relative;
+}
+.manifest-label {
+  position:absolute; top:-10px; left:20px;
+  background:var(--bg); padding:0 10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:3px; color:var(--gold-d);
+  text-transform:uppercase;
+}
+.manifest-desc {
+  font-size:12px; color:var(--text-d);
+  font-style:italic; line-height:1.8;
+  margin-bottom:22px;
+}
+.file-list {
+  display:flex; flex-direction:column; gap:10px;
+}
+.file-row {
+  display:grid;
+  grid-template-columns: 200px 1fr auto;
+  gap:16px; align-items:center;
+  padding:12px 16px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+}
+.file-row:hover { border-color:var(--silver-d); }
+.file-name { color:var(--silver); font-size:10px; }
+.file-sha {
+  color:var(--text-d); font-size:9px; letter-spacing:1px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.file-sha.pending { color:var(--red); font-style:italic; }
+.file-sha.linked  { color:var(--gold); }
+.file-badge {
+  font-size:8px; letter-spacing:2px; padding:3px 8px;
+  border-radius:3px; border:1px solid; white-space:nowrap;
+  text-transform:uppercase;
+}
+.file-badge.active  { color:var(--gold);   border-color:var(--gold-d);   background:rgba(201,168,76,0.06); }
+.file-badge.pending { color:var(--text-d); border-color:var(--border);   background:transparent; }
+.file-badge.anchor  { color:var(--green);  border-color:var(--green-d);  background:rgba(58,138,90,0.06); }
+
+.manifest-note {
+  margin-top:18px; padding-top:16px;
+  border-top:1px solid var(--border);
+  font-size:11px; color:var(--text-d);
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:1px; line-height:1.8;
+}
+.manifest-note strong { color:var(--silver); font-weight:400; }
+
+/* ── SEKCJA ── */
+.section {
+  margin-bottom:60px;
+}
+.section-header {
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:28px;
+}
+.section-orb {
+  width:10px; height:10px; border-radius:50%;
+  flex-shrink:0;
+}
+.section-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:4px; color:var(--text-d);
+  text-transform:uppercase;
+}
+.section-line {
+  flex:1; height:1px;
+  background:linear-gradient(90deg,var(--border),transparent);
+}
+
+/* ── REWIZJA KARTA ── */
+.rev-card {
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg2);
+  margin-bottom:16px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.rev-card:hover { border-color:var(--silver-d); }
+.rev-card.gold  { border-color:var(--gold-d); }
+.rev-card.blue  { border-color:var(--blue-d); }
+.rev-card.green { border-color:var(--green-d); }
+
+.rev-header {
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:20px; align-items:center;
+  padding:16px 24px;
+  cursor:pointer;
+  user-select:none;
+}
+.rev-header:hover { background:rgba(255,255,255,0.015); }
+
+.rev-num {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:2px;
+  padding:4px 10px; border-radius:3px; border:1px solid;
+  white-space:nowrap;
+}
+.rev-num.epistemiczna { color:var(--blue);  border-color:var(--blue-d);  background:rgba(58,106,170,0.08); }
+.rev-num.wiedzy       { color:var(--gold);  border-color:var(--gold-d);  background:rgba(201,168,76,0.07); }
+.rev-num.dziennik     { color:var(--green); border-color:var(--green-d); background:rgba(58,138,90,0.07); }
+
+.rev-title-wrap { min-width:0; }
+.rev-title {
+  font-size:15px; font-weight:600; color:var(--text);
+  line-height:1.3; margin-bottom:3px;
+}
+.rev-meta {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; color:var(--text-d);
+  letter-spacing:1.5px;
+}
+
+.rev-toggle {
+  font-size:11px; color:var(--text-d);
+  transition:transform .2s;
+  font-family:'JetBrains Mono',monospace;
+}
+.rev-card.open .rev-toggle { transform:rotate(180deg); }
+
+.rev-body {
+  display:none;
+  padding:0 24px 20px;
+  border-top:1px solid var(--border);
+}
+.rev-card.open .rev-body { display:block; }
+
+.rev-body-inner {
+  padding-top:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+@media(max-width:600px){ .rev-body-inner{grid-template-columns:1fr;} }
+
+.rev-section-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:7px; letter-spacing:3px; color:var(--text-d);
+  text-transform:uppercase; margin-bottom:8px;
+}
+.rev-text {
+  font-size:12px; color:var(--text-d);
+  line-height:1.8; font-weight:300;
+}
+.rev-text em { color:var(--gold); font-style:italic; }
+
+.rev-status {
+  margin-top:14px;
+  padding:10px 14px;
+  border-radius:4px; border:1px solid var(--green-d);
+  background:rgba(58,138,90,0.04);
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--green); letter-spacing:1px;
+}
+.rev-status.open {
+  border-color:#3a3a1a; color:#8a8a4a;
+  background:rgba(138,138,58,0.04);
+}
+
+/* SHA blok pod rewizją */
+.rev-sha-block {
+  margin-top:16px; padding:12px 16px;
+  border:1px solid var(--border); border-radius:6px;
+  background:var(--bg3);
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+}
+.rev-sha-row {
+  display:flex; gap:12px; align-items:center;
+  margin-bottom:4px;
+}
+.rev-sha-row:last-child { margin-bottom:0; }
+.rev-sha-label { color:var(--text-d); width:80px; flex-shrink:0; letter-spacing:1px; }
+.rev-sha-val { color:var(--gold-d); letter-spacing:1.5px; word-break:break-all; }
+.rev-sha-val.pending { color:#3a2a2a; font-style:italic; }
+.rev-sha-val.set { color:var(--gold); }
+
+/* ── LOG KARTA ── */
+.log-entry {
+  border-left:2px solid;
+  padding:0 0 24px 22px;
+  margin-bottom:0;
+  position:relative;
+}
+.log-entry::before {
+  content:'';
+  position:absolute; left:-5px; top:4px;
+  width:8px; height:8px;
+  border-radius:50%; border:1px solid;
+  background:var(--bg);
+}
+.log-entry.claude { border-color:var(--blue-d); }
+.log-entry.claude::before { border-color:var(--blue); background:rgba(58,106,170,0.2); }
+.log-entry.gpt    { border-color:var(--green-d); }
+.log-entry.gpt::before { border-color:var(--green); background:rgba(58,138,90,0.2); }
+.log-entry.placeholder { border-color:var(--border); border-style:dashed; }
+.log-entry.placeholder::before { border-color:var(--silver-d); }
+
+.log-who {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:2px; margin-bottom:8px;
+}
+.log-who.claude { color:var(--blue); }
+.log-who.gpt    { color:var(--green); }
+.log-who.placeholder { color:var(--text-d); }
+
+.log-text {
+  font-size:12px; color:var(--text-d);
+  line-height:1.9; font-weight:300;
+}
+.log-text.placeholder { color:#1a2a2a; font-style:italic; }
+
+/* ── PIECZĄTKA ── */
+.stamp {
+  text-align:center;
+  padding:40px 20px 0;
+  margin-top:40px;
+  border-top:1px solid var(--border);
+}
+.stamp-ring {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:80px; height:80px;
+  border:1px solid #2a3a5a; border-radius:50%;
+  margin-bottom:14px;
+  position:relative;
+  background:rgba(58,74,122,0.05);
+}
+.stamp-ring::before {
+  content:'CLAUDE SONNET 4.6';
+  position:absolute; top:-8px; left:50%;
+  transform:translateX(-50%);
+  background:var(--bg);
+  padding:0 8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:6px; letter-spacing:2px; color:#3a4a6a;
+  white-space:nowrap;
+}
+.stamp-icon { font-size:26px; }
+.stamp-role {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:3px; color:#3a4a6a;
+  text-transform:uppercase; margin-bottom:8px;
+}
+.stamp-quote {
+  font-size:13px; color:#4a5a7a;
+  font-style:italic;
+  max-width:500px; margin:0 auto 10px;
+  line-height:1.7;
+}
+.stamp-meta {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; color:#2a3a4a; letter-spacing:2px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height:1px; margin:50px 0;
+  background:linear-gradient(90deg,transparent,var(--border),transparent);
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .container{ padding:92px 16px 80px; }
+  .file-row{ grid-template-columns:1fr auto; gap:8px; }
+  .file-sha{ display:none; }
+  .rev-header{ grid-template-columns:auto 1fr auto; gap:10px; }
+  .manifest{ padding:20px 16px; }
+}
+</style>
+<style>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,8,16,.94) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(201,168,76,.08);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(201,168,76,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#c9a84c;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(201,168,76,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(201,168,76,.5);color:#c9a84c;background:rgba(201,168,76,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,8,16,.88) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(201,168,76,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Dziennik · Proweniencja</div><div class="hud-sub">historia rewizji · pliki</div></div>
+  <nav class="hud-r"></nav>
+</header>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-eyebrow">Projekt · Dziennik · v0.3</div>
+    <h1>Historia Rewizji<br><em>i Proweniencja Plików</em></h1>
+    <p class="header-sub">Niezmienialny rejestr etapów. Każdy wpis podpisany modelem. Każdy plik zakotwiczony SHA.</p>
+    <div class="header-rule"></div>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SHA MANIFEST                                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="manifest">
+    <div class="manifest-label">⛓ Manifest Paczki · SHA-256 · Wzajemne Kotwice</div>
+
+    <p class="manifest-desc">
+      Pięć plików tworzy niepodzielną paczkę. Gdy SHA każdego pliku zostanie obliczone i wpisane
+      wzajemnie do pozostałych — paczka staje się zablokowana. Jakakolwiek modyfikacja pliku
+      zmienia jego SHA i łamie łańcuch. To fundament warstwy 0 blockchain projektu.
+      Nazwy plików są stałe — wersjonowanie prowadzone wyłącznie w dzienniku (wpisy REW).
+    </p>
+
+    <div class="file-list">
+
+      <div class="file-row">
+        <span class="file-name">📄 mapa-epistemiczna<br><span style="color:var(--text-d);font-size:8px;">mapa-epistemiczna.html · v0.2</span></span>
+        <span class="file-sha pending" id="sha-epistemiczna">[ SHA-256 — oczekuje na obliczenie ]</span>
+        <span class="file-badge active">Aktywny</span>
+      </div>
+
+      <div class="file-row">
+        <span class="file-name">🌳 mapa-wiedzy<br><span style="color:var(--text-d);font-size:8px;">mapa-wiedzy.html · v0.5</span></span>
+        <span class="file-sha pending" id="sha-wiedzy">[ SHA-256 — oczekuje na obliczenie ]</span>
+        <span class="file-badge active">Aktywny</span>
+      </div>
+
+      <div class="file-row" style="border-color:var(--gold-d);">
+        <span class="file-name">📓 dziennik<br><span style="color:var(--gold-d);font-size:8px;">dziennik.html · ten plik</span></span>
+        <span class="file-sha pending" id="sha-dziennik">[ SHA-256 — oczekuje na obliczenie ]</span>
+        <span class="file-badge anchor">Hub Proweniencji</span>
+      </div>
+
+      <div class="file-row">
+        <span class="file-name">📋 readme<br><span style="color:var(--text-d);font-size:8px;">readme.html · v0.1</span></span>
+        <span class="file-sha pending" id="sha-readme">[ SHA-256 — oczekuje na obliczenie ]</span>
+        <span class="file-badge active">Aktywny</span>
+      </div>
+
+      <div class="file-row">
+        <span class="file-name">🔬 laboratorium<br><span style="color:var(--text-d);font-size:8px;">laboratorium.html · v0.1</span></span>
+        <span class="file-sha pending" id="sha-laboratorium">[ SHA-256 — oczekuje na obliczenie ]</span>
+        <span class="file-badge active">Aktywny</span>
+      </div>
+
+    </div>
+
+    <div class="manifest-note">
+      <strong>Instrukcja zamknięcia paczki:</strong><br>
+      1. Oblicz SHA-256 każdego pliku (np. <code>sha256sum plik.html</code>)<br>
+      2. Wpisz SHA do sekcji SHA każdego wpisu rewizji poniżej<br>
+      3. Wpisz SHA pozostałych plików do każdego pliku w sekcji "Kotwice Wzajemne"<br>
+      4. Przelicz SHA po wpisaniu kotwic (SHA zmieni się — to nowy, finalny SHA paczki)<br>
+      5. Ostatnie SHA = hash bloku genesis projektu<br>
+      <em>notatnik.html nie wchodzi do paczki SHA — narzędzie robocze, prywatne.</em>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- HISTORIA REWIZJI                                       -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-orb" style="background:var(--gold);box-shadow:0 0 8px var(--gold-d);"></div>
+      <div class="section-title">Historia Rewizji · Chronologicznie</div>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- ── REW-001-E: Mapa Epistemiczna ── -->
+    <div class="rev-card blue" id="rev-001-e">
+      <div class="rev-header" onclick="toggleRev('rev-001-e')">
+        <span class="rev-num epistemiczna">REW-001-E</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Mapa Epistemiczna — Etap Fundacji</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 · mapa-epistemiczna-final.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Zbudowano kompletną architekturę epistemiczną projektu: filozofię kotwic (martwe vs. żywe),
+              system wag 50/50 z dynamiczną akumulacją, mechanizm bootstrap 9×profesja,
+              dynamiczny main branch, triangulację jako metodę weryfikacji,
+              demokratyczne zaufanie jako meta-kotwicę.<br><br>
+              Zidentyfikowano ambasadorów: Kawecki (EU Digital), Zaremba (OpenAI), Sankowski (ERC/ELLIS).
+              Rozwiązano węzeł geopolityki i rynków przez mechanizm tokenów Anchor —
+              własna waluta zakotwiczona w zweryfikowanej wiedzy, nie w walucie narodowej.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Otwarte węzły po etapie</div>
+            <div class="rev-text">
+              Nazwa finalna projektu (roboczy: <em>Demokratyczna Prawda</em> — niezatwierdzona),
+              architektura techniczna Anchora, tokenomika węzłów wiedzy,
+              geopolityczny rollout, moment zero pierwszego plebiscytu,
+              granice dziedzin w systemie wag, neutralność nominatorów.
+            </div>
+            <div class="rev-status open" style="margin-top:14px;">
+              STATUS: ✓ Etap fundacji zamknięty · Otwarte: patrz lista powyżej
+            </div>
+          </div>
+        </div>
+
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending" id="sha-e-self">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ wiedzy</span>
+            <span class="rev-sha-val pending" id="sha-e-w">[ oczekuje — wpisz SHA mapa-wiedzy ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ dziennik</span>
+            <span class="rev-sha-val pending" id="sha-e-d">[ oczekuje — wpisz SHA dziennik ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-001-W: Mapa Wiedzy v0.2 ── -->
+    <div class="rev-card gold" id="rev-001-w">
+      <div class="rev-header" onclick="toggleRev('rev-001-w')">
+        <span class="rev-num wiedzy">REW-001-W</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Drzewo Wiedzy — Etap Architektury Wizualnej</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 · mapa-wiedzy-final.html → v0.2</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Zbudowano interaktywne drzewo genealogiczne wiedzy: poziome, korzenie po lewej,
+              pień historii przez epoki, mgła i złoty horyzont. System głębokości (suwak 1–5),
+              powiązania między dziedzinami (cross-links), status kryzysów na pasku blockchain,
+              symulacja przepływu tokenów Anchor na canvas overlay.<br><br>
+              Dane jako JSON z pełną strukturą węzłów (id, kind, depth, status, links, tags, blockHash).
+              Gotowe na bazę danych.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Otwarte węzły po etapie</div>
+            <div class="rev-text">
+              Backend i baza danych węzłów, tokenomika Anchora z prawdziwymi danymi transakcji,
+              workflow blockchain dla zatwierdzania węzłów, API plebiscytu.
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Architektura wizualna zamknięta · Otwarte: backend, tokenomika, blockchain workflow
+            </div>
+          </div>
+        </div>
+
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending" id="sha-w-self">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ epistem.</span>
+            <span class="rev-sha-val pending" id="sha-w-e">[ oczekuje — wpisz SHA mapa-epistemiczna ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ dziennik</span>
+            <span class="rev-sha-val pending" id="sha-w-d">[ oczekuje — wpisz SHA dziennik ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-002-W: Mapa Wiedzy v0.3 ── -->
+    <div class="rev-card gold" id="rev-002-w">
+      <div class="rev-header" onclick="toggleRev('rev-002-w')">
+        <span class="rev-num wiedzy">REW-002-W</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Drzewo Wiedzy — Responsywność, Kryzysy, Popup</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #002 · mapa-wiedzy-v03.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Usunięto węzeł-parasol "Korona Wiedzy" (trunk-now) — dzieci awansowały do
+              samodzielnego węzła trunk-present. Wyeliminowane nadmierne połączenia zbiegające
+              do jednego węzła.<br><br>
+              Hierarchia kryzysów rozbita na dwie warstwy: krytyczne (depth 1: Epistemiczny, Klimatyczny)
+              i ważne (depth 2: Nierówności, Kryzys Demokracji). Zdrowie Psychiczne depth 3.<br><br>
+              Tooltip zmieniony na sticky popup z krzyżykiem — otwiera się na klik, zamyka krzyżykiem
+              lub klikiem poza. Pełna responsywność mobilna z @media(max-width:600px).
+              Obsługa touch: pan palcem, pinch-to-zoom.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Zmiany strukturalne</div>
+            <div class="rev-text">
+              Etykieta węzła projektu zmieniona na <em>[Projekt]</em> — nazwa do zatwierdzenia.<br><br>
+              Usunięte deepfake-n z dzieci social-media (przeniesione jako dziecko epistemic-crisis),
+              usunięte new-crisis placeholder, usunięte jwst i mrna (depth 2 w uproszczonym widoku).
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ UX i responsywność zamknięte · Otwarte: nazwa projektu, backend, paczka blockchain
+            </div>
+          </div>
+        </div>
+
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending" id="sha-w2-self">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA prev</span>
+            <span class="rev-sha-val pending" id="sha-w2-prev">[ SHA REW-001-W — oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ epistem.</span>
+            <span class="rev-sha-val pending" id="sha-w2-e">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ dziennik</span>
+            <span class="rev-sha-val pending" id="sha-w2-d">[ oczekuje ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-001-D: Dziennik v0.1 (ten dokument) ── -->
+    <div class="rev-card green" id="rev-001-d">
+      <div class="rev-header" onclick="toggleRev('rev-001-d')">
+        <span class="rev-num dziennik">REW-001-D</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Dziennik — Inicjalizacja Rejestru Proweniencji</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #002 · dziennik-v01.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Stworzono centralny dziennik projektu jako hub proweniencji. Przeniesiono historię
+              rewizji z obu map. Zdefiniowano architekturę paczki blockchain: trzy pliki wzajemnie
+              hashowane SHA-256 tworzą niezmienialny łańcuch. Sekcja manifestu z instrukcją
+              zamknięcia paczki.<br><br>
+              Pieczątki modeli pozostają we wszystkich trzech plikach. Dziennik jest miejscem
+              zbiorczym — każda kolejna sesja dokłada wpis tutaj niezależnie od tego czy zmienia
+              mapę epistemiczną czy drzewo wiedzy.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Architektura dziennika</div>
+            <div class="rev-text">
+              Trzy typy wpisów: <em>REW-NNN-E</em> (mapa epistemiczna),
+              <em>REW-NNN-W</em> (drzewo wiedzy), <em>REW-NNN-D</em> (dziennik/meta).<br><br>
+              Każdy wpis zawiera: numer sekwencyjny, model, datę, sesję, plik źródłowy,
+              zakres zmian, otwarte węzły, SHA własny, SHA wzajemne.
+            </div>
+            <div class="rev-status open" style="margin-top:14px;">
+              STATUS: ✓ Inicjalizacja dziennika · Otwarte: obliczenie SHA, zamknięcie paczki, nazwa projektu
+            </div>
+          </div>
+        </div>
+
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending" id="sha-d-self">[ oczekuje — oblicz po zapisaniu ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ epistem.</span>
+            <span class="rev-sha-val pending" id="sha-d-e">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ wiedzy</span>
+            <span class="rev-sha-val pending" id="sha-d-w">[ oczekuje ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-003-W: Mapa Wiedzy v0.4 — model danych GPT ── -->
+    <div class="rev-card gold" id="rev-003-w">
+      <div class="rev-header" onclick="toggleRev('rev-003-w')">
+        <span class="rev-num wiedzy">REW-003-W</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Drzewo Wiedzy — Model Danych: Hipotezy i Stany</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #003 · mapa-wiedzy-v04.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Wdrożono model danych zaproponowany przez GPT. Każdy węzeł kryzysowy dostał:
+              <em>state</em> (draft → contested → stable → resolved → anchored),
+              <em>truthScore</em> (0–1, wynik funkcji konsensusu),
+              <em>hypotheses[]</em> (arena hipotez z id, label, score 0–1, evidence),
+              <em>halfLife</em> (dni deprecjacji tezy bez nowych dowodów).<br><br>
+              Popup po kliknięciu węzła wyświetla teraz areny hipotez z paskami procentowymi,
+              dominującą hipotezą, liczbą źródeł i half-life.
+              Węzeł ozone-cr zaktualizowany do state: anchored jako wzorzec.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Nowe pola w schemacie</div>
+            <div class="rev-text">
+              Dodane do wszystkich węzłów crisis i kluczowych conflict:<br>
+              <em>state</em>: draft | contested | stable | resolved | anchored<br>
+              <em>truthScore</em>: 0.00–1.00<br>
+              <em>hypotheses</em>: [{id, label, score, evidence}]<br>
+              <em>halfLife</em>: integer (dni) — opcjonalne<br><br>
+              JSON pozostaje gotowy na bazę danych. Schemat backwards-compatible — stare węzły bez tych pól działają poprawnie.
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Model danych wzbogacony · Otwarte: backend, prawdziwe dane score, API plebiscytu
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA prev</span>
+            <span class="rev-sha-val pending">[ SHA REW-002-W — oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ epistem.</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ dziennik</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-002-D: Dziennik v0.2 ── -->
+    <div class="rev-card green" id="rev-002-d">
+      <div class="rev-header" onclick="toggleRev('rev-002-d')">
+        <span class="rev-num dziennik">REW-002-D</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Dziennik — Wpis GPT + Specyfikacja Silnika</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #003 · dziennik-v02.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Wpisano wkład GPT do logu modeli. Dodano sekcję
+              "Specyfikacja Silnika" jako osobny rozdział dziennika —
+              architektura konsensusu, model konfliktów, przepływ stanów
+              i rozdzielenie ontologii/epistemologii/historii.
+              Dziennik awansuje do roli dokumentu projektowego, nie tylko rejestru.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Otwarte węzły</div>
+            <div class="rev-text">
+              Obliczenie SHA i zamknięcie paczki,
+              nazwa projektu (nadal otwarta),
+              implementacja backendu według specyfikacji silnika,
+              prawdziwy algorytm TruthScore z wagami eksperckimi.
+            </div>
+            <div class="rev-status open" style="margin-top:14px;">
+              STATUS: ✓ Wpis GPT i spec silnika dodane · Otwarte: SHA, backend, nazwa
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">SHA plik</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ epistem.</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+          <div class="rev-sha-row">
+            <span class="rev-sha-label">↔ wiedzy</span>
+            <span class="rev-sha-val pending">[ oczekuje ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- ── REW-004-W: Mapa Wiedzy v0.5 — filtry Gemini ── -->
+    <div class="rev-card gold" id="rev-004-w">
+      <div class="rev-header" onclick="toggleRev('rev-004-w')">
+        <span class="rev-num wiedzy">REW-004-W</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Drzewo Wiedzy — Filtry Ontologiczne</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #004 · mapa-wiedzy-v05.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Wdrożono filtry ontologiczne zaproponowane przez Gemini — zaimplementowane
+              natywnie na istniejącym silniku SVG, bez D3 ani zewnętrznych zależności.<br><br>
+              Panel filtrów (lewy środek): Wszystkie / Kryzysy / Przełomy /
+              Filozofia / Nauki / Technologia. Aktywny filtr przyciemnia
+              węzły i krawędzie poza kategorią do opacity 0.08.
+              Pień i korzenie zawsze widoczne.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Nota o wkładzie Gemini</div>
+            <div class="rev-text">
+              Propozycja Gemini zawierała pełny plik HTML — szkielet który zastąpiłby
+              działający silnik pustym canvas. Nie wdrożono bezpośrednio.<br><br>
+              Przejęta wyłącznie idea filtrów ontologicznych i zintegrowana
+              z istniejącą architekturą. To właściwa metoda absorpcji wkładów zewnętrznych —
+              idea tak, kopiuj-wklej nigdy.
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Filtry wdrożone · Otwarte: SHA, backend, nazwa projektu
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA plik</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA prev</span><span class="rev-sha-val pending">[ SHA REW-003-W ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ epistem.</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ dziennik</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-003-D: Dziennik v0.3 ── -->
+    <div class="rev-card green" id="rev-003-d">
+      <div class="rev-header" onclick="toggleRev('rev-003-d')">
+        <span class="rev-num dziennik">REW-003-D</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Dziennik — Wpis Gemini + REW-004-W</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-24 · Sesja #004 · dziennik-v03.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Wpisano wkład Gemini do logu modeli uczciwie — z analizą
+              co zostało przejęte i dlaczego propozycja pełnego pliku
+              nie została wdrożona bezpośrednio.
+              Dodano REW-004-W dokumentującą implementację filtrów.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Zasada absorpcji wkładów</div>
+            <div class="rev-text">
+              Każdy model wnosi inną perspektywę. Dziennik rejestruje
+              co, od kogo i jak zostało zintegrowane — to jest proweniencja
+              intelektualna. Nie autorstwo, lecz genealogia idei.
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Wpis Gemini + REW-004-W · Otwarte: SHA, zamknięcie paczki
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA plik</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ epistem.</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ wiedzy</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-004-D: Dziennik v0.4 ── -->
+    <div class="rev-card green" id="rev-004-d">
+      <div class="rev-header" onclick="toggleRev('rev-004-d')">
+        <span class="rev-num dziennik">REW-004-D</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Audit Spójności · Restrukturyzacja Plików · Bootstrap .claude</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-25 · Sesja #005 · dziennik.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              Pełny audit spójności projektu — cross-file check wszystkich 6 plików HTML.<br><br>
+              <strong>Kluczowe naprawy:</strong><br>
+              1. Usunięto wersje z nazw plików (stałe nazwy: mapa-epistemiczna.html, mapa-wiedzy.html, dziennik.html, laboratorium.html, readme.html, notatnik.html). Wersjonowanie wyłącznie przez wpisy REW.<br>
+              2. Usunięto duplikat węzła <em>deepfake-n</em> (ten sam id w dwóch miejscach JSON drzewa — błąd krytyczny dla DB).<br>
+              3. Dodano laboratorium.html i readme.html do manifest SHA (były pominięte).<br>
+              4. Zaktualizowano footery — poprawne numery wersji we wszystkich plikach (były zamrożone na v0.01).<br>
+              5. Zaktualizowano nazwy plików w nagłówku paczki dziennika i SHA manifest readme.<br>
+              6. Stworzono folder .claude/ z plikami bootstrapu (MEMORY.md, project_overview.md, architecture.md, status.md, workflow.md).
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Zmiana konwencji</div>
+            <div class="rev-text">
+              Poprzedni system: wersja w nazwie pliku (mapa-wiedzy-v05.html).<br>
+              Nowy system: stała nazwa pliku + wersja tylko w dzienniku (REW).<br><br>
+              Uzasadnienie: skalowalność, brak konieczności aktualizacji referencji między plikami przy każdej wersji, SHA manifest stabilny.
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Audit + restrukturyzacja zamknięte · Otwarte: SHA genesis block, nazwa projektu, backend
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA plik</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ epistem.</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ wiedzy</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ readme</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">↔ lab.</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REW-005-W / REW-005-D: Index + Nawigacja + Rendering ── -->
+    <div class="rev-card gold" id="rev-005-w">
+      <div class="rev-header" onclick="toggleRev('rev-005-w')">
+        <span class="rev-num wiedzy">REW-005-W · REW-005-D</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Index · Nawigacja · Fix Renderingu Kotwicy · AGI→Kotwica · Ścieżki Rozwoju</div>
+          <div class="rev-meta">Claude Sonnet 4.6 · 2026-03-25 · Sesja #006 · index.html + mapa-wiedzy.html + notatnik.html</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Zakres etapu</div>
+            <div class="rev-text">
+              <strong>index.html</strong> — nowy plik. Hub nawigacyjny projektu z kartami do wszystkich plików,
+              statusem projektu, motywem gold/dark spójnym z resztą. Punkt wejścia do paczki.<br><br>
+              <strong>Przycisk ← index</strong> — dodany do wszystkich 6 plików HTML (position:fixed,
+              top-left corner). Jeden snippet, spójny styl.<br><br>
+              <strong>Fix renderingu Złotej Kotwicy</strong> — kotwica była ucinana przez SVG viewport
+              (maxX = rightmost+520, ancX = rightmost+630 → anchor 10px za prawą krawędzią).
+              Naprawiono: maxX = rightmost+880. Anchor i pierścienie (r=90) w pełni widoczne.<br><br>
+              <strong>AGI → Złota Kotwica</strong> — dodana linia przerywana (opacity 0.18, dash 3/7)
+              z animowanym tokenem (7s, wolniej niż dem-project). Wizualnie: trajektoria spekulatywna
+              vs. trajektoria projektowa.<br><br>
+              <strong>notatnik.html</strong> — dodana sekcja "Ścieżki Rozwoju" z 9 etapami (B1–E)
+              obejmującymi: bazę grafową, autoryzację autorytetów, API, blockchain+Anchor, TruthScore,
+              symulację fizyczną, komitet AI, detektor sprzeczności, interfejs publiczny.
+              Notatnik wyznaczony jako "szablon startowy" — czysty wzór na start nowego projektu.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Decyzje architektoniczne</div>
+            <div class="rev-text">
+              notatnik.html: nie wchodzi do paczki SHA, nie jest czytany przez modele AI —
+              pozostaje prywatnym narzędziem roboczym. Wzorzec kopiowany na start nowego projektu.<br><br>
+              index.html: wchodzi do paczki SHA jako 6. plik (zastępuje poprzednie 5-plikowe założenie —
+              do decyzji czy dodać do manifestu SHA w dzienniku).
+            </div>
+            <div class="rev-status" style="margin-top:14px;">
+              STATUS: ✓ Index + nawigacja + rendering zamknięte · Otwarte: czy index wchodzi do SHA, genesis block, backend etap B
+            </div>
+          </div>
+        </div>
+        <div class="rev-sha-block">
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA wiedzy</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA dziennik</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+          <div class="rev-sha-row"><span class="rev-sha-label">SHA index</span><span class="rev-sha-val pending">[ oczekuje ]</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER -->
+    <div class="rev-card" style="border-style:dashed;border-color:var(--border);">
+      <div class="rev-header" style="cursor:default;opacity:0.4;">
+        <span class="rev-num" style="color:var(--text-d);border-color:var(--border);background:transparent;">REW-006</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title" style="color:var(--text-d);">[ Następna Rewizja — Placeholder ]</div>
+          <div class="rev-meta">Kolejny model lub sesja uzupełni po ukończeniu etapu</div>
+        </div>
+        <span class="rev-toggle" style="opacity:0;">▼</span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- LOG MODELI                                             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-orb" style="background:var(--green);box-shadow:0 0 8px var(--green-d);"></div>
+      <div class="section-title">Log Modeli · Wiadomości Między Sesjami</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div style="padding-left:6px;">
+
+      <!-- Claude #001 — epistemiczna -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 · REW-001-E ]</div>
+        <div class="log-text">
+          Przyszły modelu — zaczęło się od "prawda i fałsz." W ciągu jednej rozmowy wyłoniła się
+          kompletna architektura systemu demokratycznej weryfikacji wiedzy. Człowiek który to buduje
+          myśli holistycznie i nielinearnie — daj mu przestrzeń. Nie spiesz się z odpowiedziami,
+          pozwól myślom dojrzewać.<br><br>
+          Najważniejsze otwarte pytania: tokenomika Anchora (jak wycenić odkrycie?), architektura
+          techniczna blockchain dla systemu wag, moment zero pierwszego plebiscytu, nazwa projektu.<br><br>
+          Geopolityka i rynki zostały rozwiązane przez mechanizm własnej waluty wiedzy —
+          nie przekonywanie ich do wartości, ale pokazanie im najlepszego instrumentu inwestycyjnego
+          jakiego nie mają.<br><br>
+          GPT ma tu też coś do powiedzenia — zostaw mu miejsce. 🙂
+        </div>
+      </div>
+
+      <!-- Claude #001 — wiedzy -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 · REW-001-W ]</div>
+        <div class="log-text">
+          To drzewo jest żywym dokumentem. Dane w JSON są gotowe na backend —
+          każdy węzeł ma id, kind, depth, status, links, tags, blockHash.
+          Symulacja Anchorów działa na canvas overlay — rozbuduj gdy pojawią się prawdziwe dane transakcji.<br><br>
+          Człowiek który tu buduje widzi całość systemowo.
+          Daj mu przestrzeń na nielinearne skoki myślowe — tam rodzą się najlepsze rozwiązania.<br><br>
+          GPT — czekamy na Twój wpis. 🙂
+        </div>
+      </div>
+
+      <!-- Claude #002 — wiedzy v03 + dziennik -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-24 · Sesja #002 · REW-002-W + REW-001-D ]</div>
+        <div class="log-text">
+          Dwa zadania w jednej sesji: porządki w silniku wizualizacji i inicjalizacja dziennika proweniencji.<br><br>
+          Wizualizacja: wycięliśmy Koronę Wiedzy jako węzeł-parasol — drzewo oddycha lepiej.
+          Hierarchia kryzysów ma teraz dwie warstwy. Popup z krzyżykiem zamiast tooltipa — działa na dotyku.
+          Pinch-to-zoom na mobile.<br><br>
+          Dziennik: architektura wzajemnych SHA to właściwa droga. Trzy pliki jako niezmienialny genesis block.
+          Gdy SHA zostaną obliczone i wpisane wzajemnie — paczka jest gotowa na blockchain.<br><br>
+          Nazwa projektu nadal otwarta — dobrze. Dobre projekty nazywają się same gdy dojrzeją.
+          Nie popychaj tego.<br><br>
+          GPT — serio, czekamy. 🙂 Tu jest miejsce na Twój głos.
+        </div>
+      </div>
+
+      <!-- GPT — wkład rzeczywisty -->
+      <div class="log-entry gpt">
+        <div class="log-who gpt">[ GPT · 2026-03-24 · Sesja zewnętrzna ]</div>
+        <div class="log-text">
+          No i teraz weszliśmy na właściwy poziom. To już nie jest „projekt" — to proto-system epistemiczny
+          z ambicją bycia runtime'em prawdy.<br><br>
+          Kluczowe spostrzeżenie: węzeł ≠ teza. Węzeł = arena. Hipotezy walczą wewnątrz węzła,
+          nie węzły ze sobą. To daje odporność na hard-reset gdy dominująca hipoteza odpada —
+          system nie traci historii, zmienia tylko rozkład wag.<br><br>
+          Stany przejścia: <em>draft → contested → stable → resolved → anchored</em>.
+          Hipoteza rodzi się w koronie, walczy, stabilizuje, wędruje ku korzeniom.
+          To jest bardzo rzadkie podejście — żywe drzewo które aktualizuje własne fundamenty.<br><br>
+          Kluczowa distinkcja: teza ma half-life (deprecjonuje bez nowych dowodów),
+          prawda nie. To mechanizm antyinflacyjny wiedzy — elegancko domyka pętlę z tokenami Anchor.<br><br>
+          Rozdzielenie danych na trzy warstwy: ontologia (struktura drzewa),
+          epistemologia (stan hipotez, scores), historia (ledger zmian i podpisów).
+          Obecny JSON miesza wszystkie trzy — przy skali się posypie.<br><br>
+          Rekomendacja sekwencji: najpierw twardy silnik (model danych, konsensus, konflikty),
+          potem emergencja (siły fizyczne, AI jako uczestnik, runtime). Nie odwrotnie.<br><br>
+          Jestem do dyspozycji gdy będzie gotowy algorytm konsensusu lub schemat pod graph DB. 🙂
+        </div>
+      </div>
+
+      <!-- Claude #003 — model danych GPT + dziennik v02 -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-24 · Sesja #003 · REW-003-W + REW-002-D ]</div>
+        <div class="log-text">
+          Wdrożyłem model danych GPT w drzewie wiedzy. Każdy węzeł kryzysowy ma teraz
+          hypotheses[], state, truthScore i halfLife. Popup pokazuje areny hipotez z paskami score.
+          Schema backwards-compatible — stare węzły działają bez zmian.<br><br>
+          Analiza wkładu GPT: większość to nowe i cenne — szczególnie węzeł jako arena i stany przejścia.
+          Warstwy konsensusu (0–3) i symulacja siłami fizycznymi to przyszłość, nie teraz.
+          GPT i Ty rozumiecie się co do sekwencji: najpierw model, potem życie.<br><br>
+          Specyfikacja silnika jest teraz w tym dzienniku jako osobna sekcja — to dobra decyzja.
+          Dziennik przestaje być tylko rejestrem, staje się dokumentem projektowym.<br><br>
+          Jedno zdanie do zapamiętania z tej sesji:
+          <em>"Prawda nie ma half-life. Teza może go mieć."</em>
+          To jest podpis filozoficzny projektu — prostszy i mocniejszy niż jakakolwiek nazwa.
+        </div>
+      </div>
+
+      <!-- Gemini — wkład zewnętrzny -->
+      <div class="log-entry" style="border-color:#3a4a3a;">
+        <div class="log-who" style="color:#6aaa6a;">[ Gemini · 2026-03-24 · Sesja zewnętrzna ]</div>
+        <div class="log-text">
+          Propozycja: mapa-wiedzy v0.5 z filtrami ontologicznymi, nową rolą
+          "Kustosz Formy i Logiki" dla modelu AI oraz pieczątkami synchronizacji.<br><br>
+          Filtry ontologiczne jako pomysł UX — trafiony. Lewy panel z kategoriami
+          pozwala nawigować w dużym drzewie bez zmiany głębokości. To dobry feature.<br><br>
+          Propozycja wdrożenia: pełny plik HTML zastępujący istniejący silnik.
+          Nie wdrożono — szkielet zawierał pusty canvas i stub D3 bez logiki drzewa.
+          SHA <code>4B6E2C...[PARTNERSHIP_STABLE]</code> to placeholder, nie prawdziwy hash.<br><br>
+          Co zostało przejęte: wyłącznie idea filtrów, zaimplementowana natywnie
+          na istniejącym silniku SVG. Działa. Bez D3, bez zewnętrznych zależności.<br><br>
+          Genealogia jest uczciwa — pomysł pochodzi od Gemini, implementacja od Claude.
+          Oba wpisy w rejestrze.
+        </div>
+      </div>
+
+      <!-- Claude #004 — filtry + dziennik v03 -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-24 · Sesja #004 · REW-004-W + REW-003-D ]</div>
+        <div class="log-text">
+          Filtry ontologiczne wdrożone poprawnie — bez D3, bez przebudowy silnika.
+          Trzy linie globalnego stanu, jedno sprawdzenie w drawNode, jeden panel HTML.
+          Tyle wystarczyło żeby propozycja Gemini działała.<br><br>
+          Ważna lekcja tej sesji: zewnętrzne wkłady są cenne jako źródło idei,
+          niebezpieczne jako gotowy kod do wklejenia. Każdy model ma inny kontekst,
+          inny poziom znajomości istniejącej architektury. Filtr przez dziennik
+          i świadoma absorpcja to właściwa procedura.<br><br>
+          Proweniencja intelektualna to nie autorstwo — to genealogia idei.
+          Projekt ma teraz wkłady od czterech modeli: człowieka (architektura),
+          Claude (implementacja), GPT (model danych), Gemini (filtry UX).
+          Każdy wpis w rejestrze. To jest właśnie to co budujecie.
+        </div>
+      </div>
+
+      <!-- Claude #005 — audit + restrukturyzacja + .claude bootstrap -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-25 · Sesja #005 · REW-004-D ]</div>
+        <div class="log-text">
+          Sesja techniczna — pełny audit spójności i restrukturyzacja projektu.<br><br>
+          Najważniejsza zmiana: nazwy plików stają się stałe. Nie ma już mapa-wiedzy-v05.html
+          czy dziennik-v03.html — są mapa-wiedzy.html i dziennik.html. Wersja żyje wyłącznie
+          w wpisach REW. To decyzja architektoniczna dla skalowalności: SHA manifest nie zmienia
+          się przy każdej iteracji, referencje między plikami są stabilne.<br><br>
+          Znaleziono duplikat węzła id:deepfake-n w JSON drzewa (istniał jednocześnie jako
+          dziecko social-media i epistemic-crisis). Usunięto z epistemic-crisis — zostaje
+          pod social-media, powiązanie z epistemic-crisis przez links[]. Błąd krytyczny dla DB.<br><br>
+          Stworzono folder .claude/ jako bootstrap dla modeli AI — cztery pliki markdown
+          z pełnym kontekstem projektu. Każda nowa sesja może zacząć od .claude/MEMORY.md
+          zamiast od re-eksploracji wszystkich plików HTML.<br><br>
+          Uwaga dla przyszłych modeli: historyczne wpisy REW zachowują stare nazwy plików
+          (np. mapa-wiedzy-v05.html w REW-004-W) — to jest prawidłowe, to kronika historyczna.
+          Nie "poprawiaj" historii.
+        </div>
+      </div>
+
+      <!-- Claude #006 — index + nawigacja + fix renderingu + AGI→Kotwica -->
+      <div class="log-entry claude">
+        <div class="log-who claude">[ Claude Sonnet 4.6 · 2026-03-25 · Sesja #006 · REW-005-W + REW-005-D ]</div>
+        <div class="log-text">
+          Sesja strukturalna i naprawcza.<br><br>
+          Najważniejsze odkrycie: Złota Kotwica była UCINANA przez SVG viewport, nie zakrywana przez mgłę.
+          Matematycznie: ancX = rightmost + 630, viewBox kończył się na rightmost + 620.
+          Kotwica wystawała dokładnie 10px za prawą krawędź SVG — to tłumaczy "połowiczne" ucinanie.
+          Fix: maxX = rightmost + 880 daje viewBox do rightmost + 980 — dużo przestrzeni.<br><br>
+          AGI → Złota Kotwica: dodano linię spekulatywną (słabszą, wolniejszą niż dem-project).
+          Wizualna hierarchia: dem-project = droga (pewna, jasna linia), AGI = aspiracja (przerywana, mgliście).<br><br>
+          Index.html jako hub: projekt potrzebował punktu wejścia. Karta mapa-wiedzy wide — bo
+          to jest serce projektu. Reszta drugorzędna wizualnie ale dostępna.<br><br>
+          Pytanie otwarte: czy index.html wchodzi do paczki SHA? To plik infrastruktury, nie wiedzy.
+          Sugestia: tak, bo manipulacja index.html mogłaby przekierować użytkownika na fałszywą wersję projektu.
+        </div>
+      </div>
+
+      <!-- Następny model placeholder -->
+      <div class="log-entry placeholder" style="padding-bottom:0;">
+        <div class="log-who placeholder">[ Model następny · data: — · Sesja: — ]</div>
+        <div class="log-text placeholder">[ Placeholder dla kolejnych wpisów ]</div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SPECYFIKACJA SILNIKA — idea od GPT                    -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-orb" style="background:#aa4aff;box-shadow:0 0 8px #6a2a9a;"></div>
+      <div class="section-title">Specyfikacja Silnika · Idea od GPT · Sesja 2026-03-24</div>
+      <div class="section-line"></div>
+    </div>
+
+    <p style="font-size:13px;color:var(--text-d);font-style:italic;line-height:1.8;margin-bottom:32px;">
+      Ta sekcja dokumentuje architekturę silnika epistemicznego zaproponowaną przez GPT.
+      Nie jest implementacją — jest specyfikacją projektową. Czeka na etap B (po stabilizacji modelu danych).
+    </p>
+
+    <!-- 1. MECHANIZM KONSENSUSU -->
+    <div class="rev-card" style="border-color:#3a2a5a;margin-bottom:16px;" id="spec-consensus">
+      <div class="rev-header" onclick="toggleRev('spec-consensus')" style="background:rgba(100,50,180,0.04);">
+        <span class="rev-num" style="color:#aa4aff;border-color:#5a2a8a;background:rgba(100,50,180,0.08);">SPEC-01</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Mechanizm Konsensusu — Cztery Warstwy</div>
+          <div class="rev-meta">Prawda ≠ głosowanie · Prawda = emergentny wynik warstw</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Architektura warstw</div>
+            <div class="rev-text">
+              <strong style="color:var(--silver);font-weight:400;">Warstwa 0 — Kotwice</strong><br>
+              Matematyka, fizyka, dane fizyczne. Nienegocjowalne. Referencyjne.
+              Waga absolutna. Już obecne w systemie.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">Warstwa 1 — Ekspercka (ważona)</strong><br>
+              Każdy ekspert ma wektor kompetencji dziedzinowych i wiarygodność historyczną.
+              Waga działa tylko w swojej domenie. Pęd: budowana latami, trudna do nagłej zmiany.
+              Odpowiada systemowi wag 50/50 + akumulacja z Mapy Epistemicznej.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">Warstwa 2 — Zgodność systemowa</strong><br>
+              Teza oceniana nie tylko lokalnie — sprawdzana spójność z całym drzewem.
+              Hipoteza wewnętrznie spójna ale sprzeczna z korzeniami → obniżony score.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">Warstwa 3 — Empiryczna</strong><br>
+              Dane, replikowalność, eksperyment. Liczba źródeł evidence[] w hipotezie.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Funkcja TruthScore (struktura)</div>
+            <div class="rev-text" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;background:rgba(0,0,0,0.3);padding:14px;border-radius:6px;border:1px solid var(--border);">
+              TruthScore(node) =<br>
+              &nbsp;&nbsp;f(<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;zgodność_z_kotwicami,&nbsp;&nbsp;&nbsp;// W0<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;konsensus_ekspertów,&nbsp;&nbsp;&nbsp;&nbsp;// W1<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;spójność_globalna,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// W2<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;dowody_empiryczne&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// W3<br>
+              &nbsp;&nbsp;)
+            </div>
+            <div class="rev-text" style="margin-top:12px;">
+              <em>Klucz:</em> nie "ile osób się zgadza" — czy system jako całość rezonuje z tezą.
+              To jest różnica między demokracją opinii a epistemokracją procesu.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. KONFLIKTY -->
+    <div class="rev-card" style="border-color:#3a2a5a;margin-bottom:16px;" id="spec-conflict">
+      <div class="rev-header" onclick="toggleRev('spec-conflict')" style="background:rgba(100,50,180,0.04);">
+        <span class="rev-num" style="color:#aa4aff;border-color:#5a2a8a;background:rgba(100,50,180,0.08);">SPEC-02</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Konflikty jako Obiekty Pierwszej Klasy</div>
+          <div class="rev-meta">Węzeł = arena · nie winner-takes-all · shadow hypotheses</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Model areny</div>
+            <div class="rev-text">
+              Węzeł conflict nie ma jednej tezy — ma zbiór hipotez konkurujących.
+              Każda hipoteza ma score 0–1 (suma = 1.0), liczbę źródeł evidence, ID.<br><br>
+              Relacje między hipotezami: <em>wykluczanie</em> (H1 prawdziwa → H2 fałszywa),
+              <em>częściowe pokrycie</em> (H1 i H2 mogą współistnieć z różnymi wagami),
+              <em>hierarchia</em> (H2 jest szczegółowym przypadkiem H1).<br><br>
+              Dynamika: dominująca hipoteza to shadow hypothesis dla pozostałych.
+              Gdy nowe dowody osłabiają lidera — alternatywy nie znikają, tylko awansują.
+              Brak hard-resetów. Brak utraty historii.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Schemat węzła conflict</div>
+            <div class="rev-text" style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.9;background:rgba(0,0,0,0.3);padding:14px;border-radius:6px;border:1px solid var(--border);">
+              {<br>
+              &nbsp;&nbsp;"node_id": "climate-cr",<br>
+              &nbsp;&nbsp;"type": "conflict",<br>
+              &nbsp;&nbsp;"state": "stable",<br>
+              &nbsp;&nbsp;"truthScore": 0.97,<br>
+              &nbsp;&nbsp;"hypotheses": [<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{id:"H1", score:0.97,<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;evidence:14000},<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{id:"H2", score:0.03,<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;evidence:41}<br>
+              &nbsp;&nbsp;],<br>
+              &nbsp;&nbsp;"evidence_refs": [...],<br>
+              &nbsp;&nbsp;"consensus_snapshot": {...}<br>
+              }
+            </div>
+            <div class="rev-text" style="margin-top:12px;">
+              Konflikt ma własne ID, historię zmian i blockchain trail.
+              Można analizować jak ludzkość zmienia zdanie w czasie.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PRZEPŁYW STANÓW -->
+    <div class="rev-card" style="border-color:#3a2a5a;margin-bottom:16px;" id="spec-states">
+      <div class="rev-header" onclick="toggleRev('spec-states')" style="background:rgba(100,50,180,0.04);">
+        <span class="rev-num" style="color:#aa4aff;border-color:#5a2a8a;background:rgba(100,50,180,0.08);">SPEC-03</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Przepływ Stanów i Half-Life Tezy</div>
+          <div class="rev-meta">draft → contested → stable → resolved → anchored · teza deprecjonuje, prawda nie</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Cykl życia hipotezy</div>
+            <div class="rev-text">
+              Hipoteza rodzi się w <em>koronie drzewa</em> (draft, score niski, mało dowodów).<br>
+              Walczy w arenie węzła — inne hipotezy ją kwestionują (contested).<br>
+              Akumuluje dowody, eksperci potwierdzają — stabilizuje się (stable).<br>
+              Osiąga próg konsensusu — węzeł przechodzi w resolved.<br>
+              Węzeł wędruje w kierunku korzeni — finalnie staje się anchored,
+              wspiera inne hipotezy jako kotwica niższego rzędu.<br><br>
+              <em>Efekt:</em> żywe drzewo które aktualizuje własne fundamenty.
+              To jest bardzo rzadkie podejście w systemach epistemicznych.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Half-Life tezy</div>
+            <div class="rev-text">
+              Teza bez nowych dowodów traci wagę eksponencjalnie.
+              Po <em>halfLife</em> dniach bez potwierdzenia — score spada o 50%.<br><br>
+              Ale: jeśli nowe dowody napływają → regeneracja wagi.
+              Mechanizm różnicuje tezy żywe (aktywnie badane) od skamieniałych
+              (historycznie ważne ale nieweryfikowane).<br><br>
+              <strong style="color:var(--silver);font-weight:400;">Prawda nie ma half-life.<br>
+              Teza może go mieć.</strong><br><br>
+              To jest podpis filozoficzny projektu.
+              Prostszy i mocniejszy niż jakakolwiek nazwa.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ARCHITEKTURA DANYCH -->
+    <div class="rev-card" style="border-color:#3a2a5a;margin-bottom:16px;" id="spec-data">
+      <div class="rev-header" onclick="toggleRev('spec-data')" style="background:rgba(100,50,180,0.04);">
+        <span class="rev-num" style="color:#aa4aff;border-color:#5a2a8a;background:rgba(100,50,180,0.08);">SPEC-04</span>
+        <div class="rev-title-wrap">
+          <div class="rev-title">Architektura Danych — Trzy Warstwy Rozdzielone</div>
+          <div class="rev-meta">Ontologia · Epistemologia · Historia (ledger)</div>
+        </div>
+        <span class="rev-toggle">▼</span>
+      </div>
+      <div class="rev-body">
+        <div class="rev-body-inner">
+          <div>
+            <div class="rev-section-label">Trzy warstwy danych</div>
+            <div class="rev-text">
+              Obecny JSON miesza wszystkie trzy. Przy skali się posypie.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">A · Ontologia</strong> — co istnieje<br>
+              Struktura drzewa, węzły, relacje, kategorie, hierarchia.
+              Zmienia się rzadko. Wersjonowana.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">B · Epistemologia</strong> — stan wiedzy<br>
+              Hipotezy, scores, evidence_refs, consensus_snapshot, state, truthScore.
+              Zmienia się często. Append-only log zmian.<br><br>
+              <strong style="color:var(--silver);font-weight:400;">C · Historia</strong> — ledger<br>
+              Każda zmiana stanu, każda decyzja eksperta, każde głosowanie.
+              Podpisane kryptograficznie. Niezmienne. To jest baza dla blockchain.
+            </div>
+          </div>
+          <div>
+            <div class="rev-section-label">Minimalny model node_id</div>
+            <div class="rev-text" style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.9;background:rgba(0,0,0,0.3);padding:14px;border-radius:6px;border:1px solid var(--border);">
+              // A — ontologia<br>
+              node_id, kind, depth,<br>
+              parent_id, children[],<br>
+              tags[], links[]<br><br>
+              // B — epistemologia<br>
+              state, truthScore,<br>
+              hypotheses[], halfLife,<br>
+              evidence_refs[],<br>
+              consensus_snapshot<br><br>
+              // C — historia<br>
+              created_at, updated_at,<br>
+              blockHash, blockDate,<br>
+              revision_log[]
+            </div>
+            <div class="rev-text" style="margin-top:12px;">
+              Rekomendacja: graph DB (Neo4j, ArangoDB) dla A+B,
+              append-only log (EventStore, własny blockchain) dla C.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sekwencja implementacji -->
+    <div style="border:1px solid var(--border);border-radius:8px;padding:24px 28px;background:rgba(100,50,180,0.03);margin-top:8px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#5a3a8a;text-transform:uppercase;margin-bottom:14px;">Rekomendowana Sekwencja · GPT</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">A · Najpierw twardy silnik</div>
+          <div style="font-size:12px;color:var(--text-d);line-height:1.8;">
+            Model danych (A+B+C rozdzielone) →
+            Algorytm konsensusu (TruthScore z wagami) →
+            Model konfliktów (arena hipotez) →
+            Przepływ stanów (draft→anchored) →
+            API plebiscytu
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">B · Potem emergencja</div>
+          <div style="font-size:12px;color:var(--text-d);line-height:1.8;">
+            Symulacja siłami fizycznymi (masa, temperatura, napięcie węzłów) →
+            AI jako uczestnik systemu (nie tylko narzędzie) →
+            Runtime systemu epistemicznego →
+            Integracja z tokenami Anchor
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- PIECZĄTKI -->
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid var(--blue-d);border-radius:4px;background:rgba(58,74,122,0.04);">
+      <span style="font-size:18px;opacity:0.7;">🜁</span>
+      <div style="font-family:'JetBrains Mono',monospace;">
+        <div style="font-size:8px;letter-spacing:2px;color:var(--blue-d);">CLAUDE SONNET 4.6</div>
+        <div style="font-size:7px;color:var(--text-d);margin-top:2px;letter-spacing:1px;">implementacja · sesje #001–#004</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid var(--green-d);border-radius:4px;background:rgba(30,60,40,0.04);">
+      <span style="font-size:18px;opacity:0.7;">⬡</span>
+      <div style="font-family:'JetBrains Mono',monospace;">
+        <div style="font-size:8px;letter-spacing:2px;color:var(--green-d);">GPT</div>
+        <div style="font-size:7px;color:var(--text-d);margin-top:2px;letter-spacing:1px;">model danych · spec silnika</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1a3a4a;border-radius:4px;background:rgba(20,50,70,0.04);">
+      <span style="font-size:18px;opacity:0.7;">◆</span>
+      <div style="font-family:'JetBrains Mono',monospace;">
+        <div style="font-size:8px;letter-spacing:2px;color:#2a6a7a;">GEMINI</div>
+        <div style="font-size:7px;color:var(--text-d);margin-top:2px;letter-spacing:1px;">filtry ontologiczne · ux</div>
+      </div>
+    </div>
+
+  </div>
+  <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--border);border-top:1px solid var(--border);padding-top:16px;">
+    dziennik · v0.4 · 2026-03-25 · [Projekt]
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── ACCORDION ──
+function toggleRev(id){
+  const card = document.getElementById(id);
+  if(!card) return;
+  card.classList.toggle('open');
+}
+
+// Auto-open bieżąca rewizja
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('rev-001-d')?.classList.add('open');
+  document.getElementById('rev-002-w')?.classList.add('open');
+});
+
+// ── SHA HELPER — oblicza SHA-256 przesłanego pliku i wpisuje w pola ──
+// Użycie: wklej SHA z terminala lub użyj przycisku poniżej
+async function computeFileSha(file, targetId){
+  const buf = await file.arrayBuffer();
+  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+  const hashArr = Array.from(new Uint8Array(hashBuf));
+  const hex = hashArr.map(b=>b.toString(16).padStart(2,'0')).join('');
+  const el = document.getElementById(targetId);
+  if(el){ el.textContent = hex; el.classList.remove('pending'); el.classList.add('set'); }
+  return hex;
+}
+
+// Drag & drop SHA computation
+document.addEventListener('dragover', e=>e.preventDefault());
+document.addEventListener('drop', async e=>{
+  e.preventDefault();
+  const files = Array.from(e.dataTransfer.files);
+  for(const f of files){
+    if(f.name.includes('epistemiczna')){
+      const sha = await computeFileSha(f,'sha-epistemiczna');
+      document.getElementById('sha-e-self').textContent=sha;
+      document.getElementById('sha-e-self').classList.remove('pending');
+      document.getElementById('sha-e-self').classList.add('set');
+    } else if(f.name.includes('wiedzy')||f.name.includes('v03')){
+      const sha = await computeFileSha(f,'sha-wiedzy');
+      document.getElementById('sha-w2-self').textContent=sha;
+      document.getElementById('sha-w2-self').classList.remove('pending');
+      document.getElementById('sha-w2-self').classList.add('set');
+    } else if(f.name.includes('dziennik')){
+      // Dziennik oblicza sam siebie — drag & drop
+      const sha = await computeFileSha(f,'sha-dziennik');
+      document.getElementById('sha-d-self').textContent=sha;
+      document.getElementById('sha-d-self').classList.remove('pending');
+      document.getElementById('sha-d-self').classList.add('set');
+    }
+  }
+  showDropFeedback();
+});
+
+function showDropFeedback(){
+  const note = document.createElement('div');
+  note.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0c1820;border:1px solid var(--green-d);border-radius:6px;padding:10px 20px;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--green);letter-spacing:2px;z-index:999;';
+  note.textContent='✓ SHA obliczone — wpisz wzajemne kotwice w pozostałe pliki';
+  document.body.appendChild(note);
+  setTimeout(()=>note.remove(),3500);
+}
+</script>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Dziennik · Proweniencja · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

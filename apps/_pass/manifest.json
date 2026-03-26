@@ -1,0 +1,70 @@
+{
+  "id": "_pass",
+  "name": "AiWPass · Paszport Operatora 🔑",
+  "version": "4.1",
+  "date": "2026-05-02",
+  "description": "Kryptograficzna tożsamość operatora — kontrakty, profil Ed25519, certyfikacja, łańcuch proweniencji. Para z AiWVerify.",
+  "type": "standalone",
+  "status": "active",
+  "lineage": {
+    "seed_session": "AIWPass · Złota Linka",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWPass.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "_pass-boot.md",
+    "bootstrap_sha": "f6a45e21c3df0d2fcddf436a986050d0a5ec74e5e68d0b932f9212610a32664b",
+    "entry_sha": "a5805b4cfaa50ee06fc87cee8deb3fe5c5569b9186c7ad50a0d61288716921fd",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": ".data/_pass/",
+    "io": [
+      "read",
+      "write"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "_verify"
+    }
+  ],
+  "tags": [
+    "identity",
+    "cryptography",
+    "ed25519",
+    "contracts",
+    "provenance",
+    "system"
+  ]
+}

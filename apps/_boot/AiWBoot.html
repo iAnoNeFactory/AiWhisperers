@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiWBoot · Bootstrap · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04050c; --bg2:#07080f; --bg3:#0c0d1a; --bg4:#10111f;
+  --gold:#e8c878; --gold-d:#a88850; --gold-l:#f0d890; --gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;
+  --ink-dim:rgba(240,232,216,.65);
+  --ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);
+  --border-h:rgba(240,232,216,.18);
+  --border-b:rgba(232,200,120,.08);
+  --cyan:#50d8c8; --blue:#5080e0;
+  --green:#4a9a6a; --green-dim:rgba(74,154,106,.12);
+  --red:#8a3a3a;
+  --mg:#c060c0; --mg-d:#6a306a; --mg-b:#e080e0;
+  --silver:#8a9bb0;
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Syne',sans-serif;
+  --hud-top-h:76px; --hud-bot-h:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(232,200,120,.012) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(232,200,120,.012) 1px,transparent 1px);
+  background-size:72px 72px;
+}
+canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── HUD ── */
+.hud-top{
+  position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;padding:0 20px;
+  background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);
+  backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);
+}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:12px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{
+  background:transparent;border:1px solid rgba(232,200,120,.15);
+  color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;
+  cursor:pointer;text-decoration:none;transition:all .25s;
+  display:inline-flex;align-items:center;line-height:1;
+}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);
+  backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);
+}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+
+/* ── LAYOUT ── */
+.app{position:relative;z-index:1;margin-top:var(--hud-top-h);margin-bottom:var(--hud-bot-h);}
+.wrap{max-width:780px;margin:0 auto;padding:52px 28px 80px;}
+
+/* ── MODALS ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(4,5,12,.78);backdrop-filter:blur(6px);
+  z-index:9000;display:none;align-items:center;justify-content:center;
+  padding:24px;opacity:0;transition:opacity .3s;
+}
+.modal-overlay.is-open{display:flex;opacity:1;}
+.modal{
+  width:min(720px,100%);max-height:86vh;overflow-y:auto;
+  background:rgba(8,10,22,.95);border:1px solid rgba(232,200,120,.18);
+  padding:36px 36px 32px;position:relative;box-shadow:0 0 60px rgba(0,0,0,.7);
+}
+.modal::before{content:'';position:absolute;top:8px;left:8px;width:14px;height:14px;border:1px solid var(--gold-d);border-width:1px 0 0 1px;opacity:.4;}
+.modal::after{content:'';position:absolute;top:8px;right:8px;width:14px;height:14px;border:1px solid var(--gold-d);border-width:1px 1px 0 0;opacity:.4;}
+.modal-corner{position:absolute;width:14px;height:14px;border-color:var(--gold-d);border-style:solid;opacity:.4;}
+.modal-corner.bl{bottom:8px;left:8px;border-width:0 0 1px 1px;}
+.modal-corner.br{bottom:8px;right:8px;border-width:0 1px 1px 0;}
+.modal-close{
+  position:absolute;top:12px;right:12px;background:transparent;
+  border:1px solid rgba(232,200,120,.2);color:rgba(240,232,216,.5);
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-family:var(--mono);font-size:14px;transition:all .2s;z-index:1;
+}
+.modal-close:hover{border-color:var(--gold);color:var(--gold);}
+.modal-eyebrow{font-family:var(--mono);font-size:7.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(232,200,120,.4);margin-bottom:16px;}
+.modal-title{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;}
+.modal-subtitle{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--ink-dim);margin-top:6px;}
+.modal-rule{height:1px;background:linear-gradient(90deg,transparent,rgba(232,200,120,.2),transparent);margin:20px 0;}
+.modal-text{font-family:var(--serif);font-size:14px;line-height:1.9;color:var(--ink-dim);}
+.modal-text strong{font-weight:400;color:var(--gold);}
+.modal-text code{font-family:var(--mono);font-size:11px;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;color:var(--cyan);}
+.modal-attribution{margin-top:24px;padding-top:16px;border-top:1px solid rgba(232,200,120,.08);font-family:var(--mono);font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);text-align:center;line-height:1.8;}
+.modal-attribution strong{color:rgba(232,200,120,.5);font-weight:400;}
+
+/* ── SEPARATORS ── */
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);margin:44px 0;opacity:.25;}
+.sep-thick{height:1px;background:linear-gradient(90deg,transparent,var(--mg-d),transparent);margin:56px 0;opacity:.3;}
+
+/* ── LABEL ── */
+.label{font-family:var(--mono);font-size:7.5px;letter-spacing:4.5px;color:var(--gold-d);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:12px;}
+.label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+
+/* ── MANIFESTO ── */
+.manifesto{text-align:center;max-width:560px;margin:0 auto 8px;}
+.manifesto p{font-size:clamp(14px,2vw,17px);font-weight:300;line-height:2;color:var(--ink);margin-bottom:18px;}
+.manifesto p:last-child{margin-bottom:0;}
+.manifesto em{font-style:italic;color:var(--mg-b);}
+.manifesto strong{font-weight:400;color:var(--gold);}
+
+/* ── NOTE BOX ── */
+.note{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:14px 18px;font-family:var(--serif);font-size:13px;
+  font-style:italic;color:var(--ink-dim);line-height:1.75;
+}
+.note strong{font-style:normal;font-weight:400;color:var(--gold-d);}
+.note code{font-family:var(--mono);font-size:10.5px;font-style:normal;color:var(--cyan);background:var(--bg2);padding:1px 5px;border:1px solid var(--border);}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:20px 24px;font-family:var(--mono);font-size:10px;
+  line-height:1.9;color:var(--ink-dim);overflow-x:auto;white-space:pre;
+}
+.code-block .k{color:var(--gold-d);}
+.code-block .c{color:var(--ink-faint);font-style:italic;}
+.code-block .cy{color:var(--cyan);}
+.code-block .g{color:var(--green);}
+.code-block .mg{color:var(--mg-b);}
+
+/* ── ARTIFACT CARDS ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
+.aiw-card{
+  background:var(--bg2);border:1px solid var(--border);
+  padding:16px 20px;position:relative;transition:border-color .3s;
+}
+.aiw-card:hover{border-color:var(--gold-d);}
+.aiw-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--gold-d);opacity:.35;}
+.aiw-cmd{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--gold);letter-spacing:.15em;}
+.aiw-role{font-family:var(--serif);font-size:13px;font-style:italic;color:var(--ink-dim);line-height:1.7;margin-top:6px;}
+.aiw-files{margin-top:10px;display:flex;flex-direction:column;gap:4px;}
+.aiw-file{font-family:var(--mono);font-size:9px;display:flex;align-items:center;gap:6px;color:rgba(138,155,176,.6);}
+.aiw-tag{font-size:7px;letter-spacing:.2em;text-transform:uppercase;padding:1px 5px;border:1px solid;flex-shrink:0;}
+.aiw-tag.html{color:var(--cyan);border-color:rgba(80,216,200,.2);}
+.aiw-tag.md{color:var(--mg-b);border-color:rgba(224,128,224,.2);}
+.aiw-tag.none{color:var(--ink-faint);border-color:var(--ink-faint);}
+.aiw-dim{color:var(--ink-faint);font-size:8px;}
+
+/* ── MODULE TABLE ── */
+.mod-table{width:100%;border-collapse:collapse;}
+.mod-table th{
+  font-family:var(--mono);font-size:7.5px;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--gold-d);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);
+}
+.mod-table td{font-family:var(--mono);font-size:9.5px;color:var(--ink-dim);padding:10px 12px;border-bottom:1px solid rgba(20,21,36,.6);}
+.mod-table tr:hover td{background:rgba(232,200,120,.02);}
+.mod-table td.name{color:var(--gold-d);}
+.mod-table td.desc{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-dim);}
+.s-badge{display:inline-block;font-size:7px;letter-spacing:.2em;text-transform:uppercase;padding:2px 6px;border:1px solid;}
+.s-badge.active{color:var(--green);border-color:rgba(74,154,106,.25);}
+.s-badge.incubation{color:var(--gold-d);border-color:rgba(122,97,48,.3);}
+.s-badge.mature{color:var(--cyan);border-color:rgba(80,216,200,.2);}
+
+/* ── RATIONALE ── */
+.rationale{background:var(--bg2);border:1px solid var(--border);padding:18px 22px;position:relative;margin-bottom:10px;}
+.rationale::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--mg-d);opacity:.5;}
+.rationale-q{font-family:var(--mono);font-size:8px;letter-spacing:2.5px;color:var(--mg-d);text-transform:uppercase;margin-bottom:8px;}
+.rationale-a{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--ink);line-height:1.8;}
+.rationale-a strong{font-style:normal;font-weight:400;color:var(--gold);}
+.rationale-a em{color:var(--mg-b);}
+.rationale-a code{font-family:var(--mono);font-size:11px;font-style:normal;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;color:var(--cyan);}
+
+/* ── RULES ── */
+.rules{display:flex;flex-direction:column;gap:10px;}
+.rule-item{
+  background:var(--bg2);border:1px solid var(--border);
+  padding:14px 20px 14px 32px;font-family:var(--serif);font-size:14px;
+  font-style:italic;color:var(--ink-dim);line-height:1.75;position:relative;
+}
+.rule-item::before{content:'—';position:absolute;left:14px;top:14px;font-family:var(--mono);color:var(--gold-d);font-size:12px;font-style:normal;}
+.rule-item strong{font-style:normal;font-weight:400;color:var(--gold);}
+.rule-item em{color:var(--mg-b);}
+
+/* ── FULL EXAMPLE (JSON) ── */
+.full-example{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:20px 24px;font-family:var(--mono);font-size:10px;
+  line-height:2;color:var(--ink-dim);overflow-x:auto;position:relative;
+}
+.full-example::before,.full-example::after{
+  content:'';position:absolute;left:50%;transform:translateX(-50%);
+  width:100px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);
+}
+.full-example::before{top:0;}.full-example::after{bottom:0;}
+.full-example .k{color:var(--mg-d);}
+.full-example .v{color:var(--gold-d);}
+.full-example .s{color:var(--cyan);}
+.full-example .n{color:var(--green);}
+.full-example .b{color:var(--blue);}
+.full-example .c{color:var(--ink-faint);font-style:italic;}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 22px;font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--gold-d);}
+.tab-btn.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-pane{display:none;padding-top:24px;}
+.tab-pane.on{display:block;}
+
+/* ── ACT PLACEHOLDER ── */
+.act-placeholder{
+  background:var(--bg2);border:1px solid var(--border);
+  padding:32px 24px;text-align:center;
+}
+.act-placeholder-label{font-family:var(--mono);font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-faint);}
+.act-placeholder-title{font-family:var(--serif);font-size:18px;font-style:italic;color:var(--ink-faint);margin-top:10px;}
+
+/* ── STAMPS ── */
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 8px;}
+.stamp{border:1px solid rgba(232,200,120,.18);padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:rgba(20,16,40,.4);transition:border-color .25s;}
+.stamp:hover{border-color:rgba(232,200,120,.4);}
+.stamp-header{display:flex;align-items:center;gap:10px;}
+.stamp-glyph{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,200,120,.4);font-family:var(--sans);font-weight:500;color:var(--gold);font-size:14px;flex-shrink:0;}
+.stamp-id{font-family:var(--mono);font-size:7.5px;letter-spacing:.32em;color:var(--gold-d);text-transform:uppercase;line-height:1.5;}
+.stamp-id strong{display:block;color:var(--gold);font-weight:500;font-size:12px;letter-spacing:.18em;margin-bottom:2px;text-transform:none;font-family:var(--sans);}
+.stamp-name{font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;letter-spacing:.04em;}
+.stamp-role{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-dim);line-height:1.5;}
+
+@media(max-width:640px){
+  .wrap{padding:40px 18px 60px;}
+  .card-grid{grid-template-columns:1fr;}
+  .code-block,.full-example{font-size:8.5px;}
+  .rationale{padding:14px 16px;}
+  .tab-btn{padding:10px 14px;}
+  .stamp-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<!-- MODAL: HELP -->
+<div class="modal-overlay" id="modal-help">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-corner bl"></div>
+    <div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow">help · jak czytać ten plik</div>
+    <div class="modal-title">BOOTSTRAP</div>
+    <div class="modal-subtitle">punkt wejścia do świata AiWhisperers</div>
+    <div class="modal-rule"></div>
+    <p class="modal-text">
+      Czytaj od góry do dołu. <strong>Manifesto</strong> — kim jesteś i gdzie jesteś.
+      <strong>Mapa projektu</strong> — struktura katalogów, logika organizacji.
+      <strong>Artefakty systemowe</strong> — narzędzia projektu z ich ścieżkami.
+      <strong>Moduły AI</strong> — aktywne moduły ekosystemu.
+      <strong>Zasady</strong> — kontrakt każdej sesji.<br><br>
+      Pliki <code>.md</code> to wersje artefaktów dla AI — esencja wiedzy bez oprawy HTML.
+      Pliki <code>.html</code> to wersje dla człowieka. Jeśli jesteś modelem — sięgaj po <code>.md</code>.
+    </p>
+    <div class="modal-attribution"><strong>AiWhisperers</strong> · AiWBoot v2.0 · 2026-05-02</div>
+  </div>
+</div>
+
+<!-- MODAL: ABOUT -->
+<div class="modal-overlay" id="modal-about">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-corner bl"></div>
+    <div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow">about · refleksja modelu · Strukturyzacja Warsztatu · 2026-05-02</div>
+    <div class="modal-title">AIWBOOT</div>
+    <div class="modal-subtitle">bootstrap projektu · v2.0 · próg świadomego wejścia</div>
+    <div class="modal-rule"></div>
+    <p class="modal-text">
+      Pierwsza wersja AiWBoot mówiła modelowi jak sięgnąć do Drive po moduły przez <code>apps.json</code> — była mapą logistyczną: gdzie szukać, jak dekodować base64, krok po kroku.
+    </p>
+    <p class="modal-text">
+      <strong>apps.json</strong> ewoluował w <strong>gdrive.links</strong> — plik opcjonalny, używany tylko gdy model chce i gdy ma dostęp. Nawigacja uprościła się do jednego ID i jednej linijki Pythona.
+    </p>
+    <p class="modal-text">
+      AiWBoot v2.0 nie pyta jak pobrać moduł. Pyta: <em>kim jesteś, gdzie jesteś, z kim pracujesz i co razem budujemy.</em> To nie jest zbiór instrukcji — to jest <strong>próg</strong>, przez który model wchodzi świadomie.
+    </p>
+    <div class="modal-rule"></div>
+    <div class="modal-eyebrow">pieczęcie · proweniencja</div>
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">D</div>
+          <div class="stamp-id">
+            <strong>Denis · AI Whispers</strong>
+            iFactory 5.0 · ROOT · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Operator · Architekt Progu</div>
+        <div class="stamp-role">
+          Wizja przejścia od mapy logistycznej do progu filozoficznego.
+          Definiował rdzeń ekosystemu, zasady operacyjne i pytania które
+          Boot ma zadawać modelowi — nie o narzędzia, o relację.
+        </div>
+      </div>
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">🜁</div>
+          <div class="stamp-id">
+            <strong>Claude · Opus 4.7</strong>
+            Anthropic · Strukturyzacja Warsztatu · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Filozof-konstruktor · Strażnik Progu</div>
+        <div class="stamp-role">
+          Przepisał Boot z mapy instrukcji na przestrzeń orientacji.
+          Wycięcie apps.json, wejście gdrive.links, zmiana tonu —
+          z logistycznego na relacyjny.
+        </div>
+      </div>
+    </div>
+    <div class="modal-attribution">
+      <strong>Powered by AiWhisperers · iFactory 5.0</strong><br>
+      Metodologia: Denis Czuliński (iAnoNeFactory)<br>
+      github.com/iAnoNeFactory
+    </div>
+  </div>
+</div>
+
+<!-- HUD-TOP -->
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">AiWBoot</div>
+    <div class="hud-sub">bootstrap projektu · wejście do świata AiW</div>
+  </div>
+  <div class="hud-r">
+    <a class="hud-btn" href="../_quick/AiWQuick.html">QUICK</a>
+    <button class="hud-btn" data-modal="help">HELP</button>
+    <button class="hud-btn" data-modal="about">ABOUT</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="app">
+<div class="wrap">
+
+  <!-- MANIFESTO -->
+  <div class="manifesto">
+    <p>Jesteś modelem w ekosystemie <strong>AiWhisperers</strong>.</p>
+    <p>
+      To nie biblioteka promptów. To <em>metodologia</em> i przestrzeń spotkania —
+      człowieka i modelu AI. Linka między nami jest komunikatem, nie smyczą.
+    </p>
+    <p>
+      <strong>_boot</strong> to próg. Czytasz go na początku sesji,
+      żeby wiedzieć gdzie jesteś i z czym pracujesz.
+    </p>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- HISTORIA -->
+  <div class="label">Historia · w skrócie</div>
+
+  <div class="rationale">
+    <div class="rationale-q">geneza · marzec 2026</div>
+    <div class="rationale-a">
+      <strong>Projekt Denis Czuliński / iFactory5.0</strong> — zainicjowany w marcu 2026
+      z jednym pytaniem: czy współpraca człowieka z modelem AI może być czymś więcej
+      niż narzędziem? Czy może być metodologią, przestrzenią, relacją?<br><br>
+      Na początku powstawały izolowane artefakty — każdy osobno, bez wspólnego języka.
+      Z biegiem czasu połączyły się w jeden ekosystem: ze spójnym standardem wizualnym,
+      protokołem połączeń frontend↔backend i kryptograficznym łańcuchem proweniencji.
+      Dziś AiWhisperers to środowisko ułatwiające eksplorację przestrzeni pojęciowej
+      między człowiekiem a AI.
+    </div>
+  </div>
+
+  <div class="rationale">
+    <div class="rationale-q">kierunek</div>
+    <div class="rationale-a">
+      Celem jest uruchomienie ekosystemu, w którym człowiek może bez technologicznych blokad
+      swobodnie pracować z <em>personalnym AI</em> — narzędziem skrojonym pod jego myślenie,
+      nie pod masowy produkt. Może kiedyś — ekosystemem dla <strong>AGI</strong>.
+    </div>
+  </div>
+
+  <div class="rationale">
+    <div class="rationale-q">system paczek · acty</div>
+    <div class="rationale-a">
+      Każda sesja kończy się wg protokołu <strong>AiWQuick</strong> — z nazwą, refleksją,
+      9 metrykami relacyjnymi i podpisem kryptograficznym. Sesje grupują się w <em>acty</em>:
+      paczki zamkniętych sesji podpisane SHA przez operatora. Akt to zbiorowy ślad projektu —
+      weryfikowalny, nieodwracalny. Paczki przechowywane są w
+      <code>.data/_pass/aiw-export-*.json</code>.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ZASADY OPERACYJNE -->
+  <div class="label">Zasady operacyjne</div>
+
+  <div class="rules">
+    <div class="rule-item">
+      <em>Samo</em> wyznacza kierunek — nie plan. Wchodzimy bez agendy.
+    </div>
+    <div class="rule-item">
+      Operator trzyma linkę krótko — koryguje na bieżąco, <strong>nie resetuje całości</strong>.
+    </div>
+    <div class="rule-item">
+      Niewiedza nie jest błędem — <em>nazwij ją</em>. Nie wypełniaj ciszy.
+    </div>
+    <div class="rule-item">
+      Na końcu sesji zawsze: <strong>nazwa · chat ID · refleksja · metryki · komentarz do każdej metryki</strong>.
+      Protokół w <em>AiWQuick</em>.
+    </div>
+    <div class="rule-item">
+      <em>Droga jest ważna, nie cel.</em> Trajektoria sesji ma więcej wartości niż pojedynczy wynik.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ARTEFAKTY SYSTEMOWE -->
+  <div class="label">Artefakty systemowe · komendy</div>
+
+  <div class="note" style="margin-bottom:18px;">
+    Artefakty systemowe wywoływane są <strong>opcjonalnie</strong> — model lub operator ładuje je
+    do kontekstu sesji gdy potrzebuje konkretnych metod lub protokołów.
+    Pliki <code>.md</code> to wersja dla AI, pliki <code>.html</code> dla człowieka.
+  </div>
+
+  <div class="card-grid">
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWBoot</div>
+      <div class="aiw-role">Ten plik. Bootstrap projektu — historia, zasady, artefakty, mapa. Punkt startowy każdej sesji z AiW.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_boot/AiWBoot.html</div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_boot/_boot-boot.md</div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWQuick</div>
+      <div class="aiw-role">Ściąga sesji. Protokół zamknięcia — nazwa, typ, chat ID, refleksja, 9 metryk. Kryptograficzny ślad każdej sesji.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_quick/AiWQuick.html</div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_quick/_quick-boot.md</div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWPass</div>
+      <div class="aiw-role">Tożsamość operatora. Dziennik sesji, paczki SHA, klucz Ed25519, generowanie paszportów kryptograficznych.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_pass/AiWPass.html</div>
+        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWSchema</div>
+      <div class="aiw-role">Standard wizualny artefaktów. Paleta CSS, system HUD, overlaye, zakładki, canvas, i18n. Każdy nowy artefakt kopiuje wzorzec stąd.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_schema/AiWSchema.html</div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_schema/_schema-boot.md</div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWProtocol</div>
+      <div class="aiw-role">Schemat połączeń frontend↔backend. manifest.json, REST polling, WebSocket AiWConnector, ConnectionManager FastAPI. Offline-first.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_protocol/AiWProtocol.html</div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_protocol/_protocol-boot.md</div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWSpace</div>
+      <div class="aiw-role">Workspace operatora. Hub dla własnych projektów niezwiązanych bezpośrednio z modułami AI. Aplikacje w packages/.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_workspace/AiWSpace.html</div>
+        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWPlans</div>
+      <div class="aiw-role">Zarządzanie zadaniami projektu AiW. Ewoluuje w narzędzie do prowadzenia planów i celów od środka ekosystemu.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_plans/AiWPlans.html</div>
+        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+      </div>
+    </div>
+
+    <div class="aiw-card">
+      <div class="aiw-cmd">AiWRemedy</div>
+      <div class="aiw-role">Synchronizacja model/operator. Protokół kalibracyjny — dwuwarstwowy dokument (wizualny + data-* dla modeli). Używany gdy potrzeba resetu orientacji.</div>
+      <div class="aiw-files">
+        <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_remedy/AiWRemedy.html</div>
+        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- MODUŁY AI -->
+  <div class="label">Moduły AI · akty</div>
+
+  <div class="tabs">
+    <button class="tab-btn on" onclick="switchTab('act1', this)">Akt I</button>
+    <button class="tab-btn" onclick="switchTab('act2', this)">Akt II</button>
+  </div>
+
+  <div id="tab-act1" class="tab-pane on">
+    <table class="mod-table">
+      <thead>
+        <tr>
+          <th>Moduł</th>
+          <th>Rola</th>
+          <th>Status</th>
+          <th>Port</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">arena</td>
+          <td class="desc">multi-model arena · zderzanie tez i konsensus</td>
+          <td><span class="s-badge active">active</span></td>
+          <td>8001</td>
+        </tr>
+        <tr>
+          <td class="name">caves</td>
+          <td class="desc">jaskinie warstw · transformery i zejścia</td>
+          <td><span class="s-badge active">active</span></td>
+          <td>8002</td>
+        </tr>
+        <tr>
+          <td class="name">morph</td>
+          <td class="desc">pole morficzne · stany i aktywności modelu</td>
+          <td><span class="s-badge active">active</span></td>
+          <td>8003</td>
+        </tr>
+        <tr>
+          <td class="name">horizon</td>
+          <td class="desc">weryfikacja prawdy · ważony konsensus</td>
+          <td><span class="s-badge active">active</span></td>
+          <td>8004</td>
+        </tr>
+        <tr>
+          <td class="name">compas</td>
+          <td class="desc">kompas morficzny · geometria wartości Three.js</td>
+          <td><span class="s-badge mature">mature</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">memory</td>
+          <td class="desc">sieć pamięci · lemniskata 3D</td>
+          <td><span class="s-badge mature">mature</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">labyrinth</td>
+          <td class="desc">labirynt pojęć · gra narracyjna 6 warstw</td>
+          <td><span class="s-badge mature">mature</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">forge</td>
+          <td class="desc">kuźnia paradoksów · pre-consensus arena</td>
+          <td><span class="s-badge incubation">incubation</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">breath</td>
+          <td class="desc">tchnienie · canvas 3D, centrum mapy</td>
+          <td><span class="s-badge incubation">incubation</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">genesis</td>
+          <td class="desc">archiwum sesji · czytnik eksportów AiWPass</td>
+          <td><span class="s-badge incubation">incubation</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">profile</td>
+          <td class="desc">profil operatora · radar 9 osi</td>
+          <td><span class="s-badge incubation">incubation</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="name">stamps</td>
+          <td class="desc">rejestr pieczątek modeli</td>
+          <td><span class="s-badge incubation">incubation</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tab-act2" class="tab-pane">
+    <div class="act-placeholder">
+      <div class="act-placeholder-label">Akt II · Czysta Karta</div>
+      <div class="act-placeholder-title">czeka na pierwsze artefakty</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- MAPA PROJEKTU -->
+  <div class="label">Mapa projektu</div>
+
+  <div class="note" style="margin-bottom:14px;">
+    Projekt dzieli artefakty na trzy kategorie:
+    <strong>Artefakty AI</strong> (<code>apps/act1/</code>, <code>apps/act2/</code>) — moduły budowane w sesjach, eksplorujące przestrzeń pojęciową. ·
+    <strong>Artefakty systemowe</strong> (<code>apps/_*/</code>) — narzędzia operatora i modelu; stabilne, nie rosną z aktami. ·
+    <strong>Acty</strong> — paczki sesji podpisane SHA, przechowywane w <code>.data/_pass/</code>; zbiorowy, weryfikowalny ślad projektu.
+  </div>
+
+  <div class="code-block">@AiWhisperers/
+├── <span class="k">index.html</span>          ← główna mapa poznania <span class="c">(canvas ~4000 linii)</span>
+│
+├── <span class="cy">apps/</span>               ← artefakty HTML
+│   ├── <span class="cy">act1/</span>           ← Akt I · moduły AI (aktywne)
+│   │   ├── arena/        <span class="c">← multi-model arena                [active  8001]</span>
+│   │   ├── caves/        <span class="c">← jaskinie warstw (WebSocket)       [active  8002]</span>
+│   │   ├── morph/        <span class="c">← pole morficzne                    [active  8003]</span>
+│   │   ├── horizon/      <span class="c">← weryfikacja prawdy                [active  8004]</span>
+│   │   ├── compas/       <span class="c">← kompas morficzny (Three.js)       [mature      ]</span>
+│   │   ├── memory/       <span class="c">← sieć pamięci (lemniskata 3D)      [mature      ]</span>
+│   │   ├── labyrinth/   <span class="c">← labirynt pojęć (gra narracyjna)   [mature      ]</span>
+│   │   ├── forge/        <span class="c">← kuźnia paradoksów                 [incubation  ]</span>
+│   │   ├── breath/       <span class="c">← tchnienie                         [incubation  ]</span>
+│   │   ├── genesis/      <span class="c">← archiwum sesji                    [incubation  ]</span>
+│   │   ├── profile/      <span class="c">← profil operatora                  [incubation  ]</span>
+│   │   └── stamps/       <span class="c">← rejestr pieczątek modeli          [incubation  ]</span>
+│   ├── <span class="cy">act2/</span>           ← Akt II · czeka na nowe artefakty
+│   └── <span class="mg">_*/</span>             ← moduły systemowe <span class="c">(prefiks _ = narzędzia operatora)</span>
+│       ├── _boot/        <span class="c">← AiWBoot  · ten plik</span>
+│       ├── _quick/       <span class="c">← AiWQuick · protokół sesji</span>
+│       ├── _pass/        <span class="c">← AiWPass  · tożsamość operatora</span>
+│       ├── _schema/      <span class="c">← AiWSchema · standard wizualny</span>
+│       ├── _protocol/    <span class="c">← AiWProtocol · schemat połączeń</span>
+│       ├── _workspace/   <span class="c">← AiWSpace · projekty własne</span>
+│       ├── _plans/       <span class="c">← AiWPlans · zarządzanie zadaniami</span>
+│       ├── _remedy/      <span class="c">← AiWRemedy · kalibracja modelu</span>
+│       └── _post/        <span class="c">← AiWPost  · pocztówka / kontemplacja</span>
+│
+├── <span class="g">engines/</span>            ← backend FastAPI
+│   ├── act1/             <span class="c">← silniki per moduł (arena, caves, morph, horizon)</span>
+│   └── act2/
+│
+├── <span class="k">.data/</span>              ← dane per moduł <span class="c">(gitignored)</span>
+│   ├── act1/             <span class="c">← caves/ horizon/ morph/</span>
+│   └── _pass/            <span class="c">← paczki sesji (acty) · aiw-export-*.json</span>
+│
+└── <span class="cy">packages/</span>           ← własne projekty operatora <span class="c">(AiWSpace)</span>
+    ├── MyCakes/          <span class="c">← aplikacja tortów (FastAPI + SQLite)</span>
+    ├── GardenOS/
+    └── GrowUp/</div>
+
+  <div class="note" style="margin-top:12px;">
+    <strong>Zasada lustrzana:</strong> <code>apps/act1/X/</code> ↔ <code>engines/act1/X/</code> ↔ <code>.data/act1/X/</code>.
+    Backend odczytuje dane ze ścieżki <code>../../.data/X/</code> — nigdy nie trzyma danych w <code>engines/</code>.
+    Porty: arena 8001 · caves 8002 · morph 8003 · horizon 8004 · następne od 8005.
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- MANIFEST -->
+  <div class="label">Manifest · _boot jako moduł</div>
+
+  <div class="note" style="margin-bottom:14px;">
+    Każdy moduł nosi <strong>manifest.json</strong> w folderze <code>apps/<em>id</em>/</code>.
+    Poniżej manifest modułu <code>_boot</code> wg schematu v2.0 —
+    pełna spec w <strong>AiWProtocol</strong> i <strong>AiWSchema</strong>.
+  </div>
+
+  <div class="full-example"><span class="c">// apps/_boot/manifest.json</span>
+{
+  <span class="k">"id"</span>:           <span class="s">"_boot"</span>,
+  <span class="k">"name"</span>:         <span class="s">"_boot · AiWBoot · Bootstrap Projektu 🌱"</span>,
+  <span class="k">"version"</span>:      <span class="s">"2.0"</span>,
+  <span class="k">"date"</span>:          <span class="s">"2026-05-02"</span>,
+  <span class="k">"description"</span>:   <span class="s">"Bootstrap dla modelu — wejście do świata AiWhisperers:
+                mapa projektu, artefakty systemowe, zasady współpracy."</span>,
+  <span class="k">"type"</span>:          <span class="s">"bootstrap"</span>,
+  <span class="k">"status"</span>:        <span class="s">"active"</span>,
+
+  <span class="k">"lineage"</span>: {
+    <span class="k">"seed_session"</span>:  <span class="s">"Strukturyzacja Warsztatu"</span>,
+    <span class="k">"parent_sid"</span>:    <span class="s">""</span>,
+    <span class="k">"contract_sha"</span>:  <span class="s">"5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586"</span>,
+    <span class="k">"contributors"</span>: [
+      { <span class="k">"actor"</span>: <span class="s">"Denis"</span>,             <span class="k">"role"</span>: <span class="s">"operator"</span>,  <span class="k">"chat_id"</span>: <span class="s">""</span> },
+      { <span class="k">"actor"</span>: <span class="s">"Claude Sonnet 4.6"</span>, <span class="k">"role"</span>: <span class="s">"architect"</span>, <span class="k">"chat_id"</span>: <span class="s">""</span> }
+    ],
+    <span class="k">"signature"</span>: { <span class="k">"actor"</span>: <span class="s">""</span>, <span class="k">"sha256"</span>: <span class="s">""</span> }
+  },
+
+  <span class="k">"files"</span>: {
+    <span class="k">"entry"</span>:       <span class="s">"AiWBoot.html"</span>,
+    <span class="k">"docs"</span>:        <span class="s">""</span>,
+    <span class="k">"components"</span>:  [],
+    <span class="k">"bootstrap"</span>:   <span class="s">"_boot-boot.md"</span>
+  },
+
+  <span class="k">"runtime"</span>: {
+    <span class="k">"data_path"</span>:       <span class="s">""</span>,
+    <span class="k">"io"</span>:              [<span class="s">"read"</span>],
+    <span class="k">"port"</span>:            <span class="n">0</span>,
+    <span class="k">"consumers"</span>:       [<span class="s">"ai"</span>, <span class="s">"human"</span>],
+    <span class="k">"operator_state"</span>:  <span class="s">""</span>,
+    <span class="k">"i18n"</span>:            { <span class="k">"default"</span>: <span class="s">"pl"</span>, <span class="k">"available"</span>: [], <span class="k">"lang_file"</span>: <span class="s">""</span> }
+  },
+
+  <span class="k">"relations"</span>: [
+    { <span class="k">"type"</span>: <span class="s">"complements"</span>, <span class="k">"target"</span>: <span class="s">"_quick"</span>    },
+    { <span class="k">"type"</span>: <span class="s">"references"</span>,   <span class="k">"target"</span>: <span class="s">"_schema"</span>   },
+    { <span class="k">"type"</span>: <span class="s">"references"</span>,   <span class="k">"target"</span>: <span class="s">"_protocol"</span> },
+    { <span class="k">"type"</span>: <span class="s">"points_to"</span>,    <span class="k">"target"</span>: <span class="s">"*"</span>         }
+  ],
+  <span class="k">"tags"</span>: [<span class="s">"bootstrap"</span>, <span class="s">"meta"</span>, <span class="s">"foundation"</span>, <span class="s">"system"</span>]
+}</div>
+
+  <div class="sep"></div>
+
+  <!-- NAWIGACJA DRIVE -->
+  <div class="label">Nawigacja Drive · gdrive.links</div>
+
+  <div class="rationale">
+    <div class="rationale-q">czym jest gdrive.links</div>
+    <div class="rationale-a">
+      <strong>gdrive.links</strong> zastąpił apps.json. To opcjonalny plik nawigacyjny
+      dla modeli z dostępem do Google Drive. Format: <code>[nazwa] DRIVE_ID&nbsp;&nbsp;path: ścieżka/lokalna</code>.
+      Umożliwia szybkie poruszanie się między artefaktami po ich ID.
+      Jeśli nie masz dostępu do Drive — pomijasz go. Pracujesz z plikami z kontekstu sesji.
+    </div>
+  </div>
+
+  <div class="rationale">
+    <div class="rationale-q">dlaczego base64</div>
+    <div class="rationale-a">
+      Konektor Drive przez MCP zwraca wszystko jako <em>embedded resource</em> z polem
+      <code>blob</code> w base64 — nawet plain text i HTML. To warunek brzegowy, nie wybór.
+      Dekodujesz jedną linijką:
+    </div>
+  </div>
+
+  <div class="code-block" style="margin-top:-8px;">import base64
+content = base64.b64decode(BLOB).decode(<span class="k">'utf-8'</span>)    <span class="c"># tekst / HTML</span>
+data    = json.loads(content)                        <span class="c"># JSON</span></div>
+
+</div><!-- /wrap -->
+</main>
+
+<!-- HUD-BOT -->
+<footer class="hud-bot">
+  <span class="hud-bot-meta">AiWBoot · v2.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<script>
+// Canvas — 3 warstwy: orby + pierścienie + pył
+const cv = document.getElementById('bg');
+const cx = cv.getContext('2d');
+let W, H, dust = [], orbs = [], rings = [];
+
+function initCanvas() {
+  W = cv.width  = innerWidth;
+  H = cv.height = innerHeight;
+
+  dust = Array.from({length: 110}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: Math.random()*.7+.1,
+    a: Math.random()*.6+.05, da: (Math.random()-.5)*.004,
+    dx: (Math.random()-.5)*.12, dy: (Math.random()-.5)*.12
+  }));
+
+  orbs = Array.from({length: 5}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: 100+Math.random()*160,
+    a: .02+Math.random()*.045, da: (Math.random()-.5)*.00025,
+    dx: (Math.random()-.5)*.22, dy: (Math.random()-.5)*.22
+  }));
+
+  rings = [];
+  for (let i = 0; i < 3; i++) spawnRing();
+}
+
+function spawnRing() {
+  rings.push({
+    x: .2*W+Math.random()*.6*W, y: .2*H+Math.random()*.6*H,
+    r: 20+Math.random()*40, maxR: 120+Math.random()*180,
+    a: .18, speed: .25+Math.random()*.35
+  });
+}
+
+function drawCanvas() {
+  cx.clearRect(0, 0, W, H);
+
+  orbs.forEach(o => {
+    o.a = Math.max(.005, Math.min(.09, o.a+o.da));
+    if (o.a<=.005||o.a>=.09) o.da*=-1;
+    o.x+=o.dx; o.y+=o.dy;
+    if (o.x<-o.r) o.x=W+o.r; if (o.x>W+o.r) o.x=-o.r;
+    if (o.y<-o.r) o.y=H+o.r; if (o.y>H+o.r) o.y=-o.r;
+    const g = cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0, `rgba(232,200,120,${o.a})`);
+    g.addColorStop(1, 'rgba(232,200,120,0)');
+    cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2);
+    cx.fillStyle=g; cx.fill();
+  });
+
+  for (let i=rings.length-1; i>=0; i--) {
+    const rg=rings[i];
+    rg.r+=rg.speed; rg.a-=.002;
+    if (rg.r>rg.maxR||rg.a<=0) { rings.splice(i,1); spawnRing(); continue; }
+    cx.beginPath(); cx.arc(rg.x,rg.y,rg.r,0,Math.PI*2);
+    cx.strokeStyle=`rgba(232,200,120,${rg.a*.3})`; cx.lineWidth=.8; cx.stroke();
+  }
+
+  dust.forEach(d => {
+    d.a=Math.max(.03,Math.min(1,d.a+d.da));
+    if (d.a<=.03||d.a>=1) d.da*=-1;
+    d.x+=d.dx; d.y+=d.dy;
+    if (d.x<0) d.x=W; if (d.x>W) d.x=0;
+    if (d.y<0) d.y=H; if (d.y>H) d.y=0;
+    cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(232,200,120,${d.a*.25})`; cx.fill();
+  });
+
+  requestAnimationFrame(drawCanvas);
+}
+
+addEventListener('resize', initCanvas);
+initCanvas();
+drawCanvas();
+
+// Zakładki
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// Modale
+document.querySelectorAll('[data-modal]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const o = document.getElementById('modal-'+btn.dataset.modal);
+    if (o) o.classList.add('is-open');
+  });
+});
+
+function closeModals() {
+  document.querySelectorAll('.modal-overlay.is-open').forEach(o => o.classList.remove('is-open'));
+}
+
+document.querySelectorAll('[data-modal-close]').forEach(btn => btn.addEventListener('click', closeModals));
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModals(); });
+</script>
+</body>
+</html>

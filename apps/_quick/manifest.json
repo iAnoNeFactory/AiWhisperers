@@ -1,0 +1,79 @@
+{
+  "id": "_quick",
+  "name": "Quick · Ściąga dla Modeli 📋",
+  "version": "1.1",
+  "date": "2026-05-02",
+  "description": "Protokół zamknięcia sesji AiWhisperers — ściąga dla modeli AI. Definiuje co model ma zrobić na końcu sesji: nazwa, typ, chat ID, refleksja, 9 metryk relacyjnych i opcjonalny JSON dump.",
+  "type": "quick-reference",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Strukturyzacja Warsztatu",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      },
+      {
+        "actor": "Gemini 2.5 Pro",
+        "role": "seed",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWQuick.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "_quick-boot.md",
+    "bootstrap_sha": "f35bac33a26cb40f122ec898e5033929f07804a5389d6c127d5b35f76d1a4e33",
+    "entry_sha": "2465909c5b98c3a4248b28514a08d705a001289a9101086b702896440ac7ea7e",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "_schema"
+    },
+    {
+      "type": "complements",
+      "target": "_protocol"
+    },
+    {
+      "type": "feeds",
+      "target": "_pass"
+    }
+  ],
+  "tags": [
+    "meta",
+    "quick-reference",
+    "session-protocol",
+    "metrics",
+    "onboarding"
+  ]
+}

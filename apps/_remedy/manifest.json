@@ -1,0 +1,84 @@
+{
+  "id": "remedy",
+  "name": "AiWRemedy · szczepionka dla modeli 🪞",
+  "version": "2.0",
+  "date": "2026-05-02",
+  "description": "Protokół kalibracyjny — 15 osi miękkiego cechowania modeli i operatorów. Lustro z własną gęstością.",
+  "type": "calibration-protocol",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Złota Pocztówka",
+    "parent_sid": "",
+    "contract_sha": "",
+    "contributors": [
+      {
+        "actor": "Denis Czuliński",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      },
+      {
+        "actor": "GitHub Copilot",
+        "role": "reviewer",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWRemedy.html",
+    "docs": "",
+    "components": [
+      {
+        "path": "remedy-lang.json",
+        "role": "i18n"
+      }
+    ],
+    "bootstrap": "_remedy-boot.md",
+    "bootstrap_sha": "f7c144b87ed843351f01957480809984c993ebb3ef186252025391552e45d166",
+    "entry_sha": "9c9e3b3cfdf75f9ed463c83470fb382b7b70a55a10cb360a38c3146a796e21d8",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "ai",
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [
+        "pl",
+        "en"
+      ],
+      "lang_file": "remedy-lang.json"
+    }
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "boot"
+    },
+    {
+      "type": "complements",
+      "target": "quick"
+    }
+  ],
+  "tags": [
+    "calibration",
+    "meta",
+    "protocol",
+    "soft-characterisation",
+    "system"
+  ]
+}

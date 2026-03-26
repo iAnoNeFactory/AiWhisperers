@@ -1,0 +1,70 @@
+{
+  "id": "_verify",
+  "name": "AiWVerify · Audytor ✓",
+  "version": "2.0",
+  "date": "2026-05-09",
+  "description": "Weryfikator kryptograficzny — kontrakty, profile Ed25519, łańcuch tożsamości, integralność bootstrap_sha modułów. Działa lokalnie przez Web Crypto API bez serwera.",
+  "type": "standalone",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Wyrównanie Protokołu · AiWProtocol",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWVerify.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "_verify-boot.md",
+    "bootstrap_sha": "bf4ad2c7b9e0b086a17e6b7cf58e2307a9a8762f008906661047279c446e4ec3",
+    "entry_sha": "3c3cae8caac80828ace7807838d389cef332db81ef52dffc2be3f6dd8b04e072",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [
+      "read"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "_pass"
+    }
+  ],
+  "tags": [
+    "verify",
+    "audit",
+    "cryptography",
+    "ed25519",
+    "sha",
+    "chain",
+    "system"
+  ]
+}

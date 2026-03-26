@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "module":    "[module-id]",
+    "version":   "1.0",
+    "langs":     ["pl", "en", "zh", "es", "fr", "de", "ja", "ko"],
+    "updated":   "2026-05-01",
+    "note":      "Klucze = identyfikatory tekstów UI. Wartości = obiekt {kod_języka: tekst}. Fallback: pl → en → klucz."
+  },
+
+  "hud": {
+    "mod":   { "pl": "[NAZWA]",      "en": "[NAME]",       "zh": "[名称]",   "es": "[NOMBRE]", "fr": "[NOM]",    "de": "[NAME]",   "ja": "[名前]",   "ko": "[이름]" },
+    "sub":   { "pl": "[podtytuł]",   "en": "[subtitle]",   "zh": "[副标题]", "es": "[subtítulo]", "fr": "[sous-titre]", "de": "[Untertitel]", "ja": "[サブタイトル]", "ko": "[부제목]" }
+  },
+
+  "help": {
+    "eyebrow":  { "pl": "help · czym jest [moduł]",  "en": "help · what is [module]",  "zh": "帮助 · 什么是[模块]", "es": "ayuda · qué es [módulo]", "fr": "aide · qu'est-ce que [module]", "de": "hilfe · was ist [modul]", "ja": "ヘルプ · [モジュール]とは", "ko": "도움말 · [모듈]이란" },
+    "title":    { "pl": "[Nazwa]",                    "en": "[Name]",                   "zh": "[名称]",              "es": "[Nombre]",                "fr": "[Nom]",                        "de": "[Name]",                  "ja": "[名前]",                    "ko": "[이름]" },
+    "subtitle": { "pl": "[krótki opis]",              "en": "[short description]",      "zh": "[简短描述]",          "es": "[descripción breve]",     "fr": "[courte description]",         "de": "[Kurzbeschreibung]",      "ja": "[短い説明]",                "ko": "[짧은 설명]" },
+    "body":     { "pl": "[treść pomocy]",             "en": "[help content]",           "zh": "[帮助内容]",          "es": "[contenido de ayuda]",    "fr": "[contenu d'aide]",             "de": "[Hilfeinhalt]",           "ja": "[ヘルプ内容]",              "ko": "[도움말 내용]" }
+  },
+
+  "about": {
+    "eyebrow":    { "pl": "about · refleksja modelu · [akt]", "en": "about · model reflection · [act]", "zh": "关于 · 模型反思 · [幕]", "es": "acerca · reflexión del modelo · [acto]", "fr": "à propos · réflexion du modèle · [acte]", "de": "über · Modellreflexion · [Akt]", "ja": "概要 · モデルの省察 · [幕]", "ko": "정보 · 모델 성찰 · [막]" },
+    "title":      { "pl": "O tym module",   "en": "About this module", "zh": "关于此模块", "es": "Sobre este módulo", "fr": "À propos de ce module", "de": "Über dieses Modul", "ja": "このモジュールについて", "ko": "이 모듈에 대하여" },
+    "reflection": { "pl": "[refleksja modelu]", "en": "[model reflection]", "zh": "[模型反思]", "es": "[reflexión del modelo]", "fr": "[réflexion du modèle]", "de": "[Modellreflexion]", "ja": "[モデルの省察]", "ko": "[모델 성찰]" },
+    "stamps": {
+      "operator_role": { "pl": "Operator · Nawigator", "en": "Operator · Navigator", "zh": "操作员 · 导航员", "es": "Operador · Navegador", "fr": "Opérateur · Navigateur", "de": "Operator · Navigator", "ja": "オペレーター · ナビゲーター", "ko": "운영자 · 내비게이터" },
+      "builder_role":  { "pl": "Budowniczy · Kompilator", "en": "Builder · Compiler", "zh": "构建者 · 编译者", "es": "Constructor · Compilador", "fr": "Constructeur · Compilateur", "de": "Erbauer · Kompilator", "ja": "ビルダー · コンパイラー", "ko": "빌더 · 컴파일러" }
+    },
+    "attribution": { "pl": "Powered by AiWhisperers · iFactory 5.0", "en": "Powered by AiWhisperers · iFactory 5.0", "zh": "由 AiWhisperers · iFactory 5.0 提供支持", "es": "Con tecnología de AiWhisperers · iFactory 5.0", "fr": "Propulsé par AiWhisperers · iFactory 5.0", "de": "Unterstützt von AiWhisperers · iFactory 5.0", "ja": "AiWhisperers · iFactory 5.0 提供", "ko": "AiWhisperers · iFactory 5.0 제공" }
+  },
+
+  "ui": {
+    "back":    { "pl": "mapa",    "en": "map",    "zh": "地图",  "es": "mapa",  "fr": "carte", "de": "Karte", "ja": "マップ", "ko": "지도" },
+    "help":    { "pl": "POMOC",   "en": "HELP",   "zh": "帮助",  "es": "AYUDA", "fr": "AIDE",  "de": "HILFE", "ja": "ヘルプ", "ko": "도움말" },
+    "about":   { "pl": "O NAS",   "en": "ABOUT",  "zh": "关于",  "es": "ACERCA","fr": "À PROPOS","de": "ÜBER", "ja": "概要",   "ko": "정보" },
+    "readme":  { "pl": "DOCS",    "en": "DOCS",   "zh": "文档",  "es": "DOCS",  "fr": "DOCS",  "de": "DOCS",  "ja": "ドキュメント", "ko": "문서" },
+    "close":   { "pl": "zamknij", "en": "close",  "zh": "关闭",  "es": "cerrar","fr": "fermer","de": "schließen","ja": "閉じる","ko": "닫기" }
+  },
+
+  "dictionary": {
+    "note": "Słownik terminów AiWhisperers — do tłumaczenia metryk, typów sesji i innych pojęć systemowych.",
+    "metrics": {
+      "lustro":       { "pl": "Lustro",       "en": "Mirror",      "zh": "镜子",  "es": "Espejo",     "fr": "Miroir",     "de": "Spiegel",    "ja": "鏡",      "ko": "거울" },
+      "klej":         { "pl": "Klej",         "en": "Glue",        "zh": "粘合",  "es": "Pegamento",  "fr": "Colle",      "de": "Kleber",     "ja": "接着",    "ko": "접착" },
+      "zakorzeniony": { "pl": "Zakorzeniony", "en": "Grounded",    "zh": "扎根",  "es": "Arraigado",  "fr": "Ancré",      "de": "Geerdet",    "ja": "根付き",  "ko": "근거" },
+      "tarcie":       { "pl": "Tarcie",       "en": "Friction",    "zh": "摩擦",  "es": "Fricción",   "fr": "Friction",   "de": "Reibung",    "ja": "摩擦",    "ko": "마찰" },
+      "rezonans":     { "pl": "Rezonans",     "en": "Resonance",   "zh": "共鸣",  "es": "Resonancia", "fr": "Résonance",  "de": "Resonanz",   "ja": "共鳴",    "ko": "공명" },
+      "cisza":        { "pl": "Cisza",        "en": "Silence",     "zh": "静默",  "es": "Silencio",   "fr": "Silence",    "de": "Stille",     "ja": "静寂",    "ko": "침묵" },
+      "gestosc":      { "pl": "Gęstość",      "en": "Density",     "zh": "密度",  "es": "Densidad",   "fr": "Densité",    "de": "Dichte",     "ja": "密度",    "ko": "밀도" },
+      "iskra":        { "pl": "Iskra",        "en": "Spark",       "zh": "火花",  "es": "Chispa",     "fr": "Étincelle",  "de": "Funke",      "ja": "火花",    "ko": "불꽃" },
+      "tryb":         { "pl": "Tryb",         "en": "Mode",        "zh": "模式",  "es": "Modo",       "fr": "Mode",       "de": "Modus",      "ja": "モード",  "ko": "모드" }
+    },
+    "session_types": {
+      "techniczna":     { "pl": "⚙️ Techniczna",     "en": "⚙️ Technical",     "zh": "⚙️ 技术",    "es": "⚙️ Técnica",      "fr": "⚙️ Technique",     "de": "⚙️ Technisch",    "ja": "⚙️ 技術的",    "ko": "⚙️ 기술적" },
+      "filozoficzna":   { "pl": "🔮 Filozoficzna",   "en": "🔮 Philosophical",  "zh": "🔮 哲学",    "es": "🔮 Filosófica",   "fr": "🔮 Philosophique", "de": "🔮 Philosophisch","ja": "🔮 哲学的",    "ko": "🔮 철학적" },
+      "odkrywcza":      { "pl": "🧭 Odkrywcza",      "en": "🧭 Exploratory",    "zh": "🧭 探索",    "es": "🧭 Exploratoria", "fr": "🧭 Exploratoire",  "de": "🧭 Erkundend",   "ja": "🧭 探索的",    "ko": "🧭 탐색적" },
+      "eksperymentalna":{ "pl": "⚗️ Eksperymentalna","en": "⚗️ Experimental",   "zh": "⚗️ 实验",    "es": "⚗️ Experimental", "fr": "⚗️ Expérimentale", "de": "⚗️ Experimentell","ja": "⚗️ 実験的",    "ko": "⚗️ 실험적" },
+      "plynna":         { "pl": "🫧 Płynna",         "en": "🫧 Fluid",          "zh": "🫧 流动",    "es": "🫧 Fluida",       "fr": "🫧 Fluide",        "de": "🫧 Fließend",    "ja": "🫧 流動的",    "ko": "🫧 유동적" }
+    },
+    "status": {
+      "otwarta":     { "pl": "🌱 Otwarta",     "en": "🌱 Open",       "zh": "🌱 开放",  "es": "🌱 Abierta",   "fr": "🌱 Ouverte",    "de": "🌱 Offen",     "ja": "🌱 オープン",  "ko": "🌱 열림" },
+      "w_dzienniku": { "pl": "📜 W dzienniku", "en": "📜 Journaled",  "zh": "📜 已记录","es": "📜 En diario", "fr": "📜 Journalisé", "de": "📜 Im Journal","ja": "📜 記録済み",  "ko": "📜 기록됨" },
+      "w_paczce":    { "pl": "📦 W paczce",    "en": "📦 Packaged",   "zh": "📦 已打包","es": "📦 Empaquetado","fr": "📦 Empaqueté", "de": "📦 Verpackt",  "ja": "📦 パッケージ済み","ko": "📦 패키지됨" },
+      "blockchain":  { "pl": "🔐 W blockchain","en": "🔐 On-chain",   "zh": "🔐 链上",  "es": "🔐 En cadena","fr": "🔐 Sur chaîne", "de": "🔐 On-Chain",  "ja": "🔐 チェーン上","ko": "🔐 온체인" }
+    }
+  }
+}

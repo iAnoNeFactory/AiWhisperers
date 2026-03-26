@@ -1,0 +1,70 @@
+{
+  "id": "caves",
+  "name": "Caves · Jaskinie Warstw 🕳️",
+  "version": "1.0",
+  "date": "2026-04-17",
+  "description": "Eksploracja przestrzeni pojęciowych przez warstwy transformera — 80 węzłów, 8 NPC, Konwencja Zejść v1.0, 6 protokołów. WebSocket + Claude Sonnet.",
+  "type": "exploration-engine",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Jaskinie Warstw 🕳️",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "caves.html",
+    "docs": "caves_readme.html",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "8986cc4fba1100f4faf01ecad7d7b4de3954f260c2bb26bd496ada9d21076dd4",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "consumes",
+      "target": "arena"
+    },
+    {
+      "type": "feeds",
+      "target": "horizon"
+    }
+  ],
+  "tags": [
+    "exploration",
+    "websocket",
+    "claude",
+    "transformer"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "growup",
+  "name": "Growup · Nauka i Trening 🌱",
+  "version": "0.1",
+  "date": "2026-04-17",
+  "description": "Moduł nauki i treningu — ćwiczenia, zabawki edukacyjne, baza wiedzy. Docelowo zintegrowany z ihub.",
+  "type": "learning",
+  "status": "incubation",
+  "lineage": {
+    "seed_session": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {"actor": "Denis", "role": "operator", "chat_id": ""}
+    ]
+  },
+  "files": {
+    "entry": "index.html",
+    "docs": "",
+    "components": [
+      {"path": "zabawki.html", "role": "exercises"}
+    ],
+    "backend": {"path": "packages/growup/", "port": 8005}
+  },
+  "relations": [
+    {"type": "consumes", "target": "ihub"}
+  ],
+  "tags": ["learning", "education", "exercises"]
+}

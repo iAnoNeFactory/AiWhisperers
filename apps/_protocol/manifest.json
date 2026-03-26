@@ -1,0 +1,69 @@
+{
+  "id": "_protocol",
+  "name": "Protocol · Manifest & Protokół Połączeń ⟁",
+  "version": "1.0",
+  "date": "2026-05-02",
+  "description": "Meta-moduł dokumentujący konwencję manifest.json wszystkich modułów AiWhisperers oraz protokół połączeń artefakt↔backend: REST polling, WebSocket (AiWConnector, ConnectionManager), typy komunikatów (BROADCAST_SIGNAL, STATE_UPDATE, TASK_READY, ACTION).",
+  "type": "protocol-schema",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Wyrównanie Protokołu · AiWProtocol",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWProtocol.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "_protocol-boot.md",
+    "bootstrap_sha": "64ca87f71a5ee291086c1d0007ca7e09e22eadd92ddc0e8de95210082a5fe744",
+    "entry_sha": "96c9ea7119a479ef7de87a338dbd4c46186e9e1e6d2501c187ee6a77f1039d7a",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "documents",
+      "target": "*"
+    },
+    {
+      "type": "complements",
+      "target": "_schema"
+    }
+  ],
+  "tags": [
+    "meta",
+    "protocol",
+    "manifest",
+    "websocket",
+    "rest",
+    "foundation"
+  ]
+}

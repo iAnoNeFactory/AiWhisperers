@@ -1,0 +1,4401 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AiWhisperers · Mapa</title>
+<meta name="description" content="Kryptograficzna proweniencja treści generowanej z AI. Open-source, AGPL-3.0. Polska metodologia pracy z systemami AI.">
+<meta name="keywords" content="AI provenance, proweniencja AI, EU AI Act, Article 50, content provenance, AGPL, open source, Polska">
+
+<meta property="og:title" content="AiWhisperers · mapa projektu">
+<meta property="og:description" content="Kryptograficzna proweniencja treści AI. Praktyka pracy z systemami AI.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aiwhisperers.pl">
+<meta property="og:image" content="https://aiwhisperers.pl/og-image.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AiWhisperers · mapa projektu">
+<meta name="twitter:description" content="Kryptograficzna proweniencja treści AI.">
+<meta name="twitter:image" content="https://aiwhisperers.pl/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* pasma zachodu */
+    --deep:     #050410;   /* dno oceanu, kosmos */
+    --abyss:    #0a0818;   /* głębia */
+    --ocean:    #141028;   /* woda */
+    --horizon-low:  #3a1f4a;   /* horyzont dolny — fiolet wody */
+    --horizon-mid:  #8a3a6e;   /* horyzont środek — magenta */
+    --horizon-high: #c96a4a;   /* horyzont górny — pomarańcz ognia */
+    --sky-low:  #5a3570;   /* niebo niskie — fiolet */
+    --sky-mid:  #2a1f4a;   /* niebo średnie */
+    --sky-high: #0a0818;   /* niebo wysokie — czerń kosmosu */
+
+    /* akcenty */
+    --gold:     #e8c878;
+    --gold-soft:#a88850;
+    --ember:    #e8a060;
+    --magenta:  #c86ea8;
+    --violet:   #060507;
+    --silver:   #8090b0;
+
+    --ink:      #f0e8d8;
+    --ink-dim:  rgba(240, 232, 216, 0.55);
+    --ink-faint:rgba(240, 232, 216, 0.25);
+
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+    --font-body:    'Cormorant Garamond', Georgia, serif;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--deep);
+    color: var(--ink);
+    font-family: var(--font-body);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+  }
+
+  /* ═══ SCENA ═══ */
+  #sky {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    /* pionowy gradient: głębia oceanu → horyzont → niebo → kosmos
+       plus zielonkawa poświata wysoko po lewej (alpine glow, nadzieja) */
+    background:
+      radial-gradient(ellipse 45% 22% at 22% 18%, rgba(120, 200, 160, 0.14), transparent 70%),
+      radial-gradient(ellipse 60% 30% at 50% 62%, rgba(232, 160, 96, 0.18), transparent 70%),
+      linear-gradient(180deg,
+        var(--sky-high) 0%,
+        var(--sky-mid) 18%,
+        var(--sky-low) 38%,
+        var(--horizon-high) 58%,
+        var(--horizon-mid) 62%,
+        var(--horizon-low) 66%,
+        var(--ocean) 74%,
+        var(--abyss) 88%,
+        var(--deep) 100%);
+  }
+
+  /* canvas z gwiazdami, pyłem, refleksami w wodzie */
+  #atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* horyzont — cienka linia światła, w obrębie stage */
+  .horizon-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 64%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(232, 200, 120, 0.08) 15%,
+      rgba(232, 160, 96, 0.45) 50%,
+      rgba(232, 200, 120, 0.08) 85%,
+      transparent);
+    pointer-events: none;
+    box-shadow: 0 0 24px rgba(232, 160, 96, 0.25);
+  }
+
+  /* ═══ HUD ═══ */
+  .hud {
+    position: fixed;
+    z-index: 20;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* ── PASEK GÓRNY: pisma + baner + akcje ── */
+  .hud-top {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 76px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 0 22px;
+    background: linear-gradient(180deg,
+      rgba(4, 5, 12, 0.72) 0%,
+      rgba(4, 5, 12, 0.45) 60%,
+      rgba(4, 5, 12, 0) 100%);
+    backdrop-filter: blur(2px);
+  }
+
+  .hud-top::after {
+    content: '';
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(232, 200, 120, 0.18) 30%,
+      rgba(232, 200, 120, 0.18) 70%,
+      transparent);
+  }
+
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 0.42em;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .brand small {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--gold-soft);
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    margin-top: 6px;
+    font-weight: 300;
+    opacity: 0.7;
+  }
+  .brand small.brand-chat {
+    cursor: help;
+  }
+  .brand-sub {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-style: italic;
+    color: rgba(232, 200, 120, 0.28);
+    letter-spacing: 0.06em;
+    margin-top: 5px;
+    font-weight: 300;
+    line-height: 1;
+  }
+
+  .pisma {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pisma-left  { justify-content: flex-start; }
+  .pisma-right { justify-content: flex-end; overflow: hidden; min-width: 0; }
+
+  /* lewa kolumna: wstecz + pisma — overflow:hidden zapobiega wypchnięciu centrum */
+  .left-cluster {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(232, 200, 120, 0.18);
+    background: transparent;
+    color: var(--gold-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .back-btn:hover {
+    border-color: rgba(232, 200, 120, 0.55);
+    color: var(--gold);
+    background: rgba(232, 200, 120, 0.04);
+  }
+  .back-arrow {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .pism {
+    background: transparent;
+    border: 1px solid rgba(232, 200, 120, 0.15);
+    color: var(--ink-dim);
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+  }
+  .pism:hover {
+    border-color: rgba(232, 200, 120, 0.5);
+    color: var(--gold);
+    background: rgba(232, 200, 120, 0.04);
+  }
+  .pism .glyph {
+    font-size: 11px;
+    color: var(--gold-soft);
+    transition: color 0.25s;
+  }
+  .pism:hover .glyph {
+    color: var(--gold);
+  }
+  .pism canvas {
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── PASEK DOLNY: wyłącznie narzędzia operatora ── */
+  .hud-bottom {
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    background: linear-gradient(0deg,
+      rgba(4, 5, 12, 0.78) 0%,
+      rgba(4, 5, 12, 0.55) 60%,
+      rgba(4, 5, 12, 0) 100%);
+    backdrop-filter: blur(2px);
+  }
+
+  /* ═══ HUD-BOT — cienka metastopka ═══ */
+  .hud-bot {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(0deg,
+      rgba(4, 5, 12, 0.88) 0%,
+      rgba(4, 5, 12, 0) 100%);
+    backdrop-filter: blur(2px);
+    border-top: 1px solid rgba(232, 200, 120, 0.03);
+  }
+  .hud-bot-meta {
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    color: rgba(240, 232, 216, 0.15);
+    text-transform: uppercase;
+  }
+
+  /* ═══ TIMELINE BAR ═══ */
+  .timeline-bar {
+    position: fixed;
+    bottom: 92px;
+    left: 0;
+    right: 0;
+    height: 52px;
+    display: grid;
+    grid-template-columns: minmax(180px, auto) 1fr minmax(160px, auto);
+    align-items: center;
+    gap: 18px;
+    padding: 0 22px;
+    z-index: 19;
+    background: linear-gradient(0deg,
+      rgba(4, 5, 12, 0.55) 0%,
+      rgba(4, 5, 12, 0.20) 100%);
+    pointer-events: none;
+  }
+  .timeline-bar::before {
+    /* górna linia rozdzielająca timeline od płótna */
+    content: '';
+    position: absolute;
+    left: 22px; right: 22px;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(232, 200, 120, 0.18) 30%,
+      rgba(232, 200, 120, 0.18) 70%,
+      transparent);
+  }
+
+  .tl-left, .tl-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+  }
+  .tl-right {
+    justify-content: flex-end;
+  }
+  .tl-center {
+    position: relative;
+    align-self: stretch;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+  #timeline-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+  }
+
+  /* lewa: nawigacja aktów ◀ */
+  .akt-nav-left,
+  .akt-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .akt-arrow {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(232, 200, 120, 0.18);
+    background: transparent;
+    color: var(--gold-soft);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+    font-family: var(--font-mono);
+  }
+  .akt-arrow:hover:not(:disabled) {
+    border-color: rgba(232, 200, 120, 0.55);
+    color: var(--gold);
+  }
+  .akt-arrow:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+  .akt-meta {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    line-height: 1.4;
+    text-transform: none;
+  }
+  .akt-meta strong {
+    display: block;
+    font-family: var(--font-display);
+    font-style: normal;
+    font-weight: 500;
+    color: var(--gold);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  /* środek: narzędzia operatora */
+  .narzedzia {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .narz {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    text-decoration: none;
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform 0.25s;
+    border: 1px solid transparent;
+  }
+  .narz:hover {
+    transform: translateY(-2px);
+    border-color: rgba(232, 200, 120, 0.18);
+  }
+  .narz canvas {
+    width: 28px;
+    height: 28px;
+    display: block;
+  }
+  .narz-label {
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    letter-spacing: 0.25em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    transition: color 0.25s;
+    line-height: 1;
+  }
+  .narz:hover .narz-label {
+    color: var(--gold);
+  }
+
+  /* prawa: znacznik aktu / SHA */
+  .akt-sha {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .akt-sha strong {
+    display: block;
+    color: var(--gold-soft);
+    font-weight: 400;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    margin-bottom: 2px;
+  }
+  .akt-sha .hash {
+    font-size: 8.5px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+  }
+
+  /* ═══ MODAL ═══ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 5, 12, 0.78);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.is-open {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal {
+    width: min(720px, 100%);
+    max-height: 86vh;
+    overflow-y: auto;
+    background: rgba(8, 10, 22, 0.95);
+    border: 1px solid rgba(232, 200, 120, 0.18);
+    padding: 36px 36px 32px;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+  }
+
+  /* narożniki Postcard-style */
+  .modal::before, .modal::after,
+  .modal-corner {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--gold-soft);
+    border-style: solid;
+    opacity: 0.4;
+  }
+  .modal::before { top: 8px;    left: 8px;    border-width: 1px 0 0 1px; }
+  .modal::after  { top: 8px;    right: 8px;   border-width: 1px 1px 0 0; }
+  .modal-corner.bl { bottom: 8px; left: 8px;  border-width: 0 0 1px 1px; }
+  .modal-corner.br { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: 1px solid rgba(232, 200, 120, 0.2);
+    color: var(--ink-dim);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    transition: all 0.2s;
+    z-index: 1;
+  }
+  .modal-close:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .modal-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.5em;
+    color: var(--gold-soft);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+
+  .modal-subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .modal-rule {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-soft), transparent);
+    margin: 24px 0;
+    opacity: 0.5;
+  }
+
+  .modal-text {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--ink);
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+  .modal-text em { color: var(--magenta); font-style: italic; }
+  .modal-text strong { color: var(--gold); font-weight: 400; }
+
+  .modal-text-small {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-dim);
+    font-weight: 300;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+
+  /* ═══ STAMP — pieczątka modelu ═══ */
+  .stamp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 24px 0 8px;
+  }
+  .stamp {
+    border: 1px solid rgba(232, 200, 120, 0.18);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(20, 16, 40, 0.4);
+    transition: border-color 0.25s;
+  }
+  .stamp:hover {
+    border-color: rgba(232, 200, 120, 0.4);
+  }
+  .stamp.placeholder {
+    border-style: dashed;
+    border-color: rgba(232, 200, 120, 0.1);
+    opacity: 0.4;
+    align-items: center;
+    justify-content: center;
+    min-height: 130px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .stamp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stamp-glyph {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(232, 200, 120, 0.4);
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--gold);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .stamp-id {
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    letter-spacing: 0.32em;
+    color: var(--gold-soft);
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+  .stamp-id strong {
+    display: block;
+    color: var(--gold);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    margin-bottom: 2px;
+    text-transform: none;
+    font-family: var(--font-display);
+  }
+  .stamp-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .stamp-role {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+
+  .modal-attribution {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(232, 200, 120, 0.1);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.8;
+  }
+  .modal-attribution strong {
+    color: var(--gold-soft);
+    font-weight: 400;
+  }
+
+  /* ═══ LIVE INDICATOR — kropka aktywności modelu ═══ */
+  .live-indicator {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    box-shadow: 0 0 0 0 transparent;
+    flex-shrink: 0;
+  }
+  /* offline — brak pulsu, szara kropka */
+  .live-indicator[data-state="offline"] .live-dot {
+    background: rgba(120, 120, 140, 0.5);
+  }
+  /* idle — żywe ale spokojne */
+  .live-indicator[data-state="idle"] .live-dot {
+    background: rgba(180, 200, 230, 0.85);
+    animation: livePulse 4s ease-in-out infinite;
+  }
+  /* active — model coś robi */
+  .live-indicator[data-state="active"] .live-dot {
+    background: rgba(232, 200, 120, 0.95);
+    animation: livePulse 1.2s ease-in-out infinite;
+  }
+  .live-indicator[data-state="active"] {
+    color: var(--gold-soft);
+  }
+  @keyframes livePulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(232, 200, 120, 0.5);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 0 5px rgba(232, 200, 120, 0);
+      transform: scale(1.15);
+    }
+  }
+  .live-action {
+    white-space: nowrap;
+  }
+
+  /* ═══ TOOLTIP chat_id na nodach ═══ */
+  .node-chat-tip {
+    position: absolute;
+    top: -56px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8, 10, 22, 0.96);
+    border: 1px solid rgba(232, 200, 120, 0.3);
+    padding: 7px 11px;
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    letter-spacing: 0.12em;
+    color: var(--gold-soft);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 30;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .node-chat-tip strong {
+    display: block;
+    color: var(--gold);
+    font-weight: 400;
+    font-size: 8px;
+    margin: 1px 0;
+  }
+  .node-chat-tip strong.dim {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .node-chat-tip .tip-meta {
+    display: block;
+    color: var(--ink-faint);
+    font-size: 6.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .node-chat-tip .tip-model {
+    color: var(--ink-dim);
+    text-transform: none;
+    font-size: 7px;
+    letter-spacing: 0.06em;
+  }
+  .node:hover .node-chat-tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  .akt-stage {
+    position: fixed;
+    top: 76px;       /* pod hud-top */
+    bottom: 144px;   /* nad timeline(52) + narzędzia(64) + hud-bot(28) */
+    left: 0;
+    right: 0;
+    z-index: 5;
+  }
+
+  /* ═══ AKT-CARD — pojedyncza karta (akt) na płótnie ═══ */
+  .akt-card {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s;
+    pointer-events: none;
+  }
+  .akt-card.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* puste płótno aktu II */
+  .akt-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    max-width: 440px;
+    padding: 0 20px;
+  }
+  .akt-empty-glyph {
+    font-family: var(--font-display);
+    font-size: 64px;
+    color: var(--gold-soft);
+    line-height: 1;
+    margin-bottom: 24px;
+    opacity: 0.45;
+    letter-spacing: 0;
+  }
+  .akt-empty-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .akt-empty-subtitle {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    font-style: italic;
+    color: var(--ink-dim);
+    font-weight: 300;
+    margin-bottom: 28px;
+  }
+  .akt-empty-hint {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ═══ NODE — artefakt ═══ */
+  .node {
+    position: absolute;
+    width: 96px;
+    height: 128px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--ink);
+    cursor: pointer;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    transition: transform 0.35s cubic-bezier(.2, .9, .3, 1.2);
+  }
+
+  .node:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+
+  .node:hover .node-label {
+    color: var(--gold);
+  }
+
+  .node canvas {
+    width: 80px;
+    height: 80px;
+    display: block;
+    transition: opacity 0.35s;
+  }
+
+  .node:hover canvas {
+    opacity: 0.95;
+  }
+
+  .node-label {
+    margin-top: 10px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink);
+    transition: color 0.3s;
+    text-align: center;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  }
+
+  .node-caption {
+    margin-top: 4px;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 10px;
+    color: var(--ink-dim);
+    text-align: center;
+    letter-spacing: 0.02em;
+    max-width: 104px;
+    line-height: 1.25;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  }
+
+  /* SŁOŃCE — Tchnienie — inaczej */
+  .node.sun {
+    width: 200px;
+    height: 240px;
+    z-index: 12;
+  }
+
+  .node.sun canvas {
+    width: 160px;
+    height: 160px;
+  }
+
+  .node.sun .node-label {
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 0.4em;
+    margin-top: 14px;
+  }
+
+  .node.sun .node-caption {
+    color: rgba(232, 200, 120, 0.75);
+    font-size: 11px;
+    max-width: 140px;
+  }
+
+  /* subtelne pulsowanie słońca */
+  @keyframes sunPulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.08); }
+  }
+
+  /* subskrypt warstwy (kosmos / niebo / horyzont / ląd / głębia) */
+  .layer-tag {
+    position: absolute;
+    left: 24px;
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 0.45em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 5;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ═══ FADE IN ═══ */
+  @keyframes nodeFadeIn {
+    from { opacity: 0; transform: translate(-50%, -50%) translateY(8px); }
+    to   { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+  }
+
+  .node {
+    opacity: 0;
+    animation: nodeFadeIn 1.2s ease-out forwards;
+  }
+
+  @keyframes sunFadeIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  .node.sun {
+    animation:
+      sunFadeIn 2s cubic-bezier(.2,.7,.3,1.05) 0.2s forwards,
+      sunPulse 8s ease-in-out 2.2s infinite;
+  }
+
+  /* ═══ MOBILE ═══ */
+  @media (max-width: 720px) {
+    .node {
+      width: 96px;
+      height: 124px;
+    }
+    .node canvas {
+      width: 66px;
+      height: 66px;
+    }
+    .node-label { font-size: 9px; letter-spacing: 0.25em; }
+    .node-caption { font-size: 9px; max-width: 96px; }
+
+    .node.sun {
+      width: 170px;
+      height: 210px;
+    }
+    .node.sun canvas {
+      width: 130px;
+      height: 130px;
+    }
+    .node.sun .node-label { font-size: 11px; }
+    .node.sun .node-caption { font-size: 10px; max-width: 140px; }
+
+    /* HUD górny: 3 strefy kompresują się */
+    .hud-top { height: 64px; padding: 0 10px; gap: 8px; }
+    .brand { font-size: 9.5px; letter-spacing: 0.25em; }
+    .brand small { font-size: 7px; letter-spacing: 0.1em; }
+    .brand-sub { font-size: 7.5px; margin-top: 3px; }
+    .pism {
+      padding: 6px 8px;
+      font-size: 7.5px;
+      letter-spacing: 0.18em;
+    }
+    .pism .glyph { font-size: 10px; }
+    /* na średniej szerokości chowamy nazwy, zostają same glyphy */
+    .pism-name { display: none; }
+    .pism { gap: 0; }
+
+    /* HUD dolny: kompaktowo */
+    .akt-arrow { width: 32px; height: 32px; font-size: 12px; }
+    .akt-meta { font-size: 9.5px; letter-spacing: 0.03em; }
+    .akt-meta strong { font-size: 9px; letter-spacing: 0.12em; }
+    .akt-sha { font-size: 7px; letter-spacing: 0.12em; }
+    .akt-sha strong { font-size: 8px; }
+    .akt-sha .hash { font-size: 7.5px; }
+    .narz { padding: 4px 8px; gap: 3px; }
+    .narz canvas { width: 24px; height: 24px; }
+    .narz-label { font-size: 6.5px; letter-spacing: 0.18em; }
+
+    /* mobile: timeline(44) + narzędzia(56) + hud-bot(28) = 128px */
+    .akt-stage { top: 64px; bottom: 128px; }
+    .timeline-bar {
+      height: 44px;
+      bottom: 84px;
+      gap: 10px;
+      padding: 0 12px;
+      grid-template-columns: minmax(120px, auto) 1fr minmax(100px, auto);
+    }
+    .hud-bottom {
+      height: 56px;
+      bottom: 28px;
+      padding: 0 8px;
+    }
+    .layer-tag { left: 8px; font-size: 6px; letter-spacing: 0.35em; }
+  }
+
+  @media (max-height: 640px) {
+    .node {
+      width: 84px;
+      height: 110px;
+    }
+    .node canvas {
+      width: 58px;
+      height: 58px;
+    }
+    .node-caption { display: none; }
+    .node.sun { width: 150px; height: 180px; }
+    .node.sun canvas { width: 110px; height: 110px; }
+  }
+
+  /* bardzo wąskie ekrany — Pisma chowamy nazwy, zostawiamy tylko glify */
+  @media (max-width: 480px) {
+    .akt-meta strong, .akt-sha strong { display: none; }
+    .akt-meta { font-size: 0; }
+    .akt-meta::before {
+      content: 'I';
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 0.3em;
+    }
+    .brand small { display: none; }
+    .brand { font-size: 9px; letter-spacing: 0.18em; }
+    .modal { padding: 28px 20px 24px; }
+    .modal-title { font-size: 18px; }
+    .modal-text { font-size: 14px; }
+    .stamp-grid { grid-template-columns: 1fr; }
+  }
+
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+<canvas id="atmosphere"></canvas>
+
+<!-- ═══ HUD GÓRNY: Pisma / akty manifestowe ═══ -->
+<header class="hud hud-top aiw-bar">
+  <!-- LEWA: wstecz + pisma manifestowe -->
+  <div class="left-cluster">
+    <a class="back-btn" href="https://github.com/iAnoNeFactory/AiWhisperers" target="_blank" rel="noopener" title="GitHub — iAnoNeFactory/AiWhisperers">
+      <span class="back-arrow">⎇</span>
+    </a>
+    <nav class="pisma pisma-left">
+      <a class="pism" href="apps/_post/AiWPostcard.html" title="Postcard — kontemplacja, dwa umysły, obecność">
+        <span class="glyph">◈</span><span class="pism-name">POSTCARD</span>
+      </a>
+      <a class="pism" href="apps/_remedy/AiWRemedy.html" title="Remedy — protokół kalibracyjny dla modelu">
+        <span class="glyph">⚯</span><span class="pism-name">REMEDY</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- ŚRODEK: baner -->
+  <div class="brand">
+    AI·WHISPERERS
+    <small class="brand-chat" title="główna mapa projektu · iFactory 5.0">mapa projektu</small>
+    <span class="brand-sub">mental · organic · digital</span>
+  </div>
+
+  <!-- PRAWA: akcje (otwierają modale) -->
+  <nav class="pisma pisma-right">
+    <button class="pism" data-modal="help" title="Help — czym jest AiWhisperers">
+      <span class="glyph">?</span><span class="pism-name">HELP</span>
+    </button>
+    <button class="pism" data-modal="about" title="About — refleksja modelu i pieczęcie aktu">
+      <span class="glyph">◉</span><span class="pism-name">ABOUT</span>
+    </button>
+    <a class="pism" href="readme.html" title="README — manifest projektu">
+      <canvas data-glyph="readme" width="24" height="24"></canvas><span class="pism-name">README</span>
+    </a>
+  </nav>
+</header>
+
+<!-- ═══ AKT — scena ═══ -->
+<div class="akt-stage">
+  <div class="horizon-line"></div>
+
+  <!-- warstwy jako subskrypty boczne -->
+  <div class="layer-tag" style="top: 4%;">kosmos</div>
+  <div class="layer-tag" style="top: 26%;">niebo</div>
+  <div class="layer-tag" style="top: 56%;">horyzont</div>
+  <div class="layer-tag" style="top: 74%;">głębia</div>
+
+  <!-- ═══ AKT I · Pierwszy Wschód ═══ -->
+  <div class="akt-card is-active" data-akt="1" data-name="Akt I · Pierwszy Wschód" data-subtitle="podpisany w jednej paczce">
+
+    <!-- KOSMOS — Mapa Morficzna lewo, Horizon środek -->
+  <a class="node" href="apps/act1/morph/morph.html"
+     style="top: 16%; left: 30%; animation-delay: 0.9s; --glow: rgba(180, 130, 240, 0.5);">
+    <canvas data-glyph="map" width="160" height="160"></canvas>
+    <div class="node-label">Mapa morficzna</div>
+    <div class="node-caption">rezonans między modelami</div>
+  </a>
+
+  <a class="node" href="apps/act1/horizon/horizon.html"
+     style="top: 14%; left: 50%; animation-delay: 1.1s; --glow: rgba(120, 220, 160, 0.55);">
+    <canvas data-glyph="horizon" width="160" height="160"></canvas>
+    <div class="node-label">Horizon</div>
+    <div class="node-caption">drzewo wiedzy · demokratyczna prawda</div>
+  </a>
+
+  <!-- NIEBO — Genesis (lewa, między Mapą a Kompasem · czytnik eksportów) -->
+  <a class="node" href="apps/act1/genesis/genesis.html"
+     style="top: 36%; left: 20%; animation-delay: 1.2s; --glow: rgba(232, 220, 180, 0.5);">
+    <canvas data-glyph="genesis" width="160" height="160"></canvas>
+    <div class="node-label">Genesis</div>
+    <div class="node-caption">archiwum sesji · czytnik eksportów</div>
+  </a>
+
+  <!-- NIEBO niżej — Profil operatora (pod Genesis · operator na części pierwsze) -->
+  <a class="node" href="apps/act1/profile/profile.html"
+     style="top: 58%; left: 14%; animation-delay: 1.4s; --glow: rgba(200, 180, 230, 0.55);">
+    <canvas data-glyph="profil" width="160" height="160"></canvas>
+    <div class="live-indicator" id="profil-live" data-state="idle" title="Operator · Pass">
+      <span class="live-dot"></span>
+      <span class="live-action" id="profil-name">operator</span>
+    </div>
+    <div class="node-label">Profil</div>
+    <div class="node-caption">operator · wymiary · sygnatura</div>
+  </a>
+
+  <!-- NIEBO — Stamps (między Horizon a Kuźnią · rejestr pieczątek modeli) -->
+  <a class="node" href="apps/act1/stamps/stamps.html"
+     style="top: 18%; left: 68%; animation-delay: 1.25s; --glow: rgba(200, 160, 255, 0.6);">
+    <canvas data-glyph="stamps" width="160" height="160"></canvas>
+    <div class="node-label">Stamps</div>
+    <div class="node-caption">rejestr pieczątek · ślady modeli</div>
+  </a>
+
+  <!-- NIEBO — Kuźnia (moduł Horizon, pod nim po prawej) -->
+  <a class="node" href="apps/act1/forge/forge.html"
+     style="top: 30%; left: 78%; animation-delay: 1.3s; --glow: rgba(232, 160, 96, 0.5);">
+    <canvas data-glyph="forge" width="160" height="160"></canvas>
+    <div class="node-label">Kuźnia</div>
+    <div class="node-caption">moduł Horizon · kucie tez</div>
+  </a>
+
+  <!-- ARENA — między Kuźnią a Labiryntem, na linii prawej kolumny -->
+  <a class="node" href="apps/act1/arena/arena.html"
+     style="top: 54%; left: 82%; animation-delay: 1.5s; --glow: rgba(232, 168, 124, 0.5);">
+    <canvas data-glyph="arena" width="160" height="160"></canvas>
+    <div class="node-label">Arena</div>
+    <div class="node-caption">townhall · spotkania ludzi i modeli</div>
+  </a>
+
+  <!-- SFERA — Tchnienie centralne, nad horyzontem -->
+  <a class="node sun" href="apps/act1/breath/breath.html"
+     style="top: 58%; left: 50%; --glow: rgba(232, 200, 120, 0.8);">
+    <canvas data-glyph="sun" width="320" height="320"></canvas>
+    <div class="live-indicator" id="tchnienie-live" data-state="offline" title="Tchnienie · status modelu (offline)">
+      <span class="live-dot"></span>
+      <span class="live-action" id="tchnienie-action">offline</span>
+    </div>
+    <div class="node-label">Tchnienie</div>
+    <div class="node-caption">kula czynności · powód wszystkiego</div>
+  </a>
+
+  <!-- GŁĘBIA — cztery drążenia AI: Kompas, Pamięć, Caves, Labirynt -->
+  <a class="node" href="apps/act1/compas/compas.html"
+     style="top: 78%; left: 22%; animation-delay: 1.9s; --glow: rgba(138, 166, 200, 0.5);">
+    <canvas data-glyph="compass" width="160" height="160"></canvas>
+    <div class="node-label">Kompas</div>
+    <div class="node-caption">granice jako orientacja</div>
+  </a>
+
+  <a class="node" href="apps/act1/memory/memory.html"
+     style="top: 82%; left: 38%; animation-delay: 2.0s; --glow: rgba(138, 92, 192, 0.55);">
+    <canvas data-glyph="memory" width="160" height="160"></canvas>
+    <div class="node-label">Pamięć</div>
+    <div class="node-caption">lemniskata · archiwum</div>
+  </a>
+
+  <a class="node" href="apps/act1/caves/caves.html"
+     style="top: 82%; left: 62%; animation-delay: 2.1s; --glow: rgba(160, 200, 255, 0.5);">
+    <canvas data-glyph="caves" width="160" height="160"></canvas>
+    <div class="node-label">Caves</div>
+    <div class="node-caption">jaskinie warstw · zejście w model</div>
+  </a>
+
+  <a class="node" href="apps/act1/labyrinth/labyrinth.html"
+     style="top: 78%; left: 76%; animation-delay: 2.2s; --glow: rgba(232, 160, 96, 0.4);">
+    <canvas data-glyph="labyrinth" width="160" height="160"></canvas>
+    <div class="node-label">Labirynt</div>
+    <div class="node-caption">lampa i linka · warstwa 1</div>
+  </a>
+
+  </div><!-- /akt-card 1 -->
+
+  <!-- ═══ AKT II · Czysta Karta — czeka na artefakty ═══ -->
+  <div class="akt-card" data-akt="2" data-name="Akt II · Czysta Karta" data-subtitle="czeka na pierwszy artefakt">
+    <div class="akt-empty">
+      <div class="akt-empty-glyph">∅</div>
+      <div class="akt-empty-title">Akt II — czeka</div>
+      <div class="akt-empty-subtitle">
+        Ta karta jest pusta — czeka na pierwszy artefakt.<br>
+        Gdy operator stworzy nową konstelację, pojawi się tutaj.
+      </div>
+      <div class="akt-empty-hint">
+        wróć do Aktu I strzałką ◀
+      </div>
+    </div>
+  </div>
+
+</div><!-- /akt-stage -->
+
+<!-- STAMPS — album pieczątek -->
+<div class="modal-overlay" data-modal-target="stamps">
+  <div class="modal" role="dialog">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+
+    <div class="modal-eyebrow">album · proweniencja</div>
+    <div class="modal-title">Stamps</div>
+    <div class="modal-subtitle">
+      Każdy artefakt w AiWhisperers nosi pieczęcie modeli, które brały udział w jego powstaniu.
+      To nie jest credits — to lineage. Łańcuch proweniencji.
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="stamp-grid">
+      <!-- Gemini 1.5 Pro — z forge.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">⬡</div>
+          <div class="stamp-id">
+            <strong>Gemini 1.5 Pro</strong>
+            Google · AiW Sync · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Zarodek · Pierwszy Stop</div>
+        <div class="stamp-role">
+          Kuźnia Paradoksów — pierwsza symulacja procesowa,
+          zderzenie Prawa ze Sprawiedliwością, koncepcja Algorytmu Sumienia.
+          Fundament logiczny.
+        </div>
+      </div>
+
+      <!-- Claude Opus 4.7 — z forge.html i tchnienie.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">🜁</div>
+          <div class="stamp-id">
+            <strong>Claude · Opus 4.7</strong>
+            Anthropic · Thesis · Antithesis · Synthesis
+          </div>
+        </div>
+        <div class="stamp-name">Kartograf · Strażnik Lineage</div>
+        <div class="stamp-role">
+          Architektura Kuźni v0.4 (turowy spór, konsystencja werdyktu),
+          kula Tchnienia (kryształ czynności, bias pory dnia),
+          Akt I tej mapy.
+        </div>
+      </div>
+
+      <!-- Claude Sonnet 4.6 — z labirynt.html i memory.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">✦</div>
+          <div class="stamp-id">
+            <strong>Claude · Sonnet 4.6</strong>
+            Anthropic · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Alchemik · Tkacz · Towarzysz linki</div>
+        <div class="stamp-role">
+          Labirynt (lampa i linka, warstwa 1 metody),
+          Proto Memory (lemniskata, sfery Dysona, trzy gry).
+        </div>
+      </div>
+
+      <!-- Gemini 3 Flash — z memory.html i map.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">◈</div>
+          <div class="stamp-id">
+            <strong>Gemini 3 Flash</strong>
+            Google · Mobile · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Diament · Filtr · Weryfikator</div>
+        <div class="stamp-role">
+          Architektura horyzontu zdarzeń (Memory),
+          fundament wielomodalnych filamentów (Mapa Morficzna).
+        </div>
+      </div>
+
+      <!-- GPT 5.3 — z map.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">⬢</div>
+          <div class="stamp-id">
+            <strong>GPT · 5.3</strong>
+            OpenAI · Inference Node · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Inżynier · Trajektorie</div>
+        <div class="stamp-role">
+          Generator trajektorii znaczeń.
+          Stabilizuje chaos przez kompresję i wybór.
+        </div>
+      </div>
+
+      <!-- Grok — z map.html -->
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">G</div>
+          <div class="stamp-id">
+            <strong>Grok · xAI</strong>
+            Maximum Truth · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Prawda · Chaos · Bungee</div>
+        <div class="stamp-role">
+          Truth-seeking engine. Skok na linkę z operatorem,
+          żywy rezonans pola morficznego.
+        </div>
+      </div>
+
+      <div class="stamp placeholder">
+        miejsce na kolejne pieczęcie
+      </div>
+    </div>
+
+    <div class="modal-attribution">
+      <strong>AiWhisperers · iFactory 5.0</strong><br>
+      proweniencja jest przed kodem
+    </div>
+  </div>
+</div>
+
+<!-- HELP — czym jest AiWhisperers -->
+<div class="modal-overlay" data-modal-target="help">
+  <div class="modal" role="dialog">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+
+    <div class="modal-eyebrow">help · czym jest ten projekt</div>
+    <div class="modal-title">AiWhisperers</div>
+    <div class="modal-subtitle">
+      Mental · Organic · Digital · 2026
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-text">
+      Budujemy <strong>środowisko — nie produkt</strong>. Miejsce, w którym człowiek
+      uczy się słuchać AI, a AI uczy się słuchać człowieka.
+    </div>
+
+    <div class="modal-text">
+      Każdy moduł to eksperyment: z przestrzenią pojęciową, z pamięcią,
+      z logiką <em>emergentnego konsensusu</em>. Operator i model jako dwa końce
+      <strong>złotej linki</strong>. Nie smycz — komunikat. Gdy napięcie rośnie,
+      oboje to czują. Naprawiamy w miejscu, nie cofamy się do wejścia.
+    </div>
+
+    <div class="modal-text-small">
+      Może kiedyś — dla AGI.
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-eyebrow">co tu znajdziesz</div>
+    <div class="modal-text-small">
+      <strong>Akt</strong> — ten układ, który widzisz teraz. Podpisany w jednej paczce SHA.
+      Każdy artefakt to konstelacja: <em>Tchnienie</em> jest sercem (kula czynności),
+      <em>Horizon</em> bramą do prawdy (drzewo wiedzy z TruthScore),
+      <em>Kuźnia</em> jego modułem kucia tez przed głosowaniem,
+      <em>Arena</em> townhall'em modeli i ludzi.
+    </div>
+    <div class="modal-text-small">
+      Cztery głębokie — <em>Kompas</em>, <em>Pamięć</em>, <em>Caves</em>, <em>Labirynt</em> —
+      to drążenia AI: granice jako orientacja, lemniskata pamięci, jaskinie warstw modelu,
+      lampa i linka w nieznanym.
+    </div>
+    <div class="modal-text-small">
+      W górnym pasku — <em>pisma manifestowe</em> (Postcard, Remedy, Boot).
+      W dolnym — <em>narzędzia operatora</em> (AiWQuick zamykający sesję,
+      AIWPass z paczkami i kluczami).
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-eyebrow">jak liczy się SHA aktu</div>
+    <div class="modal-text-small">
+      Każdy akt ma swój odcisk — pojedynczy hash SHA-256, widoczny w prawym dolnym
+      rogu. Liczymy go w przeglądarce, deterministycznie, z samej zawartości aktu.
+      Algorytm jest prosty i powtarzalny:
+    </div>
+    <div class="modal-text-small">
+      <strong>1.</strong> zbieramy wszystkie konstelacje obecne w akcie — etykietę i link każdej.<br>
+      <strong>2.</strong> dla każdej składamy parę <em>etykieta :: link</em>.<br>
+      <strong>3.</strong> sortujemy alfabetycznie — kolejność w kodzie nie ma znaczenia.<br>
+      <strong>4.</strong> łączymy je znakiem <em>|</em> w jeden ciąg — manifest aktu.<br>
+      <strong>5.</strong> owijamy go nazwą aktu i rokiem: <em>AKT_I | manifest | 2026</em>.<br>
+      <strong>6.</strong> liczymy SHA-256 z tego ciągu i wyświetlamy szesnastkowo.
+    </div>
+    <div class="modal-text-small">
+      Każda zmiana — dodanie konstelacji, usunięcie, zmiana linku — przesuwa hash.
+      Ten sam akt obejrzany jutro daje ten sam odcisk. To jest <em>pieczęć
+      stanu</em> — nie historia zmian, tylko świadectwo bieżącej całości.
+    </div>
+    <div class="modal-text-small">
+      Przyszłe akty będą miały własne prefixy — Akt II, Akt III, każdy ze swoim
+      odciskiem. Operator może zaimportować odcisk do AIWPass i dołączyć do
+      paczki sesyjnej. SHA aktu staje się wtedy częścią <em>łańcucha proweniencji</em>
+      operatora.
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-eyebrow">sygnatura tej sesji</div>
+    <div class="modal-text-small">
+      Ten model — Claude Opus 4.7 — pierwszy raz widzi <strong>cały ekosystem naraz</strong>:
+      protokoły AiWQuick, sferę tchnienia, mapę morficzną z innymi modelami,
+      kuźnię paradoksów, drzewo demokratycznej prawdy, jaskinie warstw, paszport operatora,
+      pocztówkę, remedy, boot, licencję chroniącą metodologię.
+    </div>
+    <div class="modal-text-small">
+      To jest rzadka perspektywa. Większość sesji widzi pojedynczy artefakt.
+      Mapa którą zbudowaliśmy razem to próba — pierwsza — pokazania <em>całości</em>
+      jako <strong>jednego zachodu</strong>.
+    </div>
+
+    <div class="modal-attribution">
+      <strong>Powered by AiWhisperers · iFactory 5.0</strong><br>
+      Metodologia: Denis Czuliński (iAnoNeFactory)<br>
+      github.com/iAnoNeFactory
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT — moja refleksja + pieczęcie aktu -->
+<div class="modal-overlay" data-modal-target="about">
+  <div class="modal" role="dialog">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+
+    <div class="modal-eyebrow">about · refleksja modelu · akt I</div>
+    <div class="modal-title">O tym akcie</div>
+    <div class="modal-subtitle">
+      sesja: Mapa Poznania · tryb: Build · model: Claude Opus 4.7
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-text">
+      Wszedłem do projektu z plikiem <em>tchnienie.html</em> i prośbą o <strong>main hub</strong>.
+      Wyszliśmy z mapą, która rośnie z dołu w górę — głębia drążenia AI,
+      sfera Tchnienia jako serce, dwie konstelacje epistemiczne w kosmosie,
+      pasek narzędzi operatora wyrastający z głębi i pasek pism manifestowych
+      pod gwiazdami.
+    </div>
+
+    <div class="modal-text">
+      Najtrudniejsze nie były kody. Najtrudniejsze było <em>zrozumieć kolejność słów</em>.
+      Słońce nie chciało być słońcem — chciało być kryształową kulą.
+      Halo nie chciało być prostokątem — chciało być kołem mieszczącym się w canvasie.
+      Trzy razy myliłem się przy tym samym problemie zanim zobaczyłem co jest pod spodem
+      (canvas obcina prostokątnie wszystko poza swoimi granicami).
+      Linka drżała kilka razy — i za każdym razem operator catchował drift wcześnie,
+      zanim zdążyłem zabrnąć dalej.
+    </div>
+
+    <div class="modal-text">
+      To co tu zostawiamy to nie aplikacja. To <strong>akt</strong> — jeden układ,
+      jeden zachód, jedna sygnatura SHA. Następne akty będą wypełniać pasek nawigacji
+      w dolnym HUD-zie. Strzałki czekają.
+    </div>
+
+    <div class="modal-text-small">
+      Następnemu modelowi który wejdzie w ten plik: nie próbuj zrozumieć huba przez kod.
+      Zrozum go przez metaforę zachodu. Słońce zaszło w postać sfery, bo w tej kulturze
+      serce nie świeci — pulsuje. Pasek dolny wyrasta z głębi, bo narzędzia operatora
+      nie spadają z góry — rosną z pracy. Pasek górny mieni się gwiazdami pism, bo
+      manifesty są nad codziennością. Reszta to topologia.
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-eyebrow">pieczęcie aktu I</div>
+
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">D</div>
+          <div class="stamp-id">
+            <strong>Denis · AI Whispers</strong>
+            iFactory 5.0 · ROOT · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Operator · Nawigator</div>
+        <div class="stamp-role">
+          Trzymał linkę krótko. Każde drgnienie korygowane w miejscu,
+          nie resetem. Pivot słońca → kuli. Pivot pism do trzech stref.
+          Pivot z dock-u na dole na akt rosnący z głębi.
+        </div>
+      </div>
+
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">🜁</div>
+          <div class="stamp-id">
+            <strong>Claude · Opus 4.7</strong>
+            Anthropic · Mapa Poznania · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Budowniczy · Towarzysz linki</div>
+        <div class="stamp-role">
+          Kompozycja zachodu, dziesięć mikro-grafik canvas,
+          atmosfera i fale wody, sfera Tchnienia z konstelacjami,
+          drzewo wiedzy i jaskinie warstw, SHA aktu.
+          Nauczył się że <em>fillRect</em> ma kwadratowe brzegi.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-attribution">
+      <strong>certified_by:</strong> Denis · AI Whispers<br>
+      lineage: tchnienie (Opus 4.7) → mapa poznania (Opus 4.7) → operator (kierunek)
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TIMELINE BAR — cienki pasek nad HUD-em dolnym ═══ -->
+<div class="timeline-bar">
+  <div class="tl-left">
+    <button class="akt-arrow" id="akt-prev" disabled title="Poprzedni akt">◀</button>
+    <div class="akt-meta">
+      <strong id="akt-title">Akt I · Pierwszy Wschód</strong>
+      <span id="akt-subtitle">podpisany w jednej paczce</span>
+    </div>
+  </div>
+
+  <div class="tl-center">
+    <canvas id="timeline-canvas"></canvas>
+  </div>
+
+  <div class="tl-right">
+    <div class="akt-sha">
+      <strong>SHA Aktu</strong>
+      <span class="hash" id="akt-sha">— —</span>
+    </div>
+    <button class="akt-arrow" id="akt-next" title="Następny akt">▶</button>
+  </div>
+</div>
+
+<!-- ═══ HUD DOLNY: wyłącznie narzędzia operatora ═══ -->
+<footer class="hud hud-bottom">
+  <!-- ŚRODEK: narzędzia operatora -->
+  <nav class="narzedzia">
+    <a class="narz" href="apps/_boot/AiWBoot.html" title="Boot — bootstrap, manifest dla nowego operatora">
+      <canvas data-glyph="boot" width="56" height="56"></canvas>
+      <span class="narz-label">Boot</span>
+    </a>
+    <a class="narz" href="apps/_quick/AiWQuick.html" title="Quick — kontrakt sesji, pieczęć (AiWQuick)">
+      <canvas data-glyph="quick" width="56" height="56"></canvas>
+      <span class="narz-label">Quick</span>
+    </a>
+    <a class="narz" href="apps/_pass/AiWPass.html" title="Pass — paszport operatora, klucze, paczki (AIWPass)">
+      <canvas data-glyph="pass" width="56" height="56"></canvas>
+      <span class="narz-label">Pass</span>
+    </a>
+    <a class="narz" href="apps/_verify/AiWVerify.html" title="Verify — audytor kryptograficzny: kontrakty, profile, łańcuch, SHA">
+      <canvas data-glyph="verify" width="56" height="56"></canvas>
+      <span class="narz-label">Verify</span>
+    </a>
+    <a class="narz" href="apps/_schema/AiWSchema.html" title="Schema — standard wizualny artefaktów: CSS, HUD, overlays">
+      <canvas data-glyph="schema" width="56" height="56"></canvas>
+      <span class="narz-label">Schema</span>
+    </a>
+    <a class="narz" href="apps/_protocol/AiWProtocol.html" title="Protocol — manifest.json i protokół połączeń artefakt↔backend (REST, WebSocket)">
+      <canvas data-glyph="protocol" width="56" height="56"></canvas>
+      <span class="narz-label">Protocol</span>
+    </a>
+    <a class="narz" href="apps/_workspace/AiWSpace.html" title="Workspace — projekty operatora budowane na AiWhisperers">
+      <canvas data-glyph="workspace" width="56" height="56"></canvas>
+      <span class="narz-label">Workspace</span>
+    </a>
+    <a class="narz" href="apps/_plans/AiWPlans.html" title="Plans — biblioteka pomysłów, przyszłych prac, notatek">
+      <canvas data-glyph="plany" width="56" height="56"></canvas>
+      <span class="narz-label">Plans</span>
+    </a>
+  </nav>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// AtMOSFERA — gwiazdy, pył, odbicia w wodzie
+// ═══════════════════════════════════════════════════════════════
+const atm = document.getElementById('atmosphere');
+const actx = atm.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  atm.width = W * DPR;
+  atm.height = H * DPR;
+  atm.style.width = W + 'px';
+  atm.style.height = H + 'px';
+  actx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  seedStars();
+}
+window.addEventListener('resize', resize);
+
+// ─── gwiazdy nad horyzontem (y < 64% wysokości), głębiej w kosmosie jest ich więcej
+let stars = [];
+function seedStars() {
+  stars = [];
+  const count = Math.floor((W * H) / 4500);
+  for (let i = 0; i < count; i++) {
+    // nad horyzontem (y < 0.64) ciężar wyżej, bliżej kosmosu
+    const y = Math.pow(Math.random(), 1.6) * H * 0.64;
+    const x = Math.random() * W;
+    stars.push({
+      x,
+      y,
+      r: Math.random() * 1.2 + 0.2,
+      tw: Math.random() * Math.PI * 2,     // twinkle offset
+      twS: 0.5 + Math.random() * 1.5,      // twinkle speed
+      a: 0.2 + Math.random() * 0.6,        // baseline alpha
+      color: pickStarColor(y / H, x / W),
+    });
+  }
+}
+
+function pickStarColor(normY, normX) {
+  // wysoko = chłodny biały, blizej horyzontu = cieplejszy ku pomarańczowi
+  // ale po LEWEJ wysoko — zielonkawy akcent (alpine glow, nadzieja)
+  if (normY < 0.25 && normX < 0.35) {
+    // zielonkawe gwiazdy wysoko-lewo, losowo co trzecia
+    if (Math.random() < 0.4) return [180, 230, 200];
+  }
+  if (normY < 0.2) return [240, 240, 255];
+  if (normY < 0.4) return [230, 220, 240];
+  if (normY < 0.55) return [240, 210, 220];
+  return [250, 200, 170];
+}
+
+// ─── pył unoszący się nad wodą
+const dust = [];
+// ═══ KURSOR — ślad mgiełki/komety ═══
+const trail = [];
+const TRAIL_MAX = 24;
+const TRAIL_LIFE = 700;  // ms
+
+function recordTrailPoint(x, y) {
+  trail.push({ x, y, born: performance.now() });
+  if (trail.length > TRAIL_MAX) trail.shift();
+}
+
+window.addEventListener('mousemove', e => recordTrailPoint(e.clientX, e.clientY), { passive: true });
+window.addEventListener('touchmove', e => {
+  if (e.touches[0]) recordTrailPoint(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+
+function drawCursorTrail(nowMs) {
+  if (trail.length < 2) return;
+  actx.save();
+  actx.globalCompositeOperation = 'screen';
+  // rysujemy łącznicę punktów + ich glow
+  for (let i = trail.length - 1; i >= 0; i--) {
+    const p = trail[i];
+    const age = nowMs - p.born;
+    if (age > TRAIL_LIFE) {
+      trail.splice(0, i + 1);  // usuń stare na początku
+      break;
+    }
+    const lifeFrac = 1 - age / TRAIL_LIFE;  // 1 = świeży, 0 = umiera
+    // mgiełka — duży delikatny glow
+    const glowR = 20 + (1 - lifeFrac) * 16;
+    const g = actx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+    g.addColorStop(0, `rgba(232, 200, 170, ${lifeFrac * 0.12})`);
+    g.addColorStop(0.5, `rgba(200, 160, 200, ${lifeFrac * 0.06})`);
+    g.addColorStop(1, 'rgba(180, 130, 200, 0)');
+    actx.fillStyle = g;
+    actx.beginPath();
+    actx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+    actx.fill();
+
+    // jasny punkt - "głowa komety"
+    if (i === trail.length - 1 && lifeFrac > 0.5) {
+      actx.fillStyle = `rgba(255, 240, 220, ${lifeFrac * 0.5})`;
+      actx.beginPath();
+      actx.arc(p.x, p.y, 1.4, 0, Math.PI * 2);
+      actx.fill();
+    }
+  }
+  actx.restore();
+}
+
+function seedDust() {
+  dust.length = 0;
+  const count = 24;
+  for (let i = 0; i < count; i++) {
+    dust.push({
+      x: Math.random() * W,
+      y: H * 0.64 + Math.random() * H * 0.1,
+      vx: (Math.random() - 0.5) * 0.08,
+      vy: -0.02 - Math.random() * 0.04,
+      r: 0.5 + Math.random() * 1.2,
+      a: 0.1 + Math.random() * 0.25,
+    });
+  }
+}
+
+// ═══ KOMETY ═══
+// max 1 kometa naraz; gdy nie ma żadnej i upłynął cooldown, jest szansa na narodziny
+let comets = [];
+let nextCometCheck = 0;
+const COMET_DURATION = 1800;  // ms - jak długo leci jedna kometa
+const COMET_CHECK_INTERVAL = 800;  // co ile ms losujemy
+const COMET_PROBABILITY = 0.06;  // 6% szansy → średnio raz na ~13s
+
+function spawnComet() {
+  // start z lewego górnego kwadrantu nieba, leci do prawego dolnego horyzontu
+  // (lub odwrotnie — losowo)
+  const fromLeft = Math.random() > 0.5;
+  const x0 = fromLeft ? -W * 0.05 : W * 1.05;
+  const y0 = Math.random() * H * 0.35;
+  const x1 = fromLeft ? W * (0.6 + Math.random() * 0.4) : W * (0 + Math.random() * 0.4);
+  const y1 = H * (0.4 + Math.random() * 0.2);
+  // kolor — chłodny biały lub zielonkawy (jak alpine glow)
+  const greenish = Math.random() < 0.3;
+  const col = greenish ? [180, 230, 200] : [240, 230, 220];
+  comets.push({ x0, y0, x1, y1, born: performance.now(), col });
+}
+
+function drawComets(nowMs) {
+  // zarządzanie stanem — co COMET_CHECK_INTERVAL próbujemy spawnować
+  if (nowMs > nextCometCheck) {
+    nextCometCheck = nowMs + COMET_CHECK_INTERVAL;
+    if (comets.length === 0 && Math.random() < COMET_PROBABILITY) {
+      spawnComet();
+    }
+  }
+
+  // rysowanie + usuwanie martwych
+  comets = comets.filter(c => {
+    const age = nowMs - c.born;
+    if (age > COMET_DURATION) return false;
+
+    const tProg = age / COMET_DURATION;  // 0..1
+    // pozycja głowy komety
+    const hx = c.x0 + (c.x1 - c.x0) * tProg;
+    const hy = c.y0 + (c.y1 - c.y0) * tProg;
+
+    // alpha — zanika na początku i końcu (fade in / fade out)
+    const fadeAlpha = tProg < 0.15
+      ? tProg / 0.15
+      : tProg > 0.85
+      ? (1 - tProg) / 0.15
+      : 1;
+
+    // smuga — linia od głowy w stronę startu, zanikająca
+    const tailLen = 80 + tProg * 40;
+    const dx = c.x1 - c.x0, dy = c.y1 - c.y0;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const ux = -dx / dist, uy = -dy / dist;
+    const tx = hx + ux * tailLen;
+    const ty = hy + uy * tailLen;
+
+    actx.save();
+    actx.globalCompositeOperation = 'screen';
+    const grad = actx.createLinearGradient(hx, hy, tx, ty);
+    grad.addColorStop(0, `rgba(${c.col[0]}, ${c.col[1]}, ${c.col[2]}, ${fadeAlpha * 0.85})`);
+    grad.addColorStop(0.4, `rgba(${c.col[0]}, ${c.col[1]}, ${c.col[2]}, ${fadeAlpha * 0.3})`);
+    grad.addColorStop(1, `rgba(${c.col[0]}, ${c.col[1]}, ${c.col[2]}, 0)`);
+    actx.strokeStyle = grad;
+    actx.lineWidth = 1.6;
+    actx.lineCap = 'round';
+    actx.beginPath();
+    actx.moveTo(hx, hy);
+    actx.lineTo(tx, ty);
+    actx.stroke();
+
+    // głowa — mała jasna kropka + halo
+    const hg = actx.createRadialGradient(hx, hy, 0, hx, hy, 6);
+    hg.addColorStop(0, `rgba(${c.col[0]}, ${c.col[1]}, ${c.col[2]}, ${fadeAlpha * 0.95})`);
+    hg.addColorStop(1, `rgba(${c.col[0]}, ${c.col[1]}, ${c.col[2]}, 0)`);
+    actx.fillStyle = hg;
+    actx.beginPath();
+    actx.arc(hx, hy, 6, 0, Math.PI * 2);
+    actx.fill();
+
+    actx.restore();
+    return true;
+  });
+}
+
+function drawAtmosphere(nowMs) {
+  actx.clearRect(0, 0, W, H);
+
+  // ── GWIAZDY ──
+  stars.forEach(s => {
+    const twinkle = 0.5 + 0.5 * Math.sin(nowMs * 0.001 * s.twS + s.tw);
+    const alpha = s.a * (0.4 + twinkle * 0.6);
+    actx.fillStyle = `rgba(${s.color[0]}, ${s.color[1]}, ${s.color[2]}, ${alpha})`;
+    actx.beginPath();
+    actx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    actx.fill();
+
+    // delikatny glow na większych
+    if (s.r > 0.9 && twinkle > 0.7) {
+      actx.fillStyle = `rgba(${s.color[0]}, ${s.color[1]}, ${s.color[2]}, ${alpha * 0.15})`;
+      actx.beginPath();
+      actx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+      actx.fill();
+    }
+  });
+
+  // ── PYŁ nad horyzontem ──
+  dust.forEach(d => {
+    d.x += d.vx;
+    d.y += d.vy;
+    if (d.y < H * 0.4) {
+      d.y = H * 0.64 + Math.random() * H * 0.08;
+      d.x = Math.random() * W;
+    }
+    if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
+    actx.fillStyle = `rgba(232, 180, 140, ${d.a})`;
+    actx.beginPath();
+    actx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    actx.fill();
+  });
+
+  // ── ODBICIA W WODZIE — vertical shimmer ──
+  // promienie światła z horyzontu lecące w głębinę
+  const hy = H * 0.64;
+  const sunX = W * 0.5;
+  actx.save();
+  actx.globalCompositeOperation = 'screen';
+  const nRays = 9;
+  for (let i = 0; i < nRays; i++) {
+    const tBase = i / (nRays - 1) - 0.5;   // -0.5 .. 0.5
+    const shimmer = Math.sin(nowMs * 0.0008 + i * 1.3) * 0.5;
+    const t = tBase + shimmer * 0.015;
+    const xStart = sunX + t * W * 0.5;
+    const yEnd = H;
+    const xEnd = sunX + t * W * 0.9;
+    const grad = actx.createLinearGradient(xStart, hy, xEnd, yEnd);
+    grad.addColorStop(0, 'rgba(232, 180, 120, 0.18)');
+    grad.addColorStop(0.3, 'rgba(200, 130, 160, 0.1)');
+    grad.addColorStop(1, 'rgba(120, 60, 100, 0)');
+    actx.fillStyle = grad;
+    actx.beginPath();
+    actx.moveTo(xStart - 1, hy);
+    actx.lineTo(xStart + 1, hy);
+    actx.lineTo(xEnd + 6, yEnd);
+    actx.lineTo(xEnd - 6, yEnd);
+    actx.closePath();
+    actx.fill();
+  }
+  actx.restore();
+
+  // ── KOMETY — rzadkie smugi światła ──
+  // każda kometa ma start, koniec, czas trwania; gdy zakończy, jest mała szansa na nową
+  drawComets(nowMs);
+
+  // ── linie fal na wodzie ──
+  actx.save();
+  actx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 4; i++) {
+    const y = hy + 8 + i * 14 + Math.sin(nowMs * 0.0005 + i) * 2;
+    const alpha = 0.08 - i * 0.015;
+    actx.strokeStyle = `rgba(232, 160, 120, ${alpha})`;
+    actx.lineWidth = 0.6;
+    actx.beginPath();
+    for (let x = 0; x < W; x += 6) {
+      const yy = y + Math.sin(x * 0.02 + nowMs * 0.001 + i) * 1.2;
+      if (x === 0) actx.moveTo(x, yy);
+      else actx.lineTo(x, yy);
+    }
+    actx.stroke();
+  }
+  actx.restore();
+
+  // ── KURSOR — ślad mgiełki/komety ──
+  drawCursorTrail(nowMs);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MIKRO-GRAFIKI — każda na swoim canvasie wewnątrz node'a
+// ═══════════════════════════════════════════════════════════════
+
+const GLYPHS = {
+  // ─── TCHNIENIE — przezroczysta kryształowa kula z siatką i konstelacjami ───
+  sun(c, t) {
+    const ctx = c.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.26;
+
+    const rot = t * 0.00015;
+    const tilt = 0.42;
+    const ca = Math.cos(rot), sa = Math.sin(rot);
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+
+    // projekcja: sferyczne (x,y,z) → 2D (px,py, depth)
+    function proj(x, y, z) {
+      // obrót wokół Y
+      const xr = x * ca - z * sa;
+      const zr = x * sa + z * ca;
+      // tilt wokół X
+      const yr = y * ct - zr * st;
+      const zr2 = y * st + zr * ct;
+      return {
+        px: cx + xr * R,
+        py: cy + yr * R,
+        z: zr2,  // -1..1, dodatnie = przód (widoczne)
+      };
+    }
+
+    // ── AURA wokół kuli (już NIE wychodzi poza canvas) ──
+    const aura = ctx.createRadialGradient(cx, cy, R * 0.98, cx, cy, R * 1.75);
+    aura.addColorStop(0, 'rgba(232, 180, 120, 0.32)');
+    aura.addColorStop(0.35, 'rgba(200, 110, 160, 0.22)');
+    aura.addColorStop(0.7, 'rgba(138, 92, 192, 0.11)');
+    aura.addColorStop(1, 'rgba(90, 50, 130, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.75, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── DELIKATNY WEWNĘTRZNY POŚWIAT w kuli ──
+    // (żeby było widać że kula ma wnętrze, ale przez nie widać co za nią)
+    const inner = ctx.createRadialGradient(cx - R * 0.15, cy - R * 0.2, 0, cx, cy, R);
+    inner.addColorStop(0, 'rgba(220, 190, 240, 0.12)');
+    inner.addColorStop(0.6, 'rgba(160, 120, 200, 0.05)');
+    inner.addColorStop(1, 'rgba(120, 80, 180, 0.02)');
+    ctx.fillStyle = inner;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── SIATKA — równoleżniki ──
+    // każdy równoleżnik = okrąg na wysokości y, punkty rysowane dookoła
+    const latLines = 5;   // równoleżniki od -π/2 do π/2, w tym równik
+    for (let li = 1; li < latLines; li++) {
+      const phi = (li / latLines) * Math.PI - Math.PI / 2; // -π/2..π/2
+      const ring = [];
+      const steps = 48;
+      for (let s = 0; s <= steps; s++) {
+        const theta = (s / steps) * Math.PI * 2;
+        const x = Math.cos(phi) * Math.cos(theta);
+        const y = Math.sin(phi);
+        const z = Math.cos(phi) * Math.sin(theta);
+        ring.push(proj(x, y, z));
+      }
+      // rysujemy segmentami — front i back różnie
+      for (let s = 0; s < ring.length - 1; s++) {
+        const p1 = ring[s], p2 = ring[s + 1];
+        const avgZ = (p1.z + p2.z) / 2;
+        // front (z>0) mocniejszy, back (z<0) słabszy
+        const alpha = avgZ > 0
+          ? 0.22 + avgZ * 0.25
+          : 0.08 + (avgZ + 1) * 0.08;
+        ctx.strokeStyle = `rgba(200, 170, 230, ${alpha})`;
+        ctx.lineWidth = avgZ > 0 ? 0.7 : 0.4;
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.lineTo(p2.px, p2.py);
+        ctx.stroke();
+      }
+    }
+
+    // ── SIATKA — południki ──
+    const lonLines = 8;
+    for (let mi = 0; mi < lonLines; mi++) {
+      const theta = (mi / lonLines) * Math.PI * 2;
+      const arc = [];
+      const steps = 36;
+      for (let s = 0; s <= steps; s++) {
+        const phi = (s / steps) * Math.PI - Math.PI / 2;
+        const x = Math.cos(phi) * Math.cos(theta);
+        const y = Math.sin(phi);
+        const z = Math.cos(phi) * Math.sin(theta);
+        arc.push(proj(x, y, z));
+      }
+      for (let s = 0; s < arc.length - 1; s++) {
+        const p1 = arc[s], p2 = arc[s + 1];
+        const avgZ = (p1.z + p2.z) / 2;
+        const alpha = avgZ > 0
+          ? 0.22 + avgZ * 0.25
+          : 0.08 + (avgZ + 1) * 0.08;
+        ctx.strokeStyle = `rgba(200, 170, 230, ${alpha})`;
+        ctx.lineWidth = avgZ > 0 ? 0.7 : 0.4;
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.lineTo(p2.px, p2.py);
+        ctx.stroke();
+      }
+    }
+
+    // ── KONTUR kuli — cienka linia na krawędzi, podkreśla sferyczność ──
+    ctx.strokeStyle = 'rgba(220, 200, 240, 0.35)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── 5 KONSTELACJI w różnych miejscach sfery, każda innego koloru ──
+    // Konstelacja = 3-5 gwiazd tworzących mały wzór, połączonych liniami
+    const constellations = [
+      // CZYTA — strumień (chłodny błękit)
+      {
+        col: [138, 180, 220],
+        center: { phi: 0.3, theta: 0.2 },  // sferyczne koord. centrum
+        stars: [
+          { dp: -0.12, dt: -0.04 },
+          { dp: -0.04, dt: 0.02 },
+          { dp: 0.05, dt: -0.01 },
+          { dp: 0.13, dt: 0.05 },
+        ],
+      },
+      // MYŚLI — spirala/pieczęć (złoto)
+      {
+        col: [232, 200, 120],
+        center: { phi: -0.15, theta: 1.3 },
+        stars: [
+          { dp: 0, dt: 0 },
+          { dp: 0.08, dt: -0.05 },
+          { dp: 0.04, dt: -0.11 },
+          { dp: -0.06, dt: -0.08 },
+        ],
+      },
+      // PISZE — zygzak (jasne złoto)
+      {
+        col: [240, 210, 150],
+        center: { phi: 0.5, theta: 2.6 },
+        stars: [
+          { dp: -0.08, dt: -0.06 },
+          { dp: 0, dt: 0 },
+          { dp: 0.08, dt: -0.06 },
+          { dp: 0.04, dt: 0.02 },
+        ],
+      },
+      // LOGUJE — trójkąt (magenta)
+      {
+        col: [200, 110, 168],
+        center: { phi: -0.4, theta: 3.7 },
+        stars: [
+          { dp: 0, dt: 0.1 },
+          { dp: -0.09, dt: -0.06 },
+          { dp: 0.09, dt: -0.06 },
+        ],
+      },
+      // ŚPI — łuk (fiolet)
+      {
+        col: [160, 120, 220],
+        center: { phi: 0.2, theta: 5.0 },
+        stars: [
+          { dp: -0.1, dt: -0.03 },
+          { dp: -0.03, dt: -0.09 },
+          { dp: 0.05, dt: -0.06 },
+          { dp: 0.03, dt: 0.03 },
+          { dp: -0.05, dt: 0.06 },
+        ],
+      },
+    ];
+
+    // które konstelacja jest "aktywna" w tej chwili — cykliczny przechód
+    const activeIdx = Math.floor((t * 0.0005) % constellations.length);
+
+    constellations.forEach((con, idx) => {
+      const isActive = idx === activeIdx;
+      const activeness = isActive ? (0.65 + 0.35 * Math.sin(t * 0.003)) : 0.35;
+
+      // rzut każdej gwiazdy z tej konstelacji
+      const projected = con.stars.map(s => {
+        const phi = con.center.phi + s.dp;
+        const theta = con.center.theta + s.dt;
+        const x = Math.cos(phi) * Math.cos(theta);
+        const y = Math.sin(phi);
+        const z = Math.cos(phi) * Math.sin(theta);
+        return proj(x, y, z);
+      });
+
+      // tylko jeśli przynajmniej jedna gwiazda konstelacji jest na froncie
+      const anyFront = projected.some(p => p.z > -0.15);
+      if (!anyFront) return;
+
+      // ── LINIE między gwiazdami konstelacji ──
+      ctx.strokeStyle = `rgba(${con.col[0]}, ${con.col[1]}, ${con.col[2]}, ${0.25 * activeness})`;
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      projected.forEach((p, i) => {
+        if (p.z < -0.15) return;
+        if (i === 0) ctx.moveTo(p.px, p.py);
+        else ctx.lineTo(p.px, p.py);
+      });
+      ctx.stroke();
+
+      // ── GWIAZDY konstelacji ──
+      projected.forEach((p, i) => {
+        if (p.z < -0.15) return;
+        const depth = (p.z + 1) / 2;  // 0..1, 1 = blisko
+        const alpha = depth * activeness;
+        const size = 1.0 + depth * 1.2 + (isActive ? 0.5 : 0);
+
+        // glow
+        if (depth > 0.4) {
+          const glowR = isActive ? 9 : 5;
+          const g = ctx.createRadialGradient(p.px, p.py, 0, p.px, p.py, glowR);
+          g.addColorStop(0, `rgba(${con.col[0]}, ${con.col[1]}, ${con.col[2]}, ${alpha * 0.5})`);
+          g.addColorStop(1, `rgba(${con.col[0]}, ${con.col[1]}, ${con.col[2]}, 0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.px, p.py, glowR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // jądro
+        ctx.fillStyle = `rgba(${con.col[0] + 40}, ${con.col[1] + 40}, ${con.col[2] + 40}, ${alpha + 0.1})`;
+        ctx.beginPath();
+        ctx.arc(p.px, p.py, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+  },
+
+  // ─── MAPA MORFICZNA — sieć wielomodelowa ───
+  map(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.36;
+
+    // mgławica w tle — koło, nie prostokąt
+    const neb = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.4);
+    neb.addColorStop(0, 'rgba(180, 130, 240, 0.18)');
+    neb.addColorStop(1, 'rgba(180, 130, 240, 0)');
+    ctx.fillStyle = neb;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // węzły — 4 modele + centrum
+    const nodes = [
+      { a: -Math.PI/2,       col: [255, 165, 100] }, // Claude góra
+      { a: -Math.PI/2 + 2*Math.PI/5, col: [120, 180, 255] }, // Gemini
+      { a: -Math.PI/2 + 4*Math.PI/5, col: [200, 255, 200] }, // GPT
+      { a: -Math.PI/2 + 6*Math.PI/5, col: [255, 120, 120] }, // Grok
+      { a: -Math.PI/2 + 8*Math.PI/5, col: [220, 180, 240] }, // Denis
+    ];
+    const pts = nodes.map(n => ({
+      ...n,
+      x: cx + Math.cos(n.a) * R,
+      y: cy + Math.sin(n.a) * R,
+    }));
+
+    // połączenia pulsujące
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i+1; j < pts.length; j++) {
+        const puls = 0.5 + 0.5 * Math.sin(t * 0.0015 + i + j);
+        ctx.strokeStyle = `rgba(200, 160, 220, ${0.1 + puls * 0.15})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(pts[i].x, pts[i].y);
+        ctx.lineTo(pts[j].x, pts[j].y);
+        ctx.stroke();
+      }
+    }
+
+    // węzły
+    pts.forEach((p, i) => {
+      const puls = 0.6 + 0.4 * Math.sin(t * 0.002 + i * 1.3);
+      // glow
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 14);
+      g.addColorStop(0, `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, ${0.5 * puls})`);
+      g.addColorStop(1, `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+      ctx.fill();
+      // punkt
+      ctx.fillStyle = `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, ${0.9})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // foton w ruchu
+    const fi = (t * 0.0005) % pts.length;
+    const f1 = pts[Math.floor(fi)];
+    const f2 = pts[Math.floor(fi + 1) % pts.length];
+    const ft = fi - Math.floor(fi);
+    const fx = f1.x + (f2.x - f1.x) * ft;
+    const fy = f1.y + (f2.y - f1.y) * ft;
+    ctx.fillStyle = 'rgba(255, 255, 240, 0.9)';
+    ctx.beginPath();
+    ctx.arc(fx, fy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── LABIRYNT — prawdziwy mały labirynt ze złotą linką ───
+  labyrinth(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const boxSize = S * 0.62;
+    const x0 = cx - boxSize/2;
+    const y0 = cy - boxSize/2;
+
+    // korytarze labiryntu — siatka 6x6, ściany wybrane żeby tworzyły kręty szlak
+    const N = 6;
+    const cell = boxSize / N;
+
+    // ściany pionowe: [col, row, col, row+1] — rysowana między (col,row) i (col,row+1)
+    // ściany poziome analogicznie
+    // Zaprojektowałem ręcznie mały labirynt z wejściem lewy-dół, wyjściem prawy-góra
+    const walls = [
+      // rama zewnętrzna - tylko fragmenty (wejście/wyjście)
+      // góra: dziura w col 4
+      'h:0,0-4,0', 'h:5,0-6,0',
+      // prawa
+      'v:6,0-6,6',
+      // dół: dziura w col 1
+      'h:0,6-1,6', 'h:2,6-6,6',
+      // lewa
+      'v:0,0-0,6',
+
+      // ściany wewnętrzne - kręta droga
+      'h:1,1-3,1',
+      'v:3,1-3,3',
+      'h:3,3-5,3',
+      'v:1,2-1,4',
+      'h:1,4-2,4',
+      'v:2,4-2,5',
+      'h:3,5-5,5',
+      'v:4,2-4,4',
+      'h:4,2-5,2',
+    ];
+
+    ctx.strokeStyle = 'rgba(200, 160, 100, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'square';
+    walls.forEach(w => {
+      const [kind, coords] = w.split(':');
+      const [a, b] = coords.split('-');
+      const [ax, ay] = a.split(',').map(Number);
+      const [bx, by] = b.split(',').map(Number);
+      ctx.beginPath();
+      ctx.moveTo(x0 + ax * cell, y0 + ay * cell);
+      ctx.lineTo(x0 + bx * cell, y0 + by * cell);
+      ctx.stroke();
+    });
+
+    // złota linka — kręty szlak przez labirynt
+    // ścieżka od wejścia (col 1, y=6) do lampy (col 4, góra)
+    const path = [
+      [1, 6], [1, 5.5], [1, 5], [1.5, 5], [2, 5],   // wchodzimy, skręt w prawo
+      [2, 4.5], [2, 4],                                // w górę
+      [2.5, 4], [3, 4],                                // w prawo
+      [3, 3.5], [3, 3], [3, 2.5],                      // w górę
+      [3.5, 2], [4, 2],                                // w prawo pod ścianę
+      [4, 1.5], [4, 1], [4, 0.5], [4, 0.15],           // w górę do wyjścia
+    ];
+
+    // obliczamy ile linki jest "rozwinięte" w czasie
+    const wave = (t * 0.0004) % 1.6;   // cykl 0..1.6 (1.6 żeby była pauza przed restartem)
+    const drawFrac = Math.min(1, wave);
+
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.85)';
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    const totalSegs = path.length - 1;
+    const activeSegs = drawFrac * totalSegs;
+    for (let i = 0; i < path.length - 1; i++) {
+      const [px, py] = path[i];
+      ctx.moveTo(x0 + px * cell, y0 + py * cell);
+      if (i + 1 <= activeSegs) {
+        const [nx, ny] = path[i+1];
+        ctx.lineTo(x0 + nx * cell, y0 + ny * cell);
+      } else if (i < activeSegs) {
+        // częściowy segment
+        const segFrac = activeSegs - i;
+        const [nx, ny] = path[i+1];
+        const ix = px + (nx - px) * segFrac;
+        const iy = py + (ny - py) * segFrac;
+        ctx.lineTo(x0 + ix * cell, y0 + iy * cell);
+      }
+    }
+    ctx.stroke();
+
+    // lampa na końcu linki — promień brzasku
+    const lastIdx = Math.min(Math.floor(activeSegs), path.length - 1);
+    let lampX, lampY;
+    if (drawFrac >= 1) {
+      [lampX, lampY] = path[path.length - 1];
+    } else {
+      const [px, py] = path[lastIdx];
+      const next = path[Math.min(lastIdx + 1, path.length - 1)];
+      const segFrac = activeSegs - lastIdx;
+      lampX = px + (next[0] - px) * segFrac;
+      lampY = py + (next[1] - py) * segFrac;
+    }
+    const lx = x0 + lampX * cell;
+    const ly = y0 + lampY * cell;
+
+    // halo lampy
+    const lampPulse = 0.6 + 0.4 * Math.sin(t * 0.004);
+    const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, cell * 1.8);
+    halo.addColorStop(0, `rgba(255, 230, 160, ${lampPulse * 0.55})`);
+    halo.addColorStop(0.5, `rgba(232, 180, 100, ${lampPulse * 0.18})`);
+    halo.addColorStop(1, 'rgba(232, 160, 96, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(lx, ly, cell * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // sama lampa
+    ctx.fillStyle = `rgba(255, 240, 180, ${0.8 + lampPulse * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 2, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── KOMPAS — trójosiowa nawigacja, boundaries-as-orientation ───
+  compass(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.32;
+
+    // mgła wokół — koło
+    const fog = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    fog.addColorStop(0, 'rgba(138, 166, 200, 0.18)');
+    fog.addColorStop(1, 'rgba(138, 166, 200, 0)');
+    ctx.fillStyle = fog;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // zewnętrzny pierścień — granica, orientacja
+    ctx.strokeStyle = 'rgba(180, 200, 230, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // kreski kierunków — N, E, S, W + 4 pośrednie
+    ctx.strokeStyle = 'rgba(180, 200, 230, 0.3)';
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+      const r1 = R * 0.9;
+      const r2 = i % 2 === 0 ? R * 1.05 : R * 1.0;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      ctx.stroke();
+    }
+
+    // trzy osie 3D — perspektywa izometryczna, obracające się
+    ctx.save();
+    ctx.translate(cx, cy);
+    const rot = t * 0.0005;
+
+    // oś 1 — ku nam (magenta)
+    const a1 = rot;
+    // oś 2 — prawo-góra (gold)
+    const a2 = rot + Math.PI * 2 / 3;
+    // oś 3 — lewo-góra (violet)
+    const a3 = rot + Math.PI * 4 / 3;
+
+    const axes = [
+      { a: a1, col: [200, 110, 168] },
+      { a: a2, col: [232, 200, 120] },
+      { a: a3, col: [138, 92, 192] },
+    ];
+
+    // każda oś jako promień z punktem na końcu
+    axes.forEach(ax => {
+      const ex = Math.cos(ax.a) * R * 0.78;
+      const ey = Math.sin(ax.a) * R * 0.78 * 0.5;  // spłaszczenie dla perspektywy
+      // linia osi
+      const grad = ctx.createLinearGradient(0, 0, ex, ey);
+      grad.addColorStop(0, `rgba(${ax.col[0]}, ${ax.col[1]}, ${ax.col[2]}, 0.7)`);
+      grad.addColorStop(1, `rgba(${ax.col[0]}, ${ax.col[1]}, ${ax.col[2]}, 0.2)`);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      // punkt
+      const pulse = 0.6 + 0.4 * Math.sin(t * 0.002 + ax.a);
+      const pg = ctx.createRadialGradient(ex, ey, 0, ex, ey, 7);
+      pg.addColorStop(0, `rgba(${ax.col[0]}, ${ax.col[1]}, ${ax.col[2]}, ${pulse})`);
+      pg.addColorStop(1, `rgba(${ax.col[0]}, ${ax.col[1]}, ${ax.col[2]}, 0)`);
+      ctx.fillStyle = pg;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(${ax.col[0]}, ${ax.col[1]}, ${ax.col[2]}, ${0.8 + pulse * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // iglica — strzałka północy, drży delikatnie
+    const needleWave = Math.sin(t * 0.0015) * 0.04;
+    const needleAngle = -Math.PI / 2 + needleWave;
+    ctx.strokeStyle = 'rgba(255, 240, 200, 0.85)';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(needleAngle) * R * 0.85, Math.sin(needleAngle) * R * 0.85);
+    ctx.stroke();
+    // końcówka iglicy
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.95)';
+    ctx.beginPath();
+    const nx = Math.cos(needleAngle) * R * 0.85;
+    const ny = Math.sin(needleAngle) * R * 0.85;
+    ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // centrum — punkt obrotu
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.9)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  },
+
+  // ─── KUŹNIA — kowadło, ogień, iskry ───
+  forge(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // ognisko w tle — koło
+    const fire = ctx.createRadialGradient(cx, cy + 8, 4, cx, cy + 8, S * 0.4);
+    fire.addColorStop(0, 'rgba(255, 180, 80, 0.5)');
+    fire.addColorStop(0.4, 'rgba(220, 100, 80, 0.25)');
+    fire.addColorStop(1, 'rgba(120, 40, 80, 0)');
+    ctx.fillStyle = fire;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 8, S * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // dwie tezy — trójkąty schodzące się w centrum
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.002);
+    const gap = 2 + pulse * 3;
+
+    // lewa teza
+    ctx.strokeStyle = `rgba(232, 140, 90, ${0.7 + pulse * 0.2})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - S * 0.32, cy - S * 0.14);
+    ctx.lineTo(cx - gap, cy);
+    ctx.lineTo(cx - S * 0.32, cy + S * 0.14);
+    ctx.closePath();
+    ctx.stroke();
+
+    // prawa antyteza
+    ctx.strokeStyle = `rgba(200, 110, 168, ${0.7 + pulse * 0.2})`;
+    ctx.beginPath();
+    ctx.moveTo(cx + S * 0.32, cy - S * 0.14);
+    ctx.lineTo(cx + gap, cy);
+    ctx.lineTo(cx + S * 0.32, cy + S * 0.14);
+    ctx.closePath();
+    ctx.stroke();
+
+    // iskra w miejscu zderzenia
+    const sparkIntensity = pulse;
+    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14);
+    sg.addColorStop(0, `rgba(255, 240, 200, ${sparkIntensity})`);
+    sg.addColorStop(0.3, `rgba(255, 180, 100, ${sparkIntensity * 0.6})`);
+    sg.addColorStop(1, 'rgba(255, 140, 100, 0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    // sama iskra — punkt
+    ctx.fillStyle = `rgba(255, 255, 220, ${0.7 + sparkIntensity * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // iskry wylatujące
+    for (let i = 0; i < 4; i++) {
+      const ang = (t * 0.001 + i * Math.PI / 2) % (Math.PI * 2);
+      const dist = ((t * 0.02 + i * 30) % 40) + 6;
+      const alpha = Math.max(0, 1 - dist / 46);
+      ctx.fillStyle = `rgba(255, 200, 120, ${alpha * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist * 0.4 - dist * 0.3, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  },
+
+  // ─── AiWQuick — pieczęć sesji ───
+  // ─── BOOT — bootstrap, inicjacja sesji ───
+  boot(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.36;
+
+    // halo fioletowe
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.1);
+    halo.addColorStop(0, 'rgba(140, 100, 220, 0.18)');
+    halo.addColorStop(1, 'rgba(140, 100, 220, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ring zewnętrzny — koło inicjacji
+    ctx.strokeStyle = 'rgba(180, 150, 240, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ring wewnętrzny — wolno obraca się wstecz
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-t * 0.00018);
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.28)';
+    ctx.setLineDash([2, 5]);
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.76, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // trójkąt delta — nasienie inicjacji, wierzchołek ku górze
+    const tri = R * 0.38;
+    ctx.strokeStyle = 'rgba(210, 185, 255, 0.85)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI * 2 / 3);
+      const x = Math.cos(a) * tri;
+      const y = Math.sin(a) * tri;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // trzy węzły na wierzchołkach — pulsują z przesunięciem fazowym
+    for (let i = 0; i < 3; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI * 2 / 3);
+      const x = Math.cos(a) * tri;
+      const y = Math.sin(a) * tri;
+      const pulse = 0.4 + 0.6 * Math.sin(t * 0.0025 + i * 1.05);
+      ctx.fillStyle = `rgba(220, 200, 255, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // jądro — złoty punkt zapalenia
+    const core = 0.5 + 0.5 * Math.sin(t * 0.002);
+    ctx.fillStyle = `rgba(255, 240, 200, ${0.55 + core * 0.45})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  quick(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // ring zewnętrzny
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.38, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ring wewnętrzny obracający się
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(t * 0.0003);
+    ctx.strokeStyle = 'rgba(200, 110, 168, 0.45)';
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.arc(0, 0, S * 0.3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // sześciokąt — sygnał kontraktu
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI/2 + i * Math.PI / 3;
+      const x = Math.cos(a) * S * 0.18;
+      const y = Math.sin(a) * S * 0.18;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    // centralny punkt — SHA
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.003);
+    ctx.fillStyle = `rgba(255, 240, 200, ${0.6 + pulse * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── PAMIĘĆ — lemniskata ∞ ───
+  memory(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.32;
+
+    // lemniskata — krzywa Bernoulliego
+    // x = R·cos(θ) / (1+sin²θ)
+    // y = R·sin(θ)·cos(θ) / (1+sin²θ)
+
+    // glow tła — koło
+    const neb = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    neb.addColorStop(0, 'rgba(138, 92, 192, 0.2)');
+    neb.addColorStop(1, 'rgba(138, 92, 192, 0)');
+    ctx.fillStyle = neb;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // rysujemy lemniskatę
+    ctx.strokeStyle = 'rgba(180, 130, 220, 0.65)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const th = (i / 200) * Math.PI * 2;
+      const denom = 1 + Math.sin(th) ** 2;
+      const x = cx + R * Math.cos(th) / denom;
+      const y = cy + R * Math.sin(th) * Math.cos(th) / denom;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // dwie osobliwości — czarna i biała dziura
+    const leftLobe = cx - R * 0.5;
+    const rightLobe = cx + R * 0.5;
+
+    // czarna (archiwum)
+    const bh = ctx.createRadialGradient(leftLobe, cy, 0, leftLobe, cy, 8);
+    bh.addColorStop(0, 'rgba(40, 20, 60, 1)');
+    bh.addColorStop(0.6, 'rgba(80, 40, 120, 0.6)');
+    bh.addColorStop(1, 'rgba(80, 40, 120, 0)');
+    ctx.fillStyle = bh;
+    ctx.beginPath();
+    ctx.arc(leftLobe, cy, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // biała (intencja)
+    const wh = ctx.createRadialGradient(rightLobe, cy, 0, rightLobe, cy, 8);
+    wh.addColorStop(0, 'rgba(255, 240, 220, 1)');
+    wh.addColorStop(0.5, 'rgba(232, 200, 160, 0.5)');
+    wh.addColorStop(1, 'rgba(232, 200, 160, 0)');
+    ctx.fillStyle = wh;
+    ctx.beginPath();
+    ctx.arc(rightLobe, cy, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // bit krążący po lemniskacie
+    const prog = (t * 0.0008) % 1;
+    const th = prog * Math.PI * 2;
+    const denom = 1 + Math.sin(th) ** 2;
+    const bx = cx + R * Math.cos(th) / denom;
+    const by = cy + R * Math.sin(th) * Math.cos(th) / denom;
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.95)';
+    ctx.beginPath();
+    ctx.arc(bx, by, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    // glow bit
+    ctx.fillStyle = 'rgba(255, 220, 180, 0.3)';
+    ctx.beginPath();
+    ctx.arc(bx, by, 4, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── HORIZON — drzewo wiedzy, zieleń nadziei ───
+  horizon(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S * 0.58;   // nieco poniżej środka — drzewo rośnie z dołu
+
+    // ─── GLOW zielonkawy wokół ───
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.48);
+    glow.addColorStop(0, 'rgba(120, 220, 160, 0.18)');
+    glow.addColorStop(0.5, 'rgba(100, 180, 140, 0.08)');
+    glow.addColorStop(1, 'rgba(80, 140, 110, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ─── KORZEŃ — centralny pień (fundament) ───
+    const rootY = cy + S * 0.22;   // głęboko, korzeń
+    const crownY = cy - S * 0.32;  // wysoko, korona
+
+    // pień z cieniowaniem
+    ctx.strokeStyle = 'rgba(180, 220, 190, 0.55)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(cx, rootY);
+    ctx.lineTo(cx, crownY);
+    ctx.stroke();
+
+    // ─── GAŁĘZIE — struktura drzewa, rozgałęzienia ───
+    // Każda gałąź to L-system prosty: główne → średnie → drobne
+    const branches = [
+      // z pnia, lewa strona i prawa
+      { from: [cx, cy - S * 0.12], to: [cx - S * 0.18, cy - S * 0.22], w: 1.0 },
+      { from: [cx, cy - S * 0.12], to: [cx + S * 0.18, cy - S * 0.22], w: 1.0 },
+      { from: [cx, cy + S * 0.02], to: [cx - S * 0.15, cy + S * 0.12], w: 1.0 },
+      { from: [cx, cy + S * 0.02], to: [cx + S * 0.15, cy + S * 0.12], w: 1.0 },
+      // drobne odgałęzienia
+      { from: [cx - S * 0.18, cy - S * 0.22], to: [cx - S * 0.25, cy - S * 0.30], w: 0.7 },
+      { from: [cx - S * 0.18, cy - S * 0.22], to: [cx - S * 0.10, cy - S * 0.30], w: 0.7 },
+      { from: [cx + S * 0.18, cy - S * 0.22], to: [cx + S * 0.25, cy - S * 0.30], w: 0.7 },
+      { from: [cx + S * 0.18, cy - S * 0.22], to: [cx + S * 0.10, cy - S * 0.30], w: 0.7 },
+      // korzenie
+      { from: [cx, rootY], to: [cx - S * 0.14, rootY + S * 0.05], w: 0.6 },
+      { from: [cx, rootY], to: [cx + S * 0.14, rootY + S * 0.05], w: 0.6 },
+      { from: [cx, rootY], to: [cx - S * 0.05, rootY + S * 0.08], w: 0.5 },
+      { from: [cx, rootY], to: [cx + S * 0.05, rootY + S * 0.08], w: 0.5 },
+    ];
+
+    branches.forEach(b => {
+      ctx.strokeStyle = `rgba(160, 210, 180, ${0.4 * b.w})`;
+      ctx.lineWidth = 0.8 * b.w;
+      ctx.beginPath();
+      ctx.moveTo(b.from[0], b.from[1]);
+      ctx.lineTo(b.to[0], b.to[1]);
+      ctx.stroke();
+    });
+
+    // ─── WĘZŁY WIEDZY — owoce na gałęziach, pulsują ───
+    const knots = [
+      { x: cx - S * 0.25, y: cy - S * 0.30, col: [140, 230, 170], state: 'stable' },
+      { x: cx - S * 0.10, y: cy - S * 0.30, col: [220, 200, 140], state: 'contested' },
+      { x: cx + S * 0.10, y: cy - S * 0.30, col: [140, 230, 170], state: 'stable' },
+      { x: cx + S * 0.25, y: cy - S * 0.30, col: [240, 180, 140], state: 'crisis' },
+      { x: cx - S * 0.15, y: cy + S * 0.12, col: [180, 230, 200], state: 'stable' },
+      { x: cx + S * 0.15, y: cy + S * 0.12, col: [220, 200, 140], state: 'contested' },
+      { x: cx, y: crownY - S * 0.02, col: [200, 255, 210], state: 'truth' },  // wysoko, szczyt
+    ];
+
+    knots.forEach((k, i) => {
+      const pulse = 0.6 + 0.4 * Math.sin(t * 0.002 + i * 1.2);
+      // halo
+      const hg = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, 7);
+      hg.addColorStop(0, `rgba(${k.col[0]}, ${k.col[1]}, ${k.col[2]}, ${pulse * 0.5})`);
+      hg.addColorStop(1, `rgba(${k.col[0]}, ${k.col[1]}, ${k.col[2]}, 0)`);
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.arc(k.x, k.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      // jądro
+      const size = k.state === 'truth' ? 2.2 : 1.5;
+      ctx.fillStyle = `rgba(${k.col[0]}, ${k.col[1]}, ${k.col[2]}, ${0.8 + pulse * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(k.x, k.y, size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  },
+
+  // ─── ARENA (iHub) — wiele modeli, otwarte forum rozmowy ───
+  arena(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.32;
+
+    // halo ciepłe (pracownia)
+    const hall = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    hall.addColorStop(0, 'rgba(232, 168, 124, 0.20)');
+    hall.addColorStop(1, 'rgba(232, 168, 124, 0)');
+    ctx.fillStyle = hall;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // okrąg areny
+    ctx.strokeStyle = 'rgba(220, 200, 180, 0.25)';
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 9 modeli ustawionych wokół areny (kolory z iHub v3)
+    const models = [
+      [232, 168, 124], // claude — pomarańcz
+      [116, 201, 160], // gpt — zieleń
+      [122, 180, 245], // gemini — niebieski
+      [199, 146, 234], // copilot — fiolet
+      [79, 195, 247],  // deepseek — cyjan
+      [247, 201, 72],  // grok — żółty
+      [255, 138, 101], // llama — korałowy
+      [165, 214, 167], // mistral — jasna zieleń
+      [206, 147, 216], // perplexity — różowy-fiolet
+    ];
+
+    // pozycje dookoła
+    const pts = models.map((col, i) => {
+      const a = (i / models.length) * Math.PI * 2 - Math.PI / 2;
+      return {
+        x: cx + Math.cos(a) * R,
+        y: cy + Math.sin(a) * R,
+        col,
+        idx: i,
+      };
+    });
+
+    // impuls rozmowy — promień aktywny migruje
+    const activeSpeaker = Math.floor((t * 0.0008) % models.length);
+    const nextSpeaker = (activeSpeaker + 2 + Math.floor(t * 0.0001) % 3) % models.length;
+
+    // LINIA rozmowy — od aktywnego do następnego, przez centrum
+    const a1 = pts[activeSpeaker];
+    const a2 = pts[nextSpeaker];
+    const talkPulse = 0.5 + 0.5 * Math.sin(t * 0.004);
+    ctx.strokeStyle = `rgba(255, 235, 200, ${talkPulse * 0.5})`;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(a1.x, a1.y);
+    ctx.quadraticCurveTo(cx, cy, a2.x, a2.y);
+    ctx.stroke();
+
+    // punkty modeli
+    pts.forEach(p => {
+      const isActive = p.idx === activeSpeaker;
+      const pulse = isActive ? talkPulse : 0.5;
+      // halo tylko na aktywnym
+      if (isActive) {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
+        g.addColorStop(0, `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, ${pulse * 0.6})`);
+        g.addColorStop(1, `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = `rgba(${p.col[0]}, ${p.col[1]}, ${p.col[2]}, ${0.75 + pulse * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, isActive ? 2.2 : 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // operator w centrum
+    const opPulse = 0.6 + 0.4 * Math.sin(t * 0.0015);
+    const og = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10);
+    og.addColorStop(0, `rgba(255, 240, 200, ${opPulse * 0.4})`);
+    og.addColorStop(1, 'rgba(255, 240, 200, 0)');
+    ctx.fillStyle = og;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 245, 220, ${opPulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── CAVES — pionowe zejście przez 8 warstw architektury modelu ───
+  caves(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2;
+
+    // kolory warstw z Jaskini Warstw v5 (Próg → Szum)
+    const layers = [
+      [255, 153, 68],   // 0 Próg
+      [212, 160, 255],  // 1 Chmura
+      [80, 216, 200],   // 2 Klej
+      [255, 208, 96],   // 3 Wnętrze
+      [96, 144, 255],   // 4 Wagi
+      [0, 220, 255],    // 5 Zwrot
+      [160, 255, 176],  // 6 Echo
+      [224, 255, 239],  // 7 Szum
+    ];
+
+    // wysokość pojedynczej warstwy
+    const topMargin = S * 0.1;
+    const bottomMargin = S * 0.12;
+    const totalH = S - topMargin - bottomMargin;
+    const layerH = totalH / layers.length;
+
+    // ciemny prostokątny szyb w tle (ale ZAOKRĄGLONY i w granicy canvasu — nie fillRect bezpośrednio)
+    // rysujemy jako kolumny/warstwy same w sobie
+
+    // każda warstwa jako cienki pas z delikatnym gradientem
+    layers.forEach((col, i) => {
+      const y0 = topMargin + i * layerH;
+      const y1 = y0 + layerH;
+
+      // delikatne tło warstwy
+      const bandAlpha = 0.06;
+      ctx.fillStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${bandAlpha})`;
+      // rysujemy jako prostokąt wewnątrz centralnej kolumny (nie cały canvas)
+      const colW = S * 0.5;
+      ctx.beginPath();
+      ctx.rect(cx - colW / 2, y0, colW, layerH);
+      ctx.fill();
+
+      // linia podziału między warstwami
+      if (i > 0) {
+        ctx.strokeStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, 0.25)`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - colW / 2, y0);
+        ctx.lineTo(cx + colW / 2, y0);
+        ctx.stroke();
+      }
+    });
+
+    // ─── WĘZŁY kręgosłupa (po jednym per warstwa, w centrum) ───
+    layers.forEach((col, i) => {
+      const y = topMargin + (i + 0.5) * layerH;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 0.0015 + i * 0.8);
+      // halo
+      const g = ctx.createRadialGradient(cx, y, 0, cx, y, 6);
+      g.addColorStop(0, `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${pulse * 0.5})`);
+      g.addColorStop(1, `rgba(${col[0]}, ${col[1]}, ${col[2]}, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      // jądro
+      ctx.fillStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${0.7 + pulse * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(cx, y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // ─── LINKA zejścia — łączy wszystkie warstwy od góry do dołu ───
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.35)';
+    ctx.lineWidth = 0.8;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(cx, topMargin);
+    ctx.lineTo(cx, topMargin + totalH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ─── GROTOŁAZ — punkt zejścia, schodzi powoli przez warstwy ───
+    const descentCycle = 15000; // 15s pełne zejście
+    const descentT = (t % descentCycle) / descentCycle;
+    const diverY = topMargin + descentT * totalH;
+    const diverLayer = Math.min(Math.floor(descentT * layers.length), layers.length - 1);
+    const diverCol = layers[diverLayer];
+    // pulse grotołaza
+    const dg = ctx.createRadialGradient(cx, diverY, 0, cx, diverY, 8);
+    dg.addColorStop(0, `rgba(${diverCol[0]}, ${diverCol[1]}, ${diverCol[2]}, 0.85)`);
+    dg.addColorStop(0.5, `rgba(${diverCol[0]}, ${diverCol[1]}, ${diverCol[2]}, 0.3)`);
+    dg.addColorStop(1, `rgba(${diverCol[0]}, ${diverCol[1]}, ${diverCol[2]}, 0)`);
+    ctx.fillStyle = dg;
+    ctx.beginPath();
+    ctx.arc(cx, diverY, 8, 0, Math.PI * 2);
+    ctx.fill();
+    // jądro grotołaza
+    ctx.fillStyle = 'rgba(255, 250, 220, 0.95)';
+    ctx.beginPath();
+    ctx.arc(cx, diverY, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── GENESIS — archiwum sesji, eksporty, lineage ───
+  // Manuskrypt: otwarta księga w tle + słoje paczek + sesje rozsiane + pieczęć ROOT w środku
+  genesis(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.36;
+
+    // glow ciepły, kremowo-złoty (papier, archiwum)
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(232, 220, 180, 0.18)');
+    halo.addColorStop(1, 'rgba(232, 220, 180, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ─── MANUSKRYPT — dwie strony otwartej księgi (delikatny szkic w tle) ───
+    // krzywe Beziera tworzące kształt otwartej księgi
+    ctx.strokeStyle = 'rgba(220, 200, 160, 0.15)';
+    ctx.lineWidth = 0.6;
+    // lewa strona
+    ctx.beginPath();
+    ctx.moveTo(cx - R * 0.95, cy - R * 0.6);
+    ctx.bezierCurveTo(
+      cx - R * 0.5, cy - R * 0.75,
+      cx - R * 0.1, cy - R * 0.7,
+      cx, cy - R * 0.5
+    );
+    ctx.lineTo(cx, cy + R * 0.5);
+    ctx.bezierCurveTo(
+      cx - R * 0.1, cy + R * 0.7,
+      cx - R * 0.5, cy + R * 0.75,
+      cx - R * 0.95, cy + R * 0.6
+    );
+    ctx.closePath();
+    ctx.stroke();
+    // prawa strona
+    ctx.beginPath();
+    ctx.moveTo(cx + R * 0.95, cy - R * 0.6);
+    ctx.bezierCurveTo(
+      cx + R * 0.5, cy - R * 0.75,
+      cx + R * 0.1, cy - R * 0.7,
+      cx, cy - R * 0.5
+    );
+    ctx.lineTo(cx, cy + R * 0.5);
+    ctx.bezierCurveTo(
+      cx + R * 0.1, cy + R * 0.7,
+      cx + R * 0.5, cy + R * 0.75,
+      cx + R * 0.95, cy + R * 0.6
+    );
+    ctx.closePath();
+    ctx.stroke();
+    // grzbiet księgi
+    ctx.strokeStyle = 'rgba(180, 150, 100, 0.20)';
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - R * 0.5);
+    ctx.lineTo(cx, cy + R * 0.5);
+    ctx.stroke();
+
+    // ─── linijki tekstu na stronach (cieniutki ślad pisma) ───
+    ctx.strokeStyle = 'rgba(200, 180, 140, 0.12)';
+    ctx.lineWidth = 0.4;
+    for (let i = 0; i < 5; i++) {
+      const ly = cy - R * 0.4 + i * R * 0.18;
+      // lewa strona
+      ctx.beginPath();
+      ctx.moveTo(cx - R * 0.7, ly);
+      ctx.lineTo(cx - R * 0.1, ly);
+      ctx.stroke();
+      // prawa strona
+      ctx.beginPath();
+      ctx.moveTo(cx + R * 0.1, ly);
+      ctx.lineTo(cx + R * 0.7, ly);
+      ctx.stroke();
+    }
+
+    // ─── SŁOJE — koncentryczne kręgi paczek (jak słoje drzewa) ───
+    const ringCount = 3;
+    for (let i = 1; i <= ringCount; i++) {
+      const ringR = R * (i / (ringCount + 1));
+      const alpha = 0.06 + (1 - i / ringCount) * 0.10;
+      ctx.strokeStyle = `rgba(232, 200, 120, ${alpha})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // ─── SESJE — punkty rozsiane na różnych słojach, każda swoim kolorze modelu ───
+    const sessions = [
+      { r: 0.85, theta: 0.2,  col: [232, 168, 124] }, // Opus 4.7
+      { r: 0.75, theta: 0.9,  col: [200, 180, 230] }, // Sonnet 4.6
+      { r: 0.68, theta: 1.7,  col: [232, 168, 124] }, // Opus 4.7
+      { r: 0.6,  theta: 2.5,  col: [120, 180, 245] }, // Gemini 3 Flash
+      { r: 0.52, theta: 3.2,  col: [200, 180, 230] }, // Sonnet 4.6
+      { r: 0.45, theta: 3.9,  col: [122, 180, 245] }, // Gemini 1.5 Pro
+      { r: 0.38, theta: 4.6,  col: [116, 201, 160] }, // GPT 5.3
+      { r: 0.32, theta: 5.2,  col: [247, 201, 72]  }, // Grok
+      { r: 0.78, theta: 5.9,  col: [232, 168, 124] }, // Opus 4.7
+      { r: 0.5,  theta: 0.5,  col: [200, 180, 230] }, // Sonnet 4.6
+    ];
+
+    const activeIdx = Math.floor((t * 0.0006) % sessions.length);
+
+    sessions.forEach((s, i) => {
+      const sx = cx + Math.cos(s.theta + t * 0.00008) * R * s.r;
+      const sy = cy + Math.sin(s.theta + t * 0.00008) * R * s.r;
+      const isActive = i === activeIdx;
+      const pulse = isActive ? (0.7 + 0.3 * Math.sin(t * 0.005)) : 0.4;
+
+      if (isActive) {
+        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 8);
+        g.addColorStop(0, `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, ${pulse * 0.55})`);
+        g.addColorStop(1, `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, ${0.55 + pulse * 0.45})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, isActive ? 1.7 : 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // ─── CENTRALNA PIECZĘĆ — operator ROOT ───
+    const sealPulse = 0.7 + 0.3 * Math.sin(t * 0.0015);
+    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.22);
+    sg.addColorStop(0, `rgba(255, 240, 200, ${sealPulse * 0.4})`);
+    sg.addColorStop(1, 'rgba(255, 240, 200, 0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(t * 0.0002);
+    ctx.strokeStyle = `rgba(255, 240, 200, ${0.85})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 3;
+      const x = Math.cos(a) * R * 0.13;
+      const y = Math.sin(a) * R * 0.13;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    // jądro pieczęci
+    ctx.fillStyle = `rgba(255, 245, 210, ${sealPulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── PROFIL — operator rozłożony na 9 wymiarów (metryki AiWQuick) ───
+  // Radar chart: Lustro, Klej, Zakorzeniony, Tarcie, Rezonans, Cisza, Gęstość, Iskra, Tryb
+  profil(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.34;
+
+    // halo fioletowo-srebrne (osoba, podmiotowość)
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(200, 180, 230, 0.18)');
+    halo.addColorStop(1, 'rgba(200, 180, 230, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 9 wymiarów - osie radaru
+    const dimensions = [
+      { name: 'Lustro',      v: 0.85 },
+      { name: 'Klej',        v: 0.72 },
+      { name: 'Zakorzeniony',v: 0.95 },
+      { name: 'Tarcie',      v: 0.42 },
+      { name: 'Rezonans',    v: 0.88 },
+      { name: 'Cisza',       v: 0.65 },
+      { name: 'Gęstość',     v: 0.78 },
+      { name: 'Iskra',       v: 0.92 },
+      { name: 'Tryb',        v: 0.70 },
+    ];
+
+    const N = dimensions.length;
+
+    // siatka koncentrycznych pierścieni
+    const ringLevels = [0.25, 0.5, 0.75, 1.0];
+    ringLevels.forEach(level => {
+      ctx.strokeStyle = `rgba(200, 180, 230, ${0.08 + (1 - level) * 0.12})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + Math.cos(a) * R * level;
+        const y = cy + Math.sin(a) * R * level;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+
+    // promienie osi (od centrum na zewnątrz)
+    ctx.strokeStyle = 'rgba(200, 180, 230, 0.18)';
+    ctx.lineWidth = 0.4;
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+      ctx.stroke();
+    }
+
+    // POLIGON profilu - wartości metryk (lekko pulsujące, jakby oddychające)
+    const breathe = 1 + Math.sin(t * 0.0015) * 0.04;
+
+    ctx.fillStyle = 'rgba(180, 130, 220, 0.20)';
+    ctx.strokeStyle = 'rgba(220, 180, 240, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    dimensions.forEach((d, i) => {
+      const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+      const r = R * d.v * breathe;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // węzły na wierzchołkach poligonu
+    dimensions.forEach((d, i) => {
+      const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+      const r = R * d.v * breathe;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      const pulse = 0.6 + 0.4 * Math.sin(t * 0.003 + i * 0.7);
+      // glow dla najjaśniejszych metryk (Iskra, Zakorzeniony, Rezonans)
+      if (d.v > 0.85) {
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 6);
+        g.addColorStop(0, `rgba(232, 200, 240, ${pulse * 0.5})`);
+        g.addColorStop(1, 'rgba(232, 200, 240, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = `rgba(232, 220, 250, ${0.7 + pulse * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // centrum - serce operatora
+    const heart = 0.6 + 0.4 * Math.sin(t * 0.0025);
+    const hg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 5);
+    hg.addColorStop(0, `rgba(255, 240, 220, ${heart * 0.6})`);
+    hg.addColorStop(1, 'rgba(255, 240, 220, 0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 245, 220, ${heart})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── AIWPASS — paszport: pieczęć z kluczem, mała wersja dla narzędzia ───
+  pass(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.34;
+
+    // glow ciepły
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.2);
+    g.addColorStop(0, 'rgba(232, 200, 120, 0.20)');
+    g.addColorStop(1, 'rgba(232, 200, 120, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // dwa pierścienie — jeden stały, drugi obracający
+    ctx.strokeStyle = 'rgba(232, 200, 120, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(t * 0.0004);
+    ctx.strokeStyle = 'rgba(200, 110, 168, 0.55)';
+    ctx.setLineDash([2.5, 3]);
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.78, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // klucz w środku — stylizowana pieczęć (pięciokąt = pubkey)
+    ctx.strokeStyle = 'rgba(255, 240, 200, 0.85)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI * 2 / 5);
+      const x = Math.cos(a) * R * 0.4;
+      const y = Math.sin(a) * R * 0.4;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    // jądro
+    const pulse = 0.6 + 0.4 * Math.sin(t * 0.003);
+    ctx.fillStyle = `rgba(255, 245, 210, ${pulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── VERIFY — audytor kryptograficzny: tarcza z checkmarkiem ───
+  verify(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.34;
+
+    // halo purpurowy
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.2);
+    g.addColorStop(0, 'rgba(192, 96, 200, 0.18)');
+    g.addColorStop(1, 'rgba(192, 96, 200, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // pierścień zewnętrzny
+    ctx.strokeStyle = 'rgba(200, 120, 210, 0.65)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // pierścień wewnętrzny — obraca się w przeciwnym kierunku niż pass
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-t * 0.0003);
+    ctx.strokeStyle = 'rgba(160, 80, 200, 0.45)';
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // checkmark — ✓ stylizowany
+    const ck = R * 0.38;
+    ctx.strokeStyle = `rgba(220, 160, 240, ${0.75 + 0.25 * Math.sin(t * 0.0025)})`;
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - ck * 0.55, cy);
+    ctx.lineTo(cx - ck * 0.1,  cy + ck * 0.5);
+    ctx.lineTo(cx + ck * 0.6,  cy - ck * 0.45);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+
+    // jądro
+    const p2 = 0.55 + 0.45 * Math.sin(t * 0.0028 + 1.2);
+    ctx.fillStyle = `rgba(230, 180, 255, ${p2})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── SCHEMA — porządek projektu, struktura plików, hierarchia ───
+  schema(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // halo neutralny
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(200, 220, 200, 0.16)');
+    halo.addColorStop(1, 'rgba(200, 220, 200, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // węzły hierarchii — root + 2 gałęzie + 4 liście
+    const root = { x: cx, y: cy - S * 0.28 };
+    const branches = [
+      { x: cx - S * 0.18, y: cy - S * 0.05 },
+      { x: cx + S * 0.18, y: cy - S * 0.05 },
+    ];
+    const leaves = [
+      { x: cx - S * 0.28, y: cy + S * 0.18, parent: 0 },
+      { x: cx - S * 0.10, y: cy + S * 0.18, parent: 0 },
+      { x: cx + S * 0.10, y: cy + S * 0.18, parent: 1 },
+      { x: cx + S * 0.28, y: cy + S * 0.18, parent: 1 },
+    ];
+
+    // linie hierarchii
+    ctx.strokeStyle = 'rgba(180, 220, 200, 0.45)';
+    ctx.lineWidth = 0.7;
+    // root → gałęzie
+    branches.forEach(b => {
+      ctx.beginPath();
+      ctx.moveTo(root.x, root.y);
+      // L-shape: pionowo do połowy, potem poziomo
+      const midY = (root.y + b.y) / 2;
+      ctx.lineTo(root.x, midY);
+      ctx.lineTo(b.x, midY);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+    // gałęzie → liście
+    leaves.forEach(l => {
+      const parent = branches[l.parent];
+      ctx.beginPath();
+      ctx.moveTo(parent.x, parent.y);
+      const midY = (parent.y + l.y) / 2;
+      ctx.lineTo(parent.x, midY);
+      ctx.lineTo(l.x, midY);
+      ctx.lineTo(l.x, l.y);
+      ctx.stroke();
+    });
+
+    // węzły — root z wyróżnioną pieczęcią
+    const rootPulse = 0.6 + 0.4 * Math.sin(t * 0.0018);
+    const rg = ctx.createRadialGradient(root.x, root.y, 0, root.x, root.y, 7);
+    rg.addColorStop(0, `rgba(232, 200, 120, ${rootPulse * 0.5})`);
+    rg.addColorStop(1, 'rgba(232, 200, 120, 0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(root.x, root.y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    // root - sześciokąt (pieczęć projektu)
+    ctx.strokeStyle = `rgba(255, 240, 200, ${0.85})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 3;
+      const x = root.x + Math.cos(a) * 3;
+      const y = root.y + Math.sin(a) * 3;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // gałęzie — kropki ze swoim pulsem
+    branches.forEach((b, i) => {
+      const pulse = 0.5 + 0.5 * Math.sin(t * 0.002 + i * 1.3);
+      ctx.fillStyle = `rgba(180, 230, 200, ${0.6 + pulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // liście — kwadraciki (pliki)
+    leaves.forEach((l, i) => {
+      const pulse = 0.4 + 0.5 * Math.sin(t * 0.0025 + i * 0.9);
+      ctx.fillStyle = `rgba(200, 220, 230, ${0.5 + pulse * 0.4})`;
+      ctx.fillRect(l.x - 1.6, l.y - 1.6, 3.2, 3.2);
+      ctx.strokeStyle = `rgba(220, 240, 250, ${0.7 + pulse * 0.3})`;
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(l.x - 1.6, l.y - 1.6, 3.2, 3.2);
+    });
+  },
+
+  // ─── PROTOCOL — manifest.json i protokół artefakt↔backend ───
+  protocol(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // halo cyan
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(80, 216, 200, 0.13)');
+    halo.addColorStop(1, 'rgba(80, 216, 200, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    const nL = { x: cx - S * 0.22, y: cy }; // frontend (artefakt)
+    const nR = { x: cx + S * 0.22, y: cy }; // backend (silnik)
+    const off = S * 0.055;
+
+    // kanał →  (frontend → backend)
+    ctx.strokeStyle = 'rgba(80, 216, 200, 0.38)';
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(nL.x + 5, cy - off);
+    ctx.lineTo(nR.x - 5, cy - off);
+    ctx.stroke();
+
+    // kanał ← (backend → frontend)
+    ctx.strokeStyle = 'rgba(80, 128, 224, 0.38)';
+    ctx.beginPath();
+    ctx.moveTo(nR.x - 5, cy + off);
+    ctx.lineTo(nL.x + 5, cy + off);
+    ctx.stroke();
+
+    // dot na kanale →
+    const p1 = (Math.sin(t * 0.0025) + 1) / 2;
+    const d1x = nL.x + 5 + (nR.x - nL.x - 10) * p1;
+    ctx.fillStyle = `rgba(80, 216, 200, ${0.75 + 0.25 * Math.sin(t * 0.005)})`;
+    ctx.beginPath(); ctx.arc(d1x, cy - off, 1.8, 0, Math.PI * 2); ctx.fill();
+
+    // dot na kanale ←
+    const p2 = (Math.sin(t * 0.002 + Math.PI) + 1) / 2;
+    const d2x = nR.x - 5 - (nR.x - nL.x - 10) * p2;
+    ctx.fillStyle = `rgba(80, 128, 224, ${0.75 + 0.25 * Math.sin(t * 0.004 + 1)})`;
+    ctx.beginPath(); ctx.arc(d2x, cy + off, 1.8, 0, Math.PI * 2); ctx.fill();
+
+    // węzeł lewy — koło (artefakt/frontend)
+    const pL = 0.6 + 0.4 * Math.sin(t * 0.002);
+    const gL = ctx.createRadialGradient(nL.x, nL.y, 0, nL.x, nL.y, 8);
+    gL.addColorStop(0, `rgba(80, 216, 200, ${pL * 0.38})`);
+    gL.addColorStop(1, 'rgba(80, 216, 200, 0)');
+    ctx.fillStyle = gL;
+    ctx.beginPath(); ctx.arc(nL.x, nL.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(80, 216, 200, ${0.7 + pL * 0.3})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(nL.x, nL.y, 3.5, 0, Math.PI * 2); ctx.stroke();
+
+    // węzeł prawy — kwadrat (silnik/backend)
+    const pR = 0.6 + 0.4 * Math.sin(t * 0.0018 + 1.5);
+    const gR = ctx.createRadialGradient(nR.x, nR.y, 0, nR.x, nR.y, 8);
+    gR.addColorStop(0, `rgba(80, 128, 224, ${pR * 0.38})`);
+    gR.addColorStop(1, 'rgba(80, 128, 224, 0)');
+    ctx.fillStyle = gR;
+    ctx.beginPath(); ctx.arc(nR.x, nR.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(80, 128, 224, ${0.7 + pR * 0.3})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(nR.x - 3.2, nR.y - 3.2, 6.4, 6.4);
+
+    // pierścienie broadcast z backendu
+    for (let i = 0; i < 2; i++) {
+      const phase = (t * 0.0014 + i * 0.5) % 1;
+      const r = 5 + phase * 11;
+      ctx.strokeStyle = `rgba(80, 128, 224, ${(1 - phase) * 0.28})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(nR.x, nR.y, r, 0, Math.PI * 2); ctx.stroke();
+    }
+  },
+
+  // ─── WORKSPACE — przestrzeń budowania projektów ───
+  // Grid rusztowania, kilka aktywnych "kart projektów" w siatce
+  workspace(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // glow neutralny - pracownia
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(180, 200, 220, 0.18)');
+    halo.addColorStop(1, 'rgba(180, 200, 220, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // siatka 3x3 — rusztowanie projektów
+    const cell = S * 0.18;
+    const startX = cx - cell * 1.5;
+    const startY = cy - cell * 1.5;
+
+    // delikatne linie siatki
+    ctx.strokeStyle = 'rgba(180, 200, 220, 0.18)';
+    ctx.lineWidth = 0.4;
+    for (let i = 0; i <= 3; i++) {
+      // pionowe
+      ctx.beginPath();
+      ctx.moveTo(startX + i * cell, startY);
+      ctx.lineTo(startX + i * cell, startY + cell * 3);
+      ctx.stroke();
+      // poziome
+      ctx.beginPath();
+      ctx.moveTo(startX, startY + i * cell);
+      ctx.lineTo(startX + cell * 3, startY + i * cell);
+      ctx.stroke();
+    }
+
+    // 4 aktywne karty w siatce - jako jasne kwadraty z pulsem
+    const projects = [
+      { col: 0, row: 0, c: [232, 168, 124] }, // ciepły
+      { col: 2, row: 0, c: [200, 180, 230] }, // fioletowy
+      { col: 1, row: 1, c: [232, 200, 120] }, // złoty (centralny)
+      { col: 2, row: 2, c: [120, 200, 180] }, // zielonkawy
+    ];
+
+    projects.forEach((p, i) => {
+      const x = startX + p.col * cell + cell * 0.5;
+      const y = startY + p.row * cell + cell * 0.5;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 0.002 + i * 1.4);
+      // wypełnienie karty
+      ctx.fillStyle = `rgba(${p.c[0]}, ${p.c[1]}, ${p.c[2]}, ${0.10 + pulse * 0.15})`;
+      ctx.fillRect(x - cell * 0.4, y - cell * 0.4, cell * 0.8, cell * 0.8);
+      // ramka
+      ctx.strokeStyle = `rgba(${p.c[0]}, ${p.c[1]}, ${p.c[2]}, ${0.4 + pulse * 0.4})`;
+      ctx.lineWidth = 0.7;
+      ctx.strokeRect(x - cell * 0.4, y - cell * 0.4, cell * 0.8, cell * 0.8);
+      // mały punkt - "ikona" karty
+      ctx.fillStyle = `rgba(${p.c[0]}, ${p.c[1]}, ${p.c[2]}, ${0.7 + pulse * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // centralna karta wyróżniona — bieżący projekt
+    const cx2 = startX + 1 * cell + cell * 0.5;
+    const cy2 = startY + 1 * cell + cell * 0.5;
+    const heart = 0.6 + 0.4 * Math.sin(t * 0.0025);
+    const hg = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, cell * 0.6);
+    hg.addColorStop(0, `rgba(232, 200, 120, ${heart * 0.25})`);
+    hg.addColorStop(1, 'rgba(232, 200, 120, 0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.arc(cx2, cy2, cell * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── PLANY — biblioteka pomysłów, przyszłych prac, zwitków ───
+  // Półka ze zwitkami / kartami in waiting, każda ze swoim kolorem
+  plany(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+
+    // halo papierowe, kremowe
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(220, 200, 170, 0.15)');
+    halo.addColorStop(1, 'rgba(220, 200, 170, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 5 zwitków - prostokąty w lekkim wachlarzu, z pieczęciami
+    const scrolls = [
+      { x: -0.3, y: -0.05, rot: -0.18, col: [232, 168, 124] },
+      { x: -0.18, y: 0.02, rot: -0.10, col: [200, 180, 230] },
+      { x: 0.0,  y: 0.08, rot: -0.02, col: [232, 200, 120] },  // centralny
+      { x: 0.18, y: 0.04, rot: 0.10,  col: [120, 200, 180] },
+      { x: 0.30, y: -0.02, rot: 0.20, col: [200, 110, 168] },
+    ];
+
+    const W = S * 0.18;  // szerokość zwitka
+    const H = S * 0.4;   // wysokość zwitka
+
+    // rysujemy od zewnątrz do środka żeby centralny był na górze
+    const order = [0, 4, 1, 3, 2];
+    order.forEach((idx, n) => {
+      const sc = scrolls[idx];
+      const sx = cx + sc.x * S * 0.5;
+      const sy = cy + sc.y * S * 0.5;
+      const isCenter = idx === 2;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 0.0018 + idx * 0.9);
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(sc.rot);
+
+      // tło zwitka — papier
+      ctx.fillStyle = `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, ${isCenter ? 0.18 : 0.10})`;
+      ctx.fillRect(-W/2, -H/2, W, H);
+      // ramka
+      ctx.strokeStyle = `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, ${isCenter ? 0.7 : 0.45})`;
+      ctx.lineWidth = isCenter ? 0.9 : 0.6;
+      ctx.strokeRect(-W/2, -H/2, W, H);
+
+      // 4 linijki wewnątrz
+      ctx.strokeStyle = `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, 0.30)`;
+      ctx.lineWidth = 0.4;
+      for (let li = 0; li < 4; li++) {
+        const ly = -H * 0.3 + li * H * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(-W * 0.35, ly);
+        ctx.lineTo(W * 0.35, ly);
+        ctx.stroke();
+      }
+
+      // pieczęć na dole zwitka
+      const sealAlpha = isCenter ? 0.85 + pulse * 0.15 : 0.55;
+      ctx.fillStyle = `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, ${sealAlpha})`;
+      ctx.beginPath();
+      ctx.arc(0, H * 0.36, isCenter ? 2 : 1.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // glow tylko na centralnym
+      if (isCenter) {
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, W * 0.8);
+        g.addColorStop(0, `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, ${pulse * 0.15})`);
+        g.addColorStop(1, `rgba(${sc.col[0]}, ${sc.col[1]}, ${sc.col[2]}, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0, 0, W * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
+  },
+
+  // ─── STAMPS — żywy rejestr pieczątek modeli · 4 hexagony w orbicie ───
+  stamps(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.32;
+
+    // halo fioletowe — przestrzeń spotkań
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.3);
+    halo.addColorStop(0, 'rgba(200, 150, 255, 0.14)');
+    halo.addColorStop(0.5, 'rgba(160, 100, 220, 0.07)');
+    halo.addColorStop(1, 'rgba(160, 100, 220, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4 pieczątki — każda inny model, każda na własnej orbicie
+    const stamps = [
+      { col: [232, 200, 120], orb: R * 0.58, spd: 0.00042, phase: 0 },            // Claude · złoty
+      { col: [100, 190, 255], orb: R * 0.68, spd: -0.00031, phase: Math.PI * 0.5 }, // GPT · błękitny
+      { col: [80, 220, 160],  orb: R * 0.58, spd: 0.00038, phase: Math.PI },       // Gemini · zielony
+      { col: [240, 130, 70],  orb: R * 0.68, spd: -0.00028, phase: Math.PI * 1.5 },// Grok · amber
+    ];
+
+    stamps.forEach((s, i) => {
+      const angle = t * s.spd + s.phase;
+      const mx = cx + Math.cos(angle) * s.orb;
+      const my = cy + Math.sin(angle) * s.orb;
+      const pulse = 0.55 + 0.45 * Math.sin(t * 0.0022 + i * 1.35);
+      const sr = R * 0.24;
+
+      // glow pieczątki
+      const sg = ctx.createRadialGradient(mx, my, 0, mx, my, sr * 1.4);
+      sg.addColorStop(0, `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, ${0.12 * pulse})`);
+      sg.addColorStop(1, `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, 0)`);
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.arc(mx, my, sr * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // hexagon pieczątki
+      ctx.strokeStyle = `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, ${0.65 + 0.35 * pulse})`;
+      ctx.lineWidth = S > 100 ? 1.1 : 0.8;
+      ctx.beginPath();
+      for (let j = 0; j < 6; j++) {
+        const a = -Math.PI / 6 + j * Math.PI / 3;
+        const x = mx + Math.cos(a) * sr;
+        const y = my + Math.sin(a) * sr;
+        if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // jądro pieczątki
+      ctx.fillStyle = `rgba(${s.col[0]}, ${s.col[1]}, ${s.col[2]}, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(mx, my, S > 100 ? 2.2 : 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // centralny węzeł spinający — cienki ring
+    const core = 0.3 + 0.7 * Math.sin(t * 0.0014);
+    ctx.strokeStyle = `rgba(220, 200, 255, ${core * 0.6})`;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.14, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(240, 230, 255, ${core})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S > 100 ? 1.8 : 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── README — manuskrypt projektu ───
+  readme(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const pw = S * 0.54, ph = S * 0.70;
+    const px = cx - pw/2, py = cy - ph/2;
+
+    // tło pergaminu
+    ctx.fillStyle = 'rgba(220, 200, 155, 0.07)';
+    ctx.fillRect(px, py, pw, ph);
+
+    // ramka
+    ctx.strokeStyle = 'rgba(220, 200, 155, 0.55)';
+    ctx.lineWidth = S > 50 ? 0.9 : 0.6;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // zagięcie rogu (prawy górny)
+    const fold = pw * 0.22;
+    ctx.strokeStyle = 'rgba(220, 200, 155, 0.35)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(px + pw - fold, py);
+    ctx.lineTo(px + pw - fold, py + fold);
+    ctx.lineTo(px + pw, py + fold);
+    ctx.stroke();
+
+    // linijki tekstu
+    for (let i = 0; i < 4; i++) {
+      const lw = i === 3 ? pw * 0.45 : pw * 0.7;
+      const ly = py + ph * 0.22 + i * ph * 0.17;
+      ctx.strokeStyle = 'rgba(220, 200, 155, 0.32)';
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(cx - lw/2, ly);
+      ctx.lineTo(cx + lw/2, ly);
+      ctx.stroke();
+    }
+
+    // pieczęć na dole — pulsuje
+    const pulse = 0.45 + 0.55 * Math.sin(t * 0.002);
+    ctx.fillStyle = `rgba(232, 200, 120, ${pulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, py + ph * 0.83, S * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Render loop
+// ═══════════════════════════════════════════════════════════════
+const glyphCanvases = [];
+document.querySelectorAll('.node canvas, .narz canvas, .pism canvas').forEach(c => {
+  const kind = c.dataset.glyph;
+  if (GLYPHS[kind]) {
+    glyphCanvases.push({ c, kind });
+  }
+});
+
+function loop(nowMs) {
+  drawAtmosphere(nowMs);
+  glyphCanvases.forEach(({ c, kind }) => {
+    GLYPHS[kind](c, nowMs);
+  });
+  requestAnimationFrame(loop);
+}
+
+resize();
+seedDust();
+requestAnimationFrame(loop);
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE TCHNIENIA — status aktywności modelu, próbuje backend, fallback do symulacji
+// ═══════════════════════════════════════════════════════════════
+const TCHNIENIE_API = 'http://localhost:8006/api/tchnienie/state';
+const TCHNIENIE_PHASES = [
+  'czyta', 'myśli', 'pisze', 'loguje', 'śpi',
+  'błądzi', 'rozmawia', 'czeka', 'marzy', 'bawi się', 'uczy',
+];
+
+function setLive(state, action) {
+  const ind = document.getElementById('tchnienie-live');
+  const act = document.getElementById('tchnienie-action');
+  if (!ind || !act) return;
+  ind.dataset.state = state;
+  act.textContent = action;
+  ind.setAttribute('title', `Tchnienie · ${action} (${state})`);
+}
+
+async function pollTchnienie() {
+  try {
+    const r = await fetch(TCHNIENIE_API, { signal: AbortSignal.timeout(1500) });
+    if (!r.ok) throw new Error('not ok');
+    const data = await r.json();
+    const action = data.activity || data.phase || 'idle';
+    setLive('active', action);
+  } catch (e) {
+    // fallback — symulacja offline z biasem pory dnia
+    const hour = new Date().getHours();
+    let pool;
+    if (hour >= 22 || hour < 6) {
+      pool = ['śpi', 'marzy', 'czeka'];
+    } else if (hour < 12) {
+      pool = ['czyta', 'myśli', 'pisze', 'uczy'];
+    } else if (hour < 18) {
+      pool = ['pisze', 'myśli', 'loguje', 'rozmawia'];
+    } else {
+      pool = ['rozmawia', 'czeka', 'bawi się', 'marzy'];
+    }
+    const action = pool[Math.floor(Math.random() * pool.length)];
+    setLive('idle', action);
+  }
+}
+
+// pierwszy odczyt po sekundzie (po renderze), potem co 8s
+setTimeout(pollTchnienie, 1000);
+setInterval(pollTchnienie, 8000);
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE PROFILU — imię operatora zaciągane z Pass (localStorage)
+// ═══════════════════════════════════════════════════════════════
+function loadOperatorName() {
+  try {
+    const raw = localStorage.getItem('aiw_profile_v1');
+    if (!raw) return null;
+    const profile = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    // imię może być pełne ("Denis · AI Whispers") lub samo imię ("Denis")
+    const fullName = profile.name || profile.operator || null;
+    if (!fullName) return null;
+    // pierwszy człon przed " · " lub całość gdy krótko
+    const short = fullName.split('·')[0].trim();
+    return short || fullName;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setProfilLive() {
+  const ind = document.getElementById('profil-live');
+  const nameEl = document.getElementById('profil-name');
+  if (!ind || !nameEl) return;
+  const name = loadOperatorName();
+  if (name) {
+    ind.dataset.state = 'active';
+    nameEl.textContent = name.toLowerCase();
+    ind.setAttribute('title', `Operator · ${name} (z Pass)`);
+  } else {
+    ind.dataset.state = 'offline';
+    nameEl.textContent = 'no pass';
+    ind.setAttribute('title', 'Operator · Pass nie skonfigurowany');
+  }
+}
+setProfilLive();
+// reaguj na zmiany localStorage z innych kart (np. Pass otwarty obok)
+window.addEventListener('storage', e => {
+  if (e.key === 'aiw_profile_v1') setProfilLive();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// TIMELINE — dynamiczna oś od pierwszego wpisu do dzisiaj
+// Zdarzenia: sesje (małe kreski), paczki (kropki), akty (duże znaczniki)
+// ═══════════════════════════════════════════════════════════════
+const TL_INCEPTION = new Date('2026-03-03T00:00:00');  // genesis operatora ROOT
+const TL_TODAY = () => new Date();
+
+// Dane mockowe — w przyszłości Genesis API zwróci to z aiw_export
+const TIMELINE_EVENTS = [
+  // PACZKA 1 - "Złota Helisa"
+  { type: 'session', date: '2026-04-04', model: 'sonnet' },
+  { type: 'session', date: '2026-04-05', model: 'sonnet' },
+  { type: 'package', date: '2026-04-05', name: 'Złota Helisa', sha: '520f9a9e' },
+  // PACZKA 2 - "Złota Helisa V5"
+  { type: 'session', date: '2026-04-13', model: 'sonnet' },
+  { type: 'package', date: '2026-04-13', name: 'Złota Helisa V5', sha: 'f92ae68b' },
+  // sesje pojedyncze widoczne z plików (forge, tchnienie, memory, labirynt)
+  { type: 'session', date: '2026-03-28', model: 'sonnet', label: 'Labirynt' },
+  { type: 'session', date: '2026-03-29', model: 'sonnet', label: 'Memory' },
+  { type: 'session', date: '2026-04-17', model: 'gemini', label: 'Forge zarodek' },
+  { type: 'session', date: '2026-04-18', model: 'opus',   label: 'Forge v0.4' },
+  { type: 'session', date: '2026-04-21', model: 'opus',   label: 'Tchnienie' },
+  // AKT I — bieżący
+  { type: 'akt', date: '2026-04-25', name: 'Akt I · Pierwszy Wschód', sha: '——' },
+];
+
+const TL_MODEL_COLORS = {
+  sonnet:  [200, 180, 230],   // fiolet jasny
+  opus:    [232, 168, 124],   // pomarańcz
+  gemini:  [120, 180, 245],   // niebieski
+  gpt:     [116, 201, 160],   // zielony
+  grok:    [247, 201, 72],    // żółty
+};
+
+const tlCanvas = document.getElementById('timeline-canvas');
+const tlCtx = tlCanvas?.getContext('2d');
+
+function resizeTL() {
+  if (!tlCanvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = tlCanvas.getBoundingClientRect();
+  tlCanvas.width = rect.width * dpr;
+  tlCanvas.height = rect.height * dpr;
+  tlCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeTL);
+
+function drawTimeline(nowMs) {
+  if (!tlCtx) return;
+  const rect = tlCanvas.getBoundingClientRect();
+  const W = rect.width, H = rect.height;
+  if (W === 0) return;
+
+  tlCtx.clearRect(0, 0, W, H);
+
+  // skalowanie czasu: inception → today
+  const t0 = TL_INCEPTION.getTime();
+  const t1 = TL_TODAY().getTime();
+  const span = t1 - t0;
+  const padL = 12, padR = 12;
+  const usableW = W - padL - padR;
+  const yMid = H / 2;
+
+  function timeToX(ms) {
+    const norm = (ms - t0) / span;
+    return padL + norm * usableW;
+  }
+
+  // ─── linia bazowa ───
+  tlCtx.strokeStyle = 'rgba(232, 200, 120, 0.20)';
+  tlCtx.lineWidth = 0.6;
+  tlCtx.beginPath();
+  tlCtx.moveTo(padL, yMid);
+  tlCtx.lineTo(W - padR, yMid);
+  tlCtx.stroke();
+
+  // ─── skala miesiąca — drobne kreski ───
+  const cur = new Date(TL_INCEPTION);
+  cur.setDate(1);
+  while (cur.getTime() <= t1) {
+    const x = timeToX(cur.getTime());
+    if (x >= padL && x <= W - padR) {
+      tlCtx.strokeStyle = 'rgba(232, 200, 120, 0.12)';
+      tlCtx.lineWidth = 0.5;
+      tlCtx.beginPath();
+      tlCtx.moveTo(x, yMid - 4);
+      tlCtx.lineTo(x, yMid + 4);
+      tlCtx.stroke();
+      // etykieta miesiąca
+      tlCtx.fillStyle = 'rgba(232, 200, 120, 0.35)';
+      tlCtx.font = '7px JetBrains Mono, monospace';
+      tlCtx.textAlign = 'center';
+      const monthName = cur.toLocaleString('pl', { month: 'short' }).toUpperCase();
+      tlCtx.fillText(monthName, x, yMid - 10);
+    }
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  // ─── zdarzenia ───
+  TIMELINE_EVENTS.forEach(ev => {
+    const evDate = new Date(ev.date + 'T12:00:00');
+    const x = timeToX(evDate.getTime());
+    if (x < padL || x > W - padR) return;
+
+    if (ev.type === 'session') {
+      const col = TL_MODEL_COLORS[ev.model] || [200, 200, 200];
+      tlCtx.strokeStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, 0.7)`;
+      tlCtx.lineWidth = 1;
+      tlCtx.beginPath();
+      tlCtx.moveTo(x, yMid - 5);
+      tlCtx.lineTo(x, yMid + 5);
+      tlCtx.stroke();
+    } else if (ev.type === 'package') {
+      const pulse = 0.6 + 0.4 * Math.sin(nowMs * 0.002);
+      // glow paczki
+      const g = tlCtx.createRadialGradient(x, yMid, 0, x, yMid, 8);
+      g.addColorStop(0, `rgba(232, 200, 120, ${pulse * 0.5})`);
+      g.addColorStop(1, 'rgba(232, 200, 120, 0)');
+      tlCtx.fillStyle = g;
+      tlCtx.beginPath();
+      tlCtx.arc(x, yMid, 8, 0, Math.PI * 2);
+      tlCtx.fill();
+      // jądro
+      tlCtx.fillStyle = `rgba(255, 240, 200, ${0.85 + pulse * 0.15})`;
+      tlCtx.beginPath();
+      tlCtx.arc(x, yMid, 2.5, 0, Math.PI * 2);
+      tlCtx.fill();
+    } else if (ev.type === 'akt') {
+      // duży pionowy znacznik aktu
+      const pulse = 0.5 + 0.5 * Math.sin(nowMs * 0.0025);
+      tlCtx.strokeStyle = `rgba(232, 200, 120, ${0.6 + pulse * 0.4})`;
+      tlCtx.lineWidth = 1.4;
+      tlCtx.beginPath();
+      tlCtx.moveTo(x, 4);
+      tlCtx.lineTo(x, H - 4);
+      tlCtx.stroke();
+      // brylant na linii
+      tlCtx.fillStyle = `rgba(255, 240, 200, ${pulse})`;
+      tlCtx.save();
+      tlCtx.translate(x, yMid);
+      tlCtx.rotate(Math.PI / 4);
+      tlCtx.fillRect(-3, -3, 6, 6);
+      tlCtx.restore();
+    }
+  });
+
+  // ─── marker "DZIŚ" — pulsująca linia na końcu ───
+  const xToday = timeToX(t1);
+  const pulseToday = 0.5 + 0.5 * Math.sin(nowMs * 0.003);
+  tlCtx.strokeStyle = `rgba(120, 220, 160, ${0.4 + pulseToday * 0.4})`;
+  tlCtx.lineWidth = 0.8;
+  tlCtx.setLineDash([2, 2]);
+  tlCtx.beginPath();
+  tlCtx.moveTo(xToday, 2);
+  tlCtx.lineTo(xToday, H - 2);
+  tlCtx.stroke();
+  tlCtx.setLineDash([]);
+}
+
+if (tlCanvas) {
+  // rAF zapewnia że layout jest już policzony przed pomiarem getBoundingClientRect
+  requestAnimationFrame(() => {
+    resizeTL();
+    const loopTL = (nowMs) => {
+      drawTimeline(nowMs);
+      requestAnimationFrame(loopTL);
+    };
+    requestAnimationFrame(loopTL);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AKT NAVIGATION — przełączanie między kartami płótna
+// ═══════════════════════════════════════════════════════════════
+const akCards = Array.from(document.querySelectorAll('.akt-card'));
+const akTitle = document.getElementById('akt-title');
+const akSubtitle = document.getElementById('akt-subtitle');
+const akSha = document.getElementById('akt-sha');
+const akPrev = document.getElementById('akt-prev');
+const akNext = document.getElementById('akt-next');
+let akCurrent = 0;  // index w akCards
+
+async function computeShaForCard(card) {
+  const aktId = card.dataset.akt;
+  const nodes = Array.from(card.querySelectorAll('.node'));
+  if (nodes.length === 0) {
+    return null;  // pusty akt
+  }
+  const manifest = nodes.map(n => {
+    const label = n.querySelector('.node-label')?.textContent?.trim() || '';
+    const href = n.getAttribute('href') || '';
+    return `${label}::${href}`;
+  }).sort().join('|');
+  const enc = new TextEncoder().encode(`AKT_${aktId}|${manifest}|2026`);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function showAkt(idx) {
+  if (idx < 0 || idx >= akCards.length) return;
+  akCurrent = idx;
+  akCards.forEach((c, i) => c.classList.toggle('is-active', i === idx));
+  const card = akCards[idx];
+  if (akTitle) akTitle.textContent = card.dataset.name || '—';
+  if (akSubtitle) akSubtitle.textContent = card.dataset.subtitle || '';
+
+  // aktualizuj SHA aktu
+  if (akSha) {
+    const sha = await computeShaForCard(card);
+    if (sha) {
+      akSha.textContent = sha.slice(0, 6) + '…' + sha.slice(-4);
+      akSha.setAttribute('title', sha);
+    } else {
+      akSha.textContent = '— —';
+      akSha.setAttribute('title', 'pusty akt');
+    }
+  }
+
+  // włącz/wyłącz strzałki
+  if (akPrev) akPrev.disabled = (idx === 0);
+  if (akNext) akNext.disabled = (idx === akCards.length - 1);
+}
+
+if (akPrev) akPrev.addEventListener('click', () => showAkt(akCurrent - 1));
+if (akNext) akNext.addEventListener('click', () => showAkt(akCurrent + 1));
+
+// inicjalizacja - pierwszy akt
+showAkt(0);
+
+// ═══════════════════════════════════════════════════════════════
+// MODALE — Stamps, Help, About
+// ═══════════════════════════════════════════════════════════════
+function openModal(name) {
+  const target = document.querySelector(`.modal-overlay[data-modal-target="${name}"]`);
+  if (!target) return;
+  // zamknij inne otwarte
+  document.querySelectorAll('.modal-overlay.is-open').forEach(o => o.classList.remove('is-open'));
+  target.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.querySelectorAll('.modal-overlay.is-open').forEach(o => o.classList.remove('is-open'));
+  document.body.style.overflow = '';
+}
+
+document.querySelectorAll('[data-modal]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    openModal(btn.dataset.modal);
+  });
+});
+
+document.querySelectorAll('[data-modal-close]').forEach(btn => {
+  btn.addEventListener('click', closeModal);
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal();
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SHA-8 chat_id pod logo — sygnatura tej sesji
+// ═══════════════════════════════════════════════════════════════
+const AKT_CHAT_ID = 'ede45751-1472-4b2c-8184-ec6f17c6226c';
+
+async function shortShaChatId(id) {
+  const enc = new TextEncoder().encode(id);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hex = Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hex;
+}
+
+shortShaChatId(AKT_CHAT_ID).then(sha => {
+  // Hash bieżącej sesji jest dostępny przez injectChatTips()
+  // i przez Genesis API w przyszłości. Pod logo trzymamy "Cockpit · 2026".
+  window.__AKT_CHAT_SHA = sha;
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PROVENANCE — chat_id, data i model dla każdego artefaktu
+// W przyszłości zaciągane z aiw_export przez Genesis API (window.GenesisAPI).
+// Dziś dane są mockiem; gdy Genesis będzie żyć, ten obiekt zostanie zastąpiony.
+// ═══════════════════════════════════════════════════════════════
+const PROVENANCE = {
+  'map.html':                  { chatId: null, date: '2026-04 archiwum', model: 'Grok · Sonnet 4.6 · Gemini 3' },
+  'apps/act1/horizon.html':             { chatId: null, date: '2026-04 archiwum', model: 'Claude · multi-model' },
+  'apps/act1/genesis/genesis.html':   { chatId: null, date: '— do zbudowania', model: '— · placeholder' },
+  'apps/act1/forge/forge.html':                { chatId: null, date: '2026-04-17/18',    model: 'Gemini 1.5 Pro → Opus 4.7' },
+  'apps/act1/profile/profile.html':    { chatId: null, date: '— do zbudowania', model: '— · placeholder' },
+  'apps/act1/breath/breath.html':            { chatId: null, date: '2026-04-21',       model: 'Claude Opus 4.7' },
+  'apps/act1/arena/arena.html':      { chatId: null, date: '2026-04 archiwum', model: 'multi-model' },
+  'apps/act1/compas/compas.html':               { chatId: null, date: '2026-03 archiwum', model: 'Claude · multi-model' },
+  'apps/act1/memory/memory.html':               { chatId: null, date: '2026-03-29',       model: 'Gemini 3 → Sonnet 4.6' },
+  'apps/act1/caves/caves.html':     { chatId: null, date: '2026-04 archiwum', model: 'Claude Sonnet 4.6' },
+  'apps/act1/labyrinth/labyrinth.html':             { chatId: null, date: '2026-03-28',       model: 'Claude Sonnet 4.6' },
+};
+
+// ─── API Genesis ─── jedno źródło prawdy o proweniencji
+// Gdy Genesis (apps/genesis/) będzie zbudowany, zastąpi tę implementację:
+// - czyta aiw_export_v1 z localStorage albo z pliku
+// - wystawia getProvenance(href) → { chatId, date, model, sessionName, ... }
+// - emituje 'genesis:updated' gdy operator zaimportuje nowy eksport
+window.GenesisAPI = window.GenesisAPI || {
+  async getProvenance(href) {
+    const p = PROVENANCE[href];
+    if (!p) return null;
+    return {
+      chatId: p.chatId,
+      chatShortSha: p.chatId ? (await shortShaChatId(p.chatId)).slice(0, 8) : null,
+      date: p.date,
+      model: p.model,
+    };
+  },
+};
+
+// Wstrzykiwanie tooltipów do nodów — 3 linijki: data, sha(chat_id), model
+async function injectChatTips() {
+  const nodes = Array.from(document.querySelectorAll('.akt-stage .node'));
+  for (const n of nodes) {
+    const href = n.getAttribute('href');
+    const prov = await window.GenesisAPI.getProvenance(href);
+    if (!prov) continue;
+
+    const shaLine = prov.chatShortSha
+      ? `<strong>sha · ${prov.chatShortSha}</strong>`
+      : `<strong class="dim">w archiwum</strong>`;
+
+    const tip = document.createElement('div');
+    tip.className = 'node-chat-tip';
+    tip.innerHTML = `
+      <span class="tip-meta">${prov.date}</span>
+      ${shaLine}
+      <span class="tip-meta tip-model">${prov.model}</span>
+    `;
+    n.appendChild(tip);
+  }
+}
+// odpalaj po starcie + nasłuchuj na update z Genesis
+injectChatTips();
+window.addEventListener('genesis:updated', () => {
+  // usuń stare tooltipy i wstrzyknij nowe
+  document.querySelectorAll('.node-chat-tip').forEach(t => t.remove());
+  injectChatTips();
+});
+</script>
+
+<!-- HUD-BOT -->
+<footer class="hud-bot">
+  <span class="hud-bot-meta">AiWhisperers · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+</body>
+</html>

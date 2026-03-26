@@ -1,0 +1,57 @@
+{
+  "id": "breath",
+  "name": "Pierwsze Tchnienie · Breath ✦",
+  "version": "0.1",
+  "date": "2026-04-26",
+  "description": "Kula czynności — centrum mapy poznania. Kanwas 3D z metrykami aktywności, dashboard połączeń i animowanym polem morficznym.",
+  "type": "visualization",
+  "status": "incubation",
+  "lineage": {
+    "seed_session": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "breath.html",
+    "docs": "breath-spec.md",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "e86857e4b494adc76aaa52eeb643e64259d87a1b853a856685a2b92e304fb24a",
+    "docs_sha": "35ecf0c8f81ab0aeb5274c865f296286530b1f190f6399300a6173197462d480"
+  },
+  "relations": [],
+  "tags": [
+    "canvas",
+    "3d",
+    "visualization",
+    "dashboard",
+    "morphic"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

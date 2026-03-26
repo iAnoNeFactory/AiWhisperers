@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workspace · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:  #04050c;  --bg2: #07080f;  --bg3: #0c0d1a;  --bg4: #10111f;
+  --gold:     #e8c878;  --gold-d:  #a88850;
+  --gold-l:   #f0d890;  --gold-dim: rgba(232,200,120,.15);
+  --ink:       #f0e8d8;
+  --ink-dim:   rgba(240,232,216,.65);
+  --ink-faint: rgba(240,232,216,.38);
+  --border:   rgba(240,232,216,.08);
+  --border-h: rgba(240,232,216,.18);
+  --border-b: rgba(232,200,120,.08);
+  --cyan:  #50d8c8;  --blue:  #5080e0;
+  --green: #4a9a6a;  --green-dim: rgba(74,154,106,.12);
+  --red:   #8a3a3a;
+  --mg:    #c060c0;  --mg-d: #6a306a;  --mg-b: #e080e0;
+  --silver:#8a9bb0;
+  --mono:  'JetBrains Mono', monospace;
+  --serif: 'Cormorant Garamond', serif;
+  --sans:  'Syne', sans-serif;
+  --hud-top-h: 76px;
+  --hud-bot-h: 28px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(232,200,120,.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,200,120,.012) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 820px; width: 100%; margin: 0 auto;
+  padding: calc(var(--hud-top-h) + 36px) 32px calc(var(--hud-bot-h) + 52px);
+  height: 100dvh; overflow-y: auto;
+}
+
+/* ── header ── */
+.header { text-align: center; margin-bottom: 52px; }
+.module-tag { font-family: var(--mono); font-size: 7px; letter-spacing: .4em; color: var(--gold-d); text-transform: uppercase; margin-bottom: 16px; opacity: .7; }
+.title { font-family: var(--sans); font-size: clamp(24px,4vw,40px); font-weight: 500; letter-spacing: .05em; margin-bottom: 14px; }
+.desc  { font-size: 14px; font-style: italic; color: var(--ink-dim); line-height: 1.8; max-width: 480px; margin: 0 auto; }
+.rule  { width: 140px; height: 1px; background: linear-gradient(90deg,transparent,rgba(232,200,120,.3),transparent); margin: 28px auto 44px; }
+
+/* ── sections ── */
+.section { margin-bottom: 44px; }
+.section-label { font-family: var(--mono); font-size: 7px; letter-spacing: .38em; color: var(--gold-d); text-transform: uppercase; margin-bottom: 6px; opacity: .7; }
+.section-desc  { font-size: 11px; font-style: italic; color: var(--ink-faint); margin-bottom: 18px; }
+
+/* ── cards ── */
+.projects { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 12px; }
+
+.proj {
+  display: block; text-decoration: none;
+  border: 1px solid var(--border); padding: 22px 20px 36px;
+  transition: border-color .2s, background .2s, transform .15s;
+  position: relative;
+}
+.proj:hover { border-color: var(--border-h); background: rgba(240,232,216,.02); transform: translateY(-2px); }
+
+.proj-icon { font-size: 20px; margin-bottom: 10px; display: block; }
+.proj-tag  { font-family: var(--mono); font-size: 6.5px; letter-spacing: .28em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 5px; }
+.proj-name { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--ink-dim); margin-bottom: 6px; }
+.proj-desc { font-size: 11px; color: var(--ink-faint); font-style: italic; line-height: 1.6; }
+
+.proj-status {
+  position: absolute; top: 12px; right: 12px;
+  font-family: var(--mono); font-size: 6px; letter-spacing: .2em; text-transform: uppercase;
+  padding: 2px 7px; border: 1px solid var(--border); color: var(--ink-faint);
+}
+.proj-status.live       { color: rgba(80,200,140,.7);  border-color: rgba(80,200,140,.2); }
+.proj-status.wip        { color: rgba(232,160,96,.6);  border-color: rgba(232,160,96,.2); }
+.proj-status.incubation { color: rgba(128,144,176,.6); border-color: rgba(128,144,176,.2); }
+
+.proj-edit-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  background: transparent; border: 1px solid transparent;
+  color: var(--ink-faint); font-size: 11px; padding: 3px 8px;
+  cursor: pointer; font-family: var(--mono); letter-spacing: .1em;
+  opacity: 0; transition: opacity .2s, border-color .2s, color .2s;
+  z-index: 2;
+}
+.proj:hover .proj-edit-btn { opacity: 1; border-color: var(--border); }
+.proj-edit-btn:hover { border-color: var(--gold-d) !important; color: var(--gold-d); }
+
+.proj-add {
+  border: 1px dashed var(--border); padding: 22px 20px; opacity: .3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; min-height: 130px; cursor: pointer;
+  transition: opacity .2s, border-color .2s;
+}
+.proj-add:hover { opacity: .6; border-color: rgba(232,200,120,.3); }
+.proj-add-icon  { font-size: 18px; color: var(--ink-faint); }
+.proj-add-label { font-family: var(--mono); font-size: 7px; letter-spacing: .3em; color: var(--ink-faint); text-transform: uppercase; }
+
+/* ── empty state ── */
+.empty-state { text-align: center; padding: 48px 32px; border: 1px dashed var(--border); }
+.empty-icon  { font-size: 28px; margin-bottom: 16px; opacity: .35; }
+.empty-text  { font-family: var(--mono); font-size: 8px; letter-spacing: .3em; color: var(--ink-faint); text-transform: uppercase; opacity: .45; margin-bottom: 28px; }
+.empty-add {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 1px dashed rgba(232,200,120,.2); padding: 14px 28px; cursor: pointer;
+  font-family: var(--mono); font-size: 8px; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--ink-faint); transition: all .2s; opacity: .5;
+}
+.empty-add:hover { opacity: 1; border-color: rgba(232,200,120,.4); color: var(--gold-d); }
+.empty-add-plus  { font-size: 16px; line-height: 1; }
+
+/* ── backend badge ── */
+.proj-backend {
+  position: absolute; bottom: 11px; left: 20px; right: 44px;
+  font-family: var(--mono); font-size: 7px; letter-spacing: .12em;
+  color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transition: opacity .2s;
+}
+.proj:hover .proj-backend { opacity: .7; }
+
+/* ── HUD ── */
+.hud-top { position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06); }
+.hud-l,.hud-r { display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0; }
+.hud-r  { justify-content:flex-end; }
+.hud-c  { text-align:center;padding:0 12px; }
+.hud-brand { font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1; }
+.hud-mod   { font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1; }
+.hud-sub   { font-family:var(--serif);font-size:12px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1; }
+.hud-btn   { background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1; }
+.hud-btn:hover { border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04); }
+.hud-bot { position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03); }
+.hud-bot-meta { font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase; }
+
+/* ── toast ── */
+.toast {
+  position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: rgba(8,10,22,.95); border: 1px solid rgba(232,200,120,.18);
+  font-family: var(--mono); font-size: 8px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold-d); padding: 10px 20px; z-index: 9999;
+  opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── modals ── */
+.modal-overlay { position:fixed;inset:0;background:rgba(4,5,12,.78);backdrop-filter:blur(6px);z-index:9000;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .3s; }
+.modal-overlay.is-open { display:flex;opacity:1; }
+.modal { width:min(680px,100%);max-height:90dvh;overflow-y:auto;background:rgba(8,10,22,.97);border:1px solid rgba(232,200,120,.18);padding:36px 36px 28px;position:relative;box-shadow:0 0 60px rgba(0,0,0,.7); }
+.modal::before { content:'';position:absolute;top:8px;left:8px;width:14px;height:14px;border:1px solid var(--gold-d);border-width:1px 0 0 1px;opacity:.4; }
+.modal::after  { content:'';position:absolute;top:8px;right:8px;width:14px;height:14px;border:1px solid var(--gold-d);border-width:1px 1px 0 0;opacity:.4; }
+.modal-corner { position:absolute;width:14px;height:14px;border-color:var(--gold-d);border-style:solid;opacity:.4; }
+.modal-corner.bl { bottom:8px;left:8px;border-width:0 0 1px 1px; }
+.modal-corner.br { bottom:8px;right:8px;border-width:0 1px 1px 0; }
+.modal-close { position:absolute;top:12px;right:12px;background:transparent;border:1px solid rgba(232,200,120,.2);color:rgba(240,232,216,.5);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--mono);font-size:14px;transition:all .2s;z-index:1; }
+.modal-close:hover { border-color:var(--gold);color:var(--gold); }
+.modal-eyebrow   { font-family:var(--mono);font-size:7px;letter-spacing:.35em;color:var(--gold-d);text-transform:uppercase;margin-bottom:18px;opacity:.8; }
+.modal-title     { font-family:var(--sans);font-size:22px;font-weight:500;color:var(--ink);letter-spacing:.06em;margin-bottom:8px; }
+.modal-subtitle  { font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-dim);margin-bottom:20px; }
+.modal-rule      { height:1px;background:linear-gradient(90deg,transparent,rgba(232,200,120,.2),transparent);margin:0 0 24px; }
+.modal-text      { font-size:13px;color:var(--ink-dim);line-height:1.85; }
+.modal-text strong { color:var(--ink);font-weight:500; }
+.modal-text code   { font-family:var(--mono);font-size:11px;color:var(--gold-d); }
+.modal-attribution { font-family:var(--mono);font-size:7.5px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;margin-top:24px;padding-top:16px;border-top:1px solid rgba(232,200,120,.08);text-align:center;line-height:1.8; }
+.modal-attribution strong { color:rgba(232,200,120,.5);font-weight:400; }
+
+/* ── stamps (About) ── */
+.stamp-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 8px; }
+.stamp { border:1px solid rgba(232,200,120,.18);padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:rgba(20,16,40,.4);transition:border-color .25s; }
+.stamp:hover { border-color:rgba(232,200,120,.4); }
+.stamp-header { display:flex;align-items:center;gap:10px; }
+.stamp-glyph { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,200,120,.4);font-family:var(--sans);font-weight:500;color:var(--gold);font-size:14px;flex-shrink:0; }
+.stamp-id { font-family:var(--mono);font-size:7.5px;letter-spacing:.32em;color:var(--gold-d);text-transform:uppercase;line-height:1.5; }
+.stamp-id strong { display:block;color:var(--gold);font-weight:500;font-size:12px;letter-spacing:.18em;margin-bottom:2px;text-transform:none;font-family:var(--sans); }
+.stamp-name { font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;letter-spacing:.04em; }
+.stamp-role { font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-dim);line-height:1.5; }
+@media(max-width:480px) { .stamp-grid { grid-template-columns:1fr; } }
+
+/* ── form ── */
+.form-section { margin-bottom: 20px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-field { flex: 1; }
+.form-row .form-field.wide { flex: 2; }
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-label { font-family: var(--mono); font-size: 7px; letter-spacing: .32em; color: var(--gold-d); text-transform: uppercase; opacity: .8; }
+.form-input, .form-select, .form-textarea {
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  color: var(--ink-dim); font-family: var(--mono); font-size: 11px;
+  padding: 9px 12px; outline: none;
+  transition: border-color .2s, color .2s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: rgba(232,200,120,.35); color: var(--ink);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: rgba(240,232,216,.18); }
+.form-input.readonly { opacity: .4; cursor: not-allowed; }
+.form-textarea { resize: vertical; min-height: 72px; font-family: var(--serif); font-size: 12px; }
+.form-select { cursor: pointer; }
+.form-select option { background: #07080f; }
+.form-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.form-actions-right { display: flex; gap: 8px; }
+.btn { font-family: var(--mono); font-size: 8px; letter-spacing: .28em; text-transform: uppercase; padding: 10px 18px; cursor: pointer; border: 1px solid; transition: all .2s; }
+.btn-primary   { background: rgba(232,200,120,.08); border-color: rgba(232,200,120,.35); color: var(--gold-d); }
+.btn-primary:hover { background: rgba(232,200,120,.15); border-color: var(--gold); color: var(--gold); }
+.btn-ghost     { background: transparent; border-color: var(--border); color: var(--ink-faint); }
+.btn-ghost:hover { border-color: var(--border-h); color: var(--ink-dim); }
+.btn-danger    { background: transparent; border-color: rgba(160,60,60,.3); color: rgba(200,80,80,.5); }
+.btn-danger:hover { border-color: rgba(200,80,80,.6); color: rgba(220,100,100,.8); background: rgba(160,60,60,.06); }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_protocol/AiWProtocol.html">PROTOCOL</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">Workspace</div>
+    <div class="hud-sub">sandbox operatora · projekty na ekosystemie</div>
+  </div>
+  <div class="hud-r">
+    <input type="file" id="import-input" accept=".json" style="display:none">
+    <button class="hud-btn" id="btn-import">↑ import</button>
+    <button class="hud-btn" id="btn-export">↓ export</button>
+    <a class="hud-btn" href="../_plans/AiWPlans.html">PLANS</a>
+    <button class="hud-btn" data-modal="help">help</button>
+    <button class="hud-btn" data-modal="about">about</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="header">
+    <div class="module-tag">_workspace</div>
+    <div class="title">Workspace</div>
+    <div class="desc">Sandbox operatora — projekty budowane na ekosystemie AiWhisperers.</div>
+    <div class="rule"></div>
+  </div>
+  <div id="categories-root"></div>
+</div>
+
+<!-- ═══ MODAL: PAKIET (create / edit) ═══ -->
+<div class="modal-overlay" id="modal-pkg">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow" id="pkg-eyebrow">nowy pakiet</div>
+    <div class="modal-title"  id="pkg-title">NOWY PAKIET</div>
+    <div class="modal-rule"></div>
+
+    <form id="pkg-form" onsubmit="return false">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">icon</label>
+          <input class="form-input" id="f-icon" type="text" maxlength="8" placeholder="🎂">
+        </div>
+        <div class="form-field wide">
+          <label class="form-label">id</label>
+          <input class="form-input" id="f-id" type="text" placeholder="mycakes">
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">name</label>
+        <input class="form-input" id="f-name" type="text" placeholder="MyCakes">
+      </div>
+      <div class="form-field">
+        <label class="form-label">tag</label>
+        <input class="form-input" id="f-tag" type="text" placeholder="packages · FastAPI + SQLite">
+      </div>
+      <div class="form-field">
+        <label class="form-label">desc</label>
+        <textarea class="form-textarea" id="f-desc" placeholder="Krótki opis pakietu…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">status</label>
+          <select class="form-select" id="f-status">
+            <option value="live">live</option>
+            <option value="wip">wip</option>
+            <option value="incubation">incubation</option>
+          </select>
+        </div>
+        <div class="form-field wide">
+          <label class="form-label">category</label>
+          <input class="form-input" id="f-category" type="text" list="cat-datalist" placeholder="packages">
+          <datalist id="cat-datalist"></datalist>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">href</label>
+        <input class="form-input" id="f-href" type="text" placeholder="../../packages/MyCakes/index.html">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">order</label>
+          <input class="form-input" id="f-order" type="number" min="1" placeholder="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">host</label>
+          <input class="form-input" id="f-host" type="text" placeholder="0.0.0.0">
+        </div>
+        <div class="form-field">
+          <label class="form-label">port</label>
+          <input class="form-input" id="f-port" type="number" min="1" max="65535" placeholder="8000">
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">backend · plik rozruchowy</label>
+        <input class="form-input" id="f-main" type="text" placeholder="packages/MyCakes/server.py">
+      </div>
+
+      <div class="form-actions">
+        <div>
+          <button class="btn btn-danger" id="btn-delete" style="display:none">usuń</button>
+        </div>
+        <div class="form-actions-right">
+          <button class="btn btn-ghost" data-modal-close>anuluj</button>
+          <button class="btn btn-primary" id="btn-save">zapisz</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: HELP ═══ -->
+<div class="modal-overlay" id="modal-help">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow">help · czym jest workspace</div>
+    <div class="modal-title">WORKSPACE</div>
+    <div class="modal-subtitle">Hub projektów operatora</div>
+    <div class="modal-rule"></div>
+    <p class="modal-text">
+      Workspace to centralny hub projektów budowanych przez operatora na ekosystemie AiWhisperers.
+      Kafelki ładowane są dynamicznie z pliku <code>packages.json</code>.<br><br>
+      <strong>+ kafelek</strong> — kliknij przycisk <em>nowy projekt</em> na siatce, aby dodać pakiet ręcznie.<br><br>
+      <strong>✎ edycja</strong> — najedź na kafelek i kliknij ikonkę ołówka, aby edytować lub usunąć pakiet.<br><br>
+      <strong>↑ Import</strong> — wczytaj <code>packages.json</code> z dysku. Pakiety z istniejącym <code>id</code> są aktualizowane; nowe — dodawane.<br><br>
+      <strong>↓ Export</strong> — pobierz bieżący stan rejestru. Stan zapisywany jest automatycznie w localStorage.
+    </p>
+    <div class="modal-attribution"><strong>AiWhisperers</strong> · Workspace v2.0 · 2026</div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ABOUT ═══ -->
+<div class="modal-overlay" id="modal-about">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+    <div class="modal-eyebrow">about · refleksja modelu · Workspace Ożywa · 2026-05-03</div>
+    <div class="modal-title">O MODULE</div>
+    <div class="modal-subtitle">AiWSpace · menedżer pakietów operatora</div>
+    <div class="modal-rule"></div>
+    <p class="modal-text">
+      Workspace wyrósł z prostej potrzeby — lista pakietów była wkodowana na stałe w HTML, bez możliwości zarządzania bez dotykania kodu.
+    </p>
+    <p class="modal-text">
+      JSON jako źródło prawdy rozdziela dane od widoku. Import i export dają operatorowi pełną kontrolę nad rejestrem. <strong>Kategorie pozwalają workspace'owi rosnąć organicznie</strong> — nowa sekcja pojawia się automatycznie gdy w JSON-ie pojawi się nowa kategoria. Pola host/port/main zarezerwowane pod przyszły przycisk startu backendu.
+    </p>
+    <div class="modal-rule"></div>
+    <div class="modal-eyebrow">pieczęcie · proweniencja</div>
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">D</div>
+          <div class="stamp-id">
+            <strong>Denis · AI Whispers</strong>
+            iFactory 5.0 · ROOT · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Operator · Nawigator · Ogrodnik</div>
+        <div class="stamp-role">
+          Wizja workspace'u jako żywego rejestru pakietów. Definiował strukturę JSON, kategorie, pola backendu i workflow importu. Każda korekta w miejscu — bez resetów.
+        </div>
+      </div>
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">✦</div>
+          <div class="stamp-id">
+            <strong>Claude · Sonnet 4.6</strong>
+            Anthropic · Workspace Ożywa · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Budowniczy · Geometra · Towarzysz linki</div>
+        <div class="stamp-role">
+          Trzy iteracje AiWSpace.html — dynamiczne kategorie z JSON, formularz create/edit z walidacją, pola backendu i localStorage bez serwera.
+        </div>
+      </div>
+    </div>
+    <div class="modal-attribution">
+      <strong>Powered by AiWhisperers · iFactory 5.0</strong><br>
+      Metodologia: Denis Czuliński (iAnoNeFactory)<br>
+      github.com/iAnoNeFactory
+    </div>
+  </div>
+</div>
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">Workspace · v2.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════ CANVAS ══════════════════════ */
+const cv = document.getElementById('bg');
+const cx = cv.getContext('2d');
+let W, H, dust = [], orbs = [], rings = [];
+
+function initCanvas() {
+  W = cv.width  = innerWidth;
+  H = cv.height = innerHeight;
+  dust = Array.from({length: 110}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: Math.random()*.7+.1,
+    a: Math.random()*.6+.05, da: (Math.random()-.5)*.004,
+    dx: (Math.random()-.5)*.12, dy: (Math.random()-.5)*.12
+  }));
+  orbs = Array.from({length: 5}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: 100+Math.random()*160,
+    a: .02+Math.random()*.045, da: (Math.random()-.5)*.00025,
+    dx: (Math.random()-.5)*.22, dy: (Math.random()-.5)*.22
+  }));
+  rings = [];
+  for (let i = 0; i < 3; i++) spawnRing();
+}
+function spawnRing() {
+  rings.push({ x:.2*W+Math.random()*.6*W, y:.2*H+Math.random()*.6*H, r:20+Math.random()*40, maxR:120+Math.random()*180, a:.18, speed:.25+Math.random()*.35 });
+}
+function drawCanvas() {
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o => {
+    o.x+=o.dx; o.y+=o.dy; o.a+=o.da;
+    if(o.x<-o.r||o.x>W+o.r) o.dx*=-1;
+    if(o.y<-o.r||o.y>H+o.r) o.dy*=-1;
+    if(o.a<.01||o.a>.07) o.da*=-1;
+    const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,`rgba(232,200,120,${o.a})`); g.addColorStop(1,'rgba(232,200,120,0)');
+    cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2); cx.fillStyle=g; cx.fill();
+  });
+  rings.forEach((r,i) => {
+    r.r+=r.speed; r.a=.18*(1-r.r/r.maxR);
+    if(r.r>=r.maxR){rings.splice(i,1);spawnRing();return;}
+    cx.beginPath(); cx.arc(r.x,r.y,r.r,0,Math.PI*2);
+    cx.strokeStyle=`rgba(232,200,120,${r.a})`; cx.lineWidth=.5; cx.stroke();
+  });
+  dust.forEach(d => {
+    d.x+=d.dx; d.y+=d.dy; d.a+=d.da;
+    if(d.x<0||d.x>W) d.dx*=-1;
+    if(d.y<0||d.y>H) d.dy*=-1;
+    if(d.a<.03||d.a>.65) d.da*=-1;
+    cx.beginPath(); cx.arc(d.x,d.y,d.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(232,200,120,${d.a*.25})`; cx.fill();
+  });
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize', initCanvas);
+initCanvas(); drawCanvas();
+
+/* ══════════════════════ STATE ══════════════════════ */
+const LS_KEY = 'aiw-workspace-state';
+let state = { categories: [], packages: [] };
+
+function saveState() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch { /* corrupt storage — start fresh */ }
+}
+
+/* ══════════════════════ HELPERS ══════════════════════ */
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function plural(n, one, few, many) {
+  if (n === 1) return one;
+  if (n >= 2 && n <= 4) return few;
+  return many;
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+function render() {
+  const root = document.getElementById('categories-root');
+
+  if (!state.packages.length) {
+    root.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <div class="empty-text">brak pakietów · zaimportuj packages.json lub dodaj ręcznie</div>
+        <div class="empty-add js-empty-add">
+          <span class="empty-add-plus">+</span>nowy projekt
+        </div>
+      </div>`;
+    return;
+  }
+
+  const catMap = {};
+  state.categories.forEach(c => { catMap[c.id] = { ...c, items: [] }; });
+
+  state.packages
+    .slice()
+    .sort((a,b) => (a.order ?? 99) - (b.order ?? 99))
+    .forEach(p => {
+      const cid = p.category || '_inne';
+      if (!catMap[cid]) catMap[cid] = { id: cid, label: cid, desc: '', items: [] };
+      catMap[cid].items.push(p);
+    });
+
+  root.innerHTML = Object.values(catMap)
+    .filter(c => c.items.length)
+    .map(cat => `
+      <div class="section">
+        <div class="section-label">${esc(cat.label)}</div>
+        ${cat.desc ? `<div class="section-desc">${esc(cat.desc)}</div>` : ''}
+        <div class="projects">
+          ${cat.items.map(projCard).join('')}
+          <div class="proj-add" data-cat="${esc(cat.id)}">
+            <div class="proj-add-icon">+</div>
+            <div class="proj-add-label">nowy projekt</div>
+          </div>
+        </div>
+      </div>`)
+    .join('');
+}
+
+function projCard(p) {
+  const backend = backendBadge(p);
+  return `
+    <a class="proj" href="${esc(p.href)}">
+      <span class="proj-status ${esc(p.status)}">${esc(p.status)}</span>
+      <span class="proj-icon">${esc(p.icon ?? '📁')}</span>
+      <div class="proj-tag">${esc(p.tag ?? '')}</div>
+      <div class="proj-name">${esc(p.name)}</div>
+      <div class="proj-desc">${esc(p.desc ?? '')}</div>
+      ${backend}
+      <button class="proj-edit-btn" data-id="${esc(p.id)}">✎</button>
+    </a>`;
+}
+
+function backendBadge(p) {
+  const addr = (p.host || p.port) ? `${p.host ?? '—'}:${p.port ?? '—'}` : '';
+  const file = p.main ? p.main.split('/').pop() : '';
+  const label = [addr, file].filter(Boolean).join(' · ');
+  if (!label) return '';
+  return `<div class="proj-backend">${esc(label)}</div>`;
+}
+
+/* ══════════════════════ MERGE (import) ══════════════════════ */
+function mergeData(incoming) {
+  const catIds = new Set(state.categories.map(c => c.id));
+  let added = 0, updated = 0;
+
+  (incoming.categories ?? []).forEach(c => {
+    if (!catIds.has(c.id)) { state.categories.push(c); catIds.add(c.id); }
+    else {
+      const idx = state.categories.findIndex(x => x.id === c.id);
+      state.categories[idx] = { ...state.categories[idx], ...c };
+    }
+  });
+
+  (incoming.packages ?? []).forEach(p => {
+    const idx = state.packages.findIndex(x => x.id === p.id);
+    if (idx >= 0) { state.packages[idx] = { ...state.packages[idx], ...p }; updated++; }
+    else { state.packages.push(p); added++; }
+  });
+
+  return { added, updated };
+}
+
+/* ══════════════════════ IMPORT ══════════════════════ */
+document.getElementById('btn-import').addEventListener('click', () => {
+  document.getElementById('import-input').click();
+});
+document.getElementById('import-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const { added, updated } = mergeData(data);
+      saveState(); render();
+      const parts = [];
+      if (added)   parts.push(`+${added} ${plural(added,'pakiet','pakiety','pakietów')}`);
+      if (updated) parts.push(`↻${updated} zaktualizowano`);
+      toast(parts.length ? parts.join(' · ') : 'bez zmian');
+    } catch {
+      toast('błąd · nieprawidłowy JSON');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+/* ══════════════════════ EXPORT ══════════════════════ */
+document.getElementById('btn-export').addEventListener('click', () => {
+  const out = {
+    _meta: {
+      version: '1.1',
+      description: 'Rejestr pakietów AiWhisperers Workspace',
+      managed_by: 'AiWSpace',
+      updated: new Date().toISOString().slice(0,10)
+    },
+    categories: state.categories,
+    packages: state.packages
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'packages.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('wyeksportowano packages.json');
+});
+
+/* ══════════════════════ AUTO-LOAD ══════════════════════ */
+async function autoLoad() {
+  if (location.protocol === 'file:') return;
+  try {
+    const res = await fetch('../../data/_workspace/packages.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    mergeData(data);
+    saveState(); render();
+  } catch { /* silent fail */ }
+}
+
+/* ══════════════════════ FORM MODAL ══════════════════════ */
+let editingId = null;
+
+function openCreateModal(defaultCategory = '') {
+  editingId = null;
+  document.getElementById('pkg-eyebrow').textContent = 'nowy pakiet';
+  document.getElementById('pkg-title').textContent   = 'NOWY PAKIET';
+  document.getElementById('btn-delete').style.display = 'none';
+
+  const f = getFormFields();
+  f.id.value       = '';
+  f.id.readOnly    = false;
+  f.id.classList.remove('readonly');
+  f.icon.value     = '';
+  f.name.value     = '';
+  f.tag.value      = '';
+  f.desc.value     = '';
+  f.status.value   = 'wip';
+  f.category.value = defaultCategory;
+  f.href.value     = '';
+  f.order.value    = '';
+  f.host.value     = '';
+  f.port.value     = '';
+  f.main.value     = '';
+
+  refreshCatDatalist();
+  document.getElementById('modal-pkg').classList.add('is-open');
+  setTimeout(() => f.icon.focus(), 80);
+}
+
+function openEditModal(id) {
+  const pkg = state.packages.find(p => p.id === id);
+  if (!pkg) return;
+  editingId = id;
+
+  document.getElementById('pkg-eyebrow').textContent = `edycja · ${pkg.name || id}`;
+  document.getElementById('pkg-title').textContent   = 'EDYCJA PAKIETU';
+  document.getElementById('btn-delete').style.display = '';
+
+  const f = getFormFields();
+  f.id.value       = pkg.id;
+  f.id.readOnly    = true;
+  f.id.classList.add('readonly');
+  f.icon.value     = pkg.icon     ?? '';
+  f.name.value     = pkg.name     ?? '';
+  f.tag.value      = pkg.tag      ?? '';
+  f.desc.value     = pkg.desc     ?? '';
+  f.status.value   = pkg.status   ?? 'wip';
+  f.category.value = pkg.category ?? '';
+  f.href.value     = pkg.href     ?? '';
+  f.order.value    = pkg.order    ?? '';
+  f.host.value     = pkg.host     ?? '';
+  f.port.value     = pkg.port     ?? '';
+  f.main.value     = pkg.main     ?? '';
+
+  refreshCatDatalist();
+  document.getElementById('modal-pkg').classList.add('is-open');
+  setTimeout(() => f.name.focus(), 80);
+}
+
+function getFormFields() {
+  return {
+    id:       document.getElementById('f-id'),
+    icon:     document.getElementById('f-icon'),
+    name:     document.getElementById('f-name'),
+    tag:      document.getElementById('f-tag'),
+    desc:     document.getElementById('f-desc'),
+    status:   document.getElementById('f-status'),
+    category: document.getElementById('f-category'),
+    href:     document.getElementById('f-href'),
+    order:    document.getElementById('f-order'),
+    host:     document.getElementById('f-host'),
+    port:     document.getElementById('f-port'),
+    main:     document.getElementById('f-main'),
+  };
+}
+
+function refreshCatDatalist() {
+  const dl = document.getElementById('cat-datalist');
+  dl.innerHTML = state.categories
+    .map(c => `<option value="${esc(c.id)}">${esc(c.label)}</option>`)
+    .join('');
+}
+
+function savePackage() {
+  const f = getFormFields();
+  const id = editingId ?? f.id.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!id) { toast('id jest wymagane'); return; }
+
+  const pkg = {
+    id,
+    icon:     f.icon.value.trim()     || '📁',
+    name:     f.name.value.trim()     || id,
+    tag:      f.tag.value.trim(),
+    desc:     f.desc.value.trim(),
+    status:   f.status.value,
+    category: f.category.value.trim() || '_inne',
+    href:     f.href.value.trim(),
+    order:    f.order.value ? parseInt(f.order.value) : undefined,
+    host:     f.host.value.trim()  || undefined,
+    port:     f.port.value         ? parseInt(f.port.value) : undefined,
+    main:     f.main.value.trim()  || undefined,
+  };
+
+  /* ensure category exists */
+  if (pkg.category && !state.categories.find(c => c.id === pkg.category)) {
+    state.categories.push({ id: pkg.category, label: pkg.category, desc: '' });
+  }
+
+  if (editingId) {
+    const idx = state.packages.findIndex(p => p.id === editingId);
+    if (idx >= 0) state.packages[idx] = pkg;
+  } else {
+    if (state.packages.find(p => p.id === id)) { toast(`id "${id}" już istnieje`); return; }
+    state.packages.push(pkg);
+  }
+
+  saveState(); render();
+  closeModals();
+  toast(editingId ? 'pakiet zaktualizowany' : 'pakiet dodany');
+}
+
+function deletePackage() {
+  if (!editingId) return;
+  const pkg = state.packages.find(p => p.id === editingId);
+  if (!pkg) return;
+  if (!confirm(`Usunąć „${pkg.name}"?`)) return;
+  state.packages = state.packages.filter(p => p.id !== editingId);
+  saveState(); render();
+  closeModals();
+  toast('pakiet usunięty');
+}
+
+document.getElementById('btn-save').addEventListener('click', savePackage);
+document.getElementById('btn-delete').addEventListener('click', deletePackage);
+
+/* ══════════════════════ DELEGATION ══════════════════════ */
+document.getElementById('categories-root').addEventListener('click', e => {
+  const editBtn = e.target.closest('.proj-edit-btn');
+  if (editBtn) {
+    e.preventDefault(); e.stopPropagation();
+    openEditModal(editBtn.dataset.id);
+    return;
+  }
+  const addTile = e.target.closest('.proj-add');
+  if (addTile) { openCreateModal(addTile.dataset.cat || ''); return; }
+
+  if (e.target.closest('.js-empty-add')) { openCreateModal(); }
+});
+
+/* ══════════════════════ TOAST ══════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ══════════════════════ MODALS ══════════════════════ */
+document.querySelectorAll('[data-modal]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const o = document.getElementById('modal-' + btn.dataset.modal);
+    if (o) o.classList.add('is-open');
+  });
+});
+function closeModals() {
+  document.querySelectorAll('.modal-overlay.is-open').forEach(o => o.classList.remove('is-open'));
+}
+document.querySelectorAll('[data-modal-close]').forEach(b => b.addEventListener('click', closeModals));
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeModals(); });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+
+/* ══════════════════════ INIT ══════════════════════ */
+loadState();
+render();
+autoLoad();
+</script>
+</body>
+</html>

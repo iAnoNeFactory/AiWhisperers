@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GardenOS — Mapa Upraw</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1a0f;
+    --bg2: #111f13;
+    --bg3: #162119;
+    --panel: #1a2b1c;
+    --border: #2a3f2c;
+    --green: #4caf6a;
+    --green-light: #7dcf8e;
+    --green-dim: #2d5e3a;
+    --amber: #d4a843;
+    --amber-dim: #6b4f1a;
+    --red: #c0504a;
+    --text: #c8ddc9;
+    --text-dim: #6a8a6c;
+    --text-bright: #e8f5e9;
+    --soil: #3d2b1a;
+    --soil2: #4a3420;
+    --grass: #1a3d20;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    color: var(--green-light);
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--text-dim); font-weight: 300; }
+
+  .toolbar {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .tool-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tool-btn:hover { border-color: var(--green-dim); color: var(--text); }
+  .tool-btn.active {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+
+  .tool-separator { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 220px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .panel-section {
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-header {
+    padding: 8px 12px;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-header .add-btn {
+    cursor: pointer;
+    color: var(--green-dim);
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .panel-header .add-btn:hover { color: var(--green); }
+
+  .tree-list {
+    overflow-y: auto;
+    max-height: 200px;
+  }
+
+  .tree-item {
+    padding: 5px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.1s;
+    border-left: 2px solid transparent;
+  }
+
+  .tree-item:hover { background: var(--bg3); }
+  .tree-item.selected {
+    background: var(--bg3);
+    border-left-color: var(--green);
+    color: var(--green-light);
+  }
+
+  .tree-item .icon { font-size: 13px; }
+  .tree-item .label { flex: 1; }
+  .tree-item .count {
+    color: var(--text-dim);
+    font-size: 10px;
+    background: var(--bg);
+    padding: 1px 5px;
+  }
+
+  .tree-child {
+    padding-left: 24px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .tree-child.selected { color: var(--green-light); border-left-color: var(--green-dim); }
+
+  /* CANVAS AREA */
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  #gardenCanvas {
+    cursor: crosshair;
+    display: block;
+  }
+
+  .canvas-info {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(13,26,15,0.85);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    color: var(--text-dim);
+    font-size: 10px;
+    pointer-events: none;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .zoom-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+  .zoom-btn:hover { background: var(--bg3); border-color: var(--green-dim); }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    width: 240px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+
+  .props-empty {
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-align: center;
+    margin-top: 40px;
+    line-height: 1.8;
+  }
+
+  .props-section { padding: 12px; border-bottom: 1px solid var(--border); }
+
+  .props-title {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .props-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    background: var(--green-dim);
+    color: var(--green-light);
+    padding: 2px 6px;
+    letter-spacing: 1px;
+  }
+
+  .prop-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--bg);
+  }
+
+  .prop-key { color: var(--text-dim); }
+  .prop-val { color: var(--text); text-align: right; }
+
+  .prop-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    width: 100%;
+    margin-top: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .prop-input:focus { border-color: var(--green-dim); }
+
+  .prop-label { color: var(--text-dim); font-size: 10px; margin-top: 8px; margin-bottom: 2px; }
+
+  .action-btn {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .action-btn:hover { background: var(--green); color: var(--bg); }
+
+  .danger-btn {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .danger-btn:hover { background: var(--red); color: white; }
+
+  /* POPUP */
+  .popup {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+
+  .popup-header {
+    padding: 8px 12px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    color: var(--green-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .popup-close {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .popup-close:hover { color: var(--text); }
+
+  .popup-body { padding: 10px 12px; }
+
+  .popup-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+  .popup-key { color: var(--text-dim); }
+  .popup-val { color: var(--text-bright); }
+
+  .telemetry-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 11px;
+  }
+
+  .tele-icon { font-size: 14px; }
+
+  .tele-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .tele-bar {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  .tele-val { color: var(--green-light); font-size: 10px; width: 35px; text-align: right; }
+
+  /* SEED BANK TAG */
+  .tag {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin: 2px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .tag:hover { border-color: var(--green-dim); color: var(--text); }
+
+  .tag.planted { border-color: var(--green-dim); color: var(--green); }
+
+  /* LEGEND */
+  .legend {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(13,26,15,0.9);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    font-size: 10px;
+    pointer-events: none;
+  }
+
+  .legend-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* SEASON BADGE */
+  .season {
+    font-size: 10px;
+    color: var(--amber);
+    background: var(--amber-dim);
+    padding: 2px 8px;
+    letter-spacing: 1px;
+  }
+
+  /* NOTIFICATION */
+  .notif {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green-light);
+    padding: 6px 16px;
+    font-size: 11px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .notif.show { opacity: 1; }
+
+  /* SEED BANK MODAL */
+  .modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 150;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    width: 420px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.8);
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    color: var(--green-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+  }
+
+  .modal-body { padding: 16px; }
+
+  .seed-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .seed-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .seed-card:hover { border-color: var(--green); }
+  .seed-card .seed-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+  .seed-card .seed-name { font-size: 10px; color: var(--text); }
+  .seed-card .seed-qty { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Garden<span>OS</span></div>
+  <div class="season">🌱 SEZON 2026</div>
+  <div class="toolbar">
+    <button class="tool-btn active" id="toolSelect" onclick="setTool('select')">⬚ wybierz</button>
+    <button class="tool-btn" id="toolDraw" onclick="setTool('draw')">✏ rysuj obszar</button>
+    <button class="tool-btn" id="toolBed" onclick="setTool('bed')">▦ grządka</button>
+    <button class="tool-btn" id="toolPot" onclick="setTool('pot')">⊞ wielodoniczka</button>
+    <div class="tool-separator"></div>
+    <button class="tool-btn" onclick="showSeedBank()">🌰 bank nasion</button>
+    <button class="tool-btn" onclick="exportData()">⬇ eksport</button>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span style="color:var(--text-dim);font-size:10px">Pi offline</span>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT PANEL: TREE -->
+  <div class="left-panel">
+    <div class="panel-section">
+      <div class="panel-header">
+        OBSZARY
+        <span class="add-btn" onclick="setTool('draw')">+</span>
+      </div>
+      <div class="tree-list" id="areaTree"></div>
+    </div>
+    <div class="panel-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="panel-header">ROŚLINY <span class="add-btn" onclick="addPlantToSelected()">+</span></div>
+      <div class="tree-list" id="plantTree" style="max-height:none;flex:1;"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-header">TELEMETRIA</div>
+      <div style="padding:8px 12px;">
+        <div class="telemetry-row">
+          <span class="tele-icon">🌡</span>
+          <span style="color:var(--text-dim);width:60px">temp.</span>
+          <div class="tele-bar-wrap"><div class="tele-bar" style="width:58%"></div></div>
+          <span class="tele-val">18.4°C</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="tele-icon">💧</span>
+          <span style="color:var(--text-dim);width:60px">wilg.</span>
+          <div class="tele-bar-wrap"><div class="tele-bar" style="width:72%;background:var(--amber)"></div></div>
+          <span class="tele-val" style="color:var(--amber)">72%</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="tele-icon">☀</span>
+          <span style="color:var(--text-dim);width:60px">światło</span>
+          <div class="tele-bar-wrap"><div class="tele-bar" style="width:45%;background:#b5a642"></div></div>
+          <span class="tele-val" style="color:#b5a642">4.5k lx</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-wrap">
+    <canvas id="gardenCanvas"></canvas>
+    <div class="canvas-info" id="canvasInfo">narzędzie: wybierz | klik = zaznacz | rysuj = nowy obszar</div>
+
+    <div class="legend">
+      <div class="legend-row"><div class="legend-dot" style="background:#2a5c35;border:1px solid #4caf6a"></div>obszar uprawny</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#3d2b1a;border:1px solid #6b4f1a"></div>grządka</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#1a2440;border:1px solid #3a4a70"></div>wielodoniczka</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#3d1a1a;border:1px solid #7a3030"></div>dom/budynek</div>
+    </div>
+
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+      <button class="zoom-btn" onclick="zoom(1/1.2)">−</button>
+      <button class="zoom-btn" onclick="resetView()" style="font-size:12px">⌂</button>
+    </div>
+
+    <div class="notif" id="notif"></div>
+  </div>
+
+  <!-- RIGHT PANEL: PROPERTIES -->
+  <div class="right-panel" id="rightPanel">
+    <div class="props-empty" id="propsEmpty">
+      ↖ zaznacz element<br>lub narysuj obszar<br><br>
+      <span style="color:var(--text-dim);font-size:10px">✏ = rysuj nowy obszar<br>▦ = dodaj grządkę<br>⊞ = wielodoniczka</span>
+    </div>
+    <div id="propsContent" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SEED BANK MODAL -->
+<div class="modal-overlay" id="seedModal">
+  <div class="modal">
+    <div class="modal-header">
+      🌰 Bank Nasion
+      <span class="popup-close" onclick="hideSeedBank()">×</span>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;color:var(--text-dim);font-size:11px">Kliknij nasiono aby dodać do zaznaczonego obszaru</div>
+      <div class="seed-grid" id="seedGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================== DATA MODEL ==================
+const db = {
+  areas: [],
+  nextId: 1,
+  season: 2026
+};
+
+const SEEDS = [
+  { id: 's1', name: 'Pomidor', emoji: '🍅', type: 'vegetable', days: 75, qty: 24 },
+  { id: 's2', name: 'Ogórek', emoji: '🥒', type: 'vegetable', days: 55, qty: 18 },
+  { id: 's3', name: 'Marchew', emoji: '🥕', type: 'vegetable', days: 70, qty: 60 },
+  { id: 's4', name: 'Sałata', emoji: '🥬', type: 'vegetable', days: 30, qty: 40 },
+  { id: 's5', name: 'Pietruszka', emoji: '🌿', type: 'herb', days: 60, qty: 30 },
+  { id: 's6', name: 'Bazylia', emoji: '🌱', type: 'herb', days: 25, qty: 15 },
+  { id: 's7', name: 'Dynia', emoji: '🎃', type: 'vegetable', days: 90, qty: 8 },
+  { id: 's8', name: 'Cukinia', emoji: '🫑', type: 'vegetable', days: 55, qty: 12 },
+  { id: 's9', name: 'Bób', emoji: '🫘', type: 'legume', days: 80, qty: 20 },
+];
+
+// ================== CANVAS SETUP ==================
+const canvas = document.getElementById('gardenCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let scale = 1, offsetX = 0, offsetY = 0;
+let currentTool = 'select';
+let selectedId = null;
+let drawing = false;
+let drawPoints = [];
+let isDragging = false, dragStart = null, dragOrigOffset = null;
+let popup = null;
+
+function resize() {
+  const wrap = canvas.parentElement;
+  W = wrap.clientWidth;
+  H = wrap.clientHeight;
+  canvas.width = W;
+  canvas.height = H;
+  render();
+}
+
+window.addEventListener('resize', resize);
+
+// Demo data
+function initDemo() {
+  db.areas.push({
+    id: db.nextId++, type: 'area', name: 'Ogród Wschodni',
+    points: [{x:80,y:60},{x:380,y:60},{x:380,y:300},{x:80,y:300}],
+    color: '#2a5c35', borderColor: '#4caf6a',
+    beds: [
+      { id: db.nextId++, type: 'bed', name: 'Grządka A', x:100,y:80,w:120,h:80,
+        plants: [
+          { id: db.nextId++, type:'plant', name:'Pomidor Malinowy', emoji:'🍅', sown:'2026-03-01', status:'siewka' },
+          { id: db.nextId++, type:'plant', name:'Ogórek', emoji:'🥒', sown:'2026-03-10', status:'nasiono' }
+        ]
+      },
+      { id: db.nextId++, type: 'bed', name: 'Grządka B', x:240,y:80,w:120,h:80,
+        plants: [
+          { id: db.nextId++, type:'plant', name:'Marchew', emoji:'🥕', sown:'2026-02-20', status:'wschody' }
+        ]
+      }
+    ],
+    plants: [
+      { id: db.nextId++, type:'plant', name:'Jabłoń', emoji:'🍎', sown:'2020-03-01', status:'owocuje' }
+    ]
+  });
+
+  db.areas.push({
+    id: db.nextId++, type: 'area', name: 'Ogród Zachodni',
+    points: [{x:420,y:60},{x:650,y:60},{x:650,y:250},{x:420,y:250}],
+    color: '#2a5c35', borderColor: '#4caf6a',
+    beds: [],
+    plants: []
+  });
+
+  db.areas.push({
+    id: db.nextId++, type: 'area', name: 'Dom',
+    points: [{x:80,y:340},{x:280,y:340},{x:280,y:480},{x:80,y:480}],
+    color: '#3d1a1a', borderColor: '#7a3030',
+    beds: [], plants: [], isBuilding: true
+  });
+
+  // Wielodoniczka
+  db.areas.push({
+    id: db.nextId++, type: 'grid', name: 'Doniczki Indoor',
+    x: 420, y: 300, cols: 4, rows: 3,
+    cellSize: 40,
+    color: '#1a2440', borderColor: '#3a4a70',
+    cells: Array.from({length:12}, (_,i) => ({
+      id: db.nextId++,
+      plant: i===0 ? {name:'Bazylia',emoji:'🌱',sown:'2026-03-08',status:'kiełki'} :
+             i===3 ? {name:'Sałata',emoji:'🥬',sown:'2026-03-05',status:'siewka'} : null
+    })),
+    telemetry: { temp: 22.1, humidity: 65, light: 8200 }
+  });
+
+  updateTree();
+}
+
+// ================== RENDER ==================
+function worldToScreen(x, y) {
+  return { x: x * scale + offsetX, y: y * scale + offsetY };
+}
+
+function screenToWorld(x, y) {
+  return { x: (x - offsetX) / scale, y: (y - offsetY) / scale };
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background grid
+  ctx.save();
+  ctx.strokeStyle = '#182a19';
+  ctx.lineWidth = 0.5;
+  const gs = 40 * scale;
+  const ox = offsetX % gs;
+  const oy = offsetY % gs;
+  for (let x = ox; x < W; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = oy; y < H; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.restore();
+
+  db.areas.forEach(area => {
+    if (area.type === 'grid') {
+      renderGrid(area);
+    } else {
+      renderArea(area);
+    }
+  });
+
+  // Draw in progress
+  if (drawing && drawPoints.length > 0) {
+    ctx.save();
+    ctx.strokeStyle = '#4caf6a';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    const p0 = worldToScreen(drawPoints[0].x, drawPoints[0].y);
+    ctx.moveTo(p0.x, p0.y);
+    drawPoints.slice(1).forEach(p => {
+      const s = worldToScreen(p.x, p.y);
+      ctx.lineTo(s.x, s.y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawPoints.forEach((p,i) => {
+      const s = worldToScreen(p.x, p.y);
+      ctx.fillStyle = i===0 ? '#4caf6a' : '#2d5e3a';
+      ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+  }
+}
+
+function renderArea(area) {
+  if (!area.points || area.points.length < 2) return;
+  const pts = area.points.map(p => worldToScreen(p.x, p.y));
+  const isSelected = selectedId === area.id;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.closePath();
+
+  ctx.fillStyle = area.color + '55';
+  ctx.fill();
+
+  ctx.strokeStyle = isSelected ? '#7dcf8e' : area.borderColor;
+  ctx.lineWidth = isSelected ? 2 : 1;
+  if (isSelected) ctx.shadowColor = '#4caf6a', ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Label
+  const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
+  const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+  ctx.fillStyle = '#7dcf8e';
+  ctx.font = `${Math.max(10, 13*scale)}px Fraunces, serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(area.name, cx, cy - 10);
+
+  if (!area.isBuilding) {
+    // Beds
+    (area.beds||[]).forEach(bed => renderBed(bed, area));
+    // Big plants
+    (area.plants||[]).forEach((pl,i) => {
+      const bx = pts[0].x + 10 + i*28;
+      const by = cy + 10;
+      ctx.font = `${Math.max(14,18*scale)}px serif`;
+      ctx.fillText(pl.emoji, bx, by);
+    });
+  }
+
+  ctx.restore();
+}
+
+function renderBed(bed, area) {
+  const tl = worldToScreen(bed.x, bed.y);
+  const sw = bed.w * scale, sh = bed.h * scale;
+  const isSelected = selectedId === bed.id;
+
+  ctx.save();
+  ctx.fillStyle = '#3d2b1a88';
+  ctx.fillRect(tl.x, tl.y, sw, sh);
+  ctx.strokeStyle = isSelected ? '#d4a843' : '#6b4f1a';
+  ctx.lineWidth = isSelected ? 2 : 1;
+  if (isSelected) ctx.shadowColor = '#d4a843', ctx.shadowBlur = 6;
+  ctx.strokeRect(tl.x, tl.y, sw, sh);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#a07850';
+  ctx.font = `${Math.max(9, 10*scale)}px DM Mono, monospace`;
+  ctx.textAlign = 'left';
+  ctx.fillText(bed.name, tl.x + 4, tl.y + 12);
+
+  (bed.plants||[]).forEach((pl,i) => {
+    ctx.font = `${Math.max(12,16*scale)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(pl.emoji, tl.x + 14 + i*22, tl.y + sh - 6);
+  });
+
+  ctx.restore();
+}
+
+function renderGrid(grid) {
+  const tl = worldToScreen(grid.x, grid.y);
+  const cw = grid.cellSize * scale;
+  const tw = grid.cols * cw;
+  const th = grid.rows * cw;
+  const isSelected = selectedId === grid.id;
+
+  ctx.save();
+  ctx.fillStyle = grid.color + '66';
+  ctx.fillRect(tl.x, tl.y, tw, th);
+  ctx.strokeStyle = isSelected ? '#7da0df' : grid.borderColor;
+  ctx.lineWidth = isSelected ? 2 : 1;
+  ctx.strokeRect(tl.x, tl.y, tw, th);
+
+  // Grid cells
+  for (let r = 0; r < grid.rows; r++) {
+    for (let c = 0; c < grid.cols; c++) {
+      const idx = r * grid.cols + c;
+      const cx2 = tl.x + c * cw;
+      const cy2 = tl.y + r * cw;
+      ctx.strokeStyle = grid.borderColor + '88';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx2, cy2, cw, cw);
+      const cell = grid.cells[idx];
+      if (cell && cell.plant) {
+        ctx.font = `${Math.max(14, 18*scale)}px serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(cell.plant.emoji, cx2 + cw/2, cy2 + cw/2 + 5);
+      }
+    }
+  }
+
+  // Label
+  ctx.fillStyle = '#7da0df';
+  ctx.font = `${Math.max(9,11*scale)}px Fraunces, serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(grid.name, tl.x + tw/2, tl.y - 5);
+
+  // Telemetry icons
+  if (grid.telemetry) {
+    ctx.font = '11px serif';
+    ctx.fillText('🌡', tl.x + tw + 4, tl.y + 12);
+    ctx.fillStyle = '#7da0df';
+    ctx.font = '9px DM Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(grid.telemetry.temp + '°', tl.x + tw + 18, tl.y + 13);
+  }
+
+  ctx.restore();
+}
+
+// ================== TOOLS ==================
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  const map = { select:'toolSelect', draw:'toolDraw', bed:'toolBed', pot:'toolPot' };
+  if (map[t]) document.getElementById(map[t]).classList.add('active');
+  drawing = false; drawPoints = [];
+  const infoMap = {
+    select: 'narzędzie: wybierz | klik = zaznacz',
+    draw: 'narzędzie: rysuj obszar | klik = punkt | dblklik = zakończ',
+    bed: 'narzędzie: grządka | klik+drag = prostokąt w obszarze',
+    pot: 'narzędzie: wielodoniczka | klik = wstaw siatkę'
+  };
+  document.getElementById('canvasInfo').textContent = infoMap[t] || '';
+  render();
+}
+
+// ================== MOUSE EVENTS ==================
+let bedDrawing = false, bedStart = null;
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  const {x, y} = screenToWorld(e.clientX - canvas.getBoundingClientRect().left,
+                               e.clientY - canvas.getBoundingClientRect().top);
+
+  if (currentTool === 'select') {
+    // Try to hit a bed first, then area
+    let hit = null;
+    for (const area of db.areas) {
+      if (area.type === 'grid') {
+        const tw = area.cols * area.cellSize;
+        const th = area.rows * area.cellSize;
+        if (x >= area.x && x <= area.x+tw && y >= area.y && y <= area.y+th) {
+          hit = area; break;
+        }
+      } else {
+        for (const bed of (area.beds||[])) {
+          if (x >= bed.x && x <= bed.x+bed.w && y >= bed.y && y <= bed.y+bed.h) {
+            hit = bed; break;
+          }
+        }
+        if (!hit && pointInPolygon({x,y}, area.points)) { hit = area; }
+      }
+      if (hit) break;
+    }
+
+    if (hit) {
+      selectedId = hit.id;
+      showProps(hit);
+      render();
+    } else {
+      selectedId = null;
+      showEmpty();
+      render();
+      // Start drag to pan
+      isDragging = true;
+      dragStart = {x: e.clientX, y: e.clientY};
+      dragOrigOffset = {x: offsetX, y: offsetY};
+    }
+    return;
+  }
+
+  if (currentTool === 'draw') {
+    if (!drawing) { drawing = true; drawPoints = []; }
+    drawPoints.push({x, y});
+    render();
+    return;
+  }
+
+  if (currentTool === 'bed') {
+    const parentArea = db.areas.find(a => a.type !== 'grid' && !a.isBuilding && a.points && pointInPolygon({x,y}, a.points));
+    if (!parentArea) { notify('⚠ Kliknij wewnątrz obszaru uprawnego'); return; }
+    bedDrawing = true;
+    bedStart = {x, y, areaId: parentArea.id};
+    return;
+  }
+
+  if (currentTool === 'pot') {
+    const cols = 4, rows = 3, cellSize = 40;
+    const grid = {
+      id: db.nextId++, type: 'grid', name: `Doniczki ${db.areas.filter(a=>a.type==='grid').length+1}`,
+      x: x - cols*cellSize/2, y: y - rows*cellSize/2,
+      cols, rows, cellSize,
+      color: '#1a2440', borderColor: '#3a4a70',
+      cells: Array.from({length: cols*rows}, () => ({id: db.nextId++, plant: null})),
+      telemetry: { temp: 20, humidity: 55, light: 5000 }
+    };
+    db.areas.push(grid);
+    selectedId = grid.id;
+    showProps(grid);
+    updateTree();
+    render();
+    setTool('select');
+    notify('✓ Dodano wielodoniczkę');
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (isDragging && dragStart) {
+    offsetX = dragOrigOffset.x + (e.clientX - dragStart.x);
+    offsetY = dragOrigOffset.y + (e.clientY - dragStart.y);
+    render();
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  isDragging = false;
+
+  if (bedDrawing && bedStart) {
+    const {x, y} = screenToWorld(e.clientX - canvas.getBoundingClientRect().left,
+                                  e.clientY - canvas.getBoundingClientRect().top);
+    const rx = Math.min(x, bedStart.x), ry = Math.min(y, bedStart.y);
+    const rw = Math.max(Math.abs(x - bedStart.x), 40);
+    const rh = Math.max(Math.abs(y - bedStart.y), 30);
+    const parentArea = db.areas.find(a => a.id === bedStart.areaId);
+    if (parentArea) {
+      const bed = {
+        id: db.nextId++, type: 'bed',
+        name: `Grządka ${(parentArea.beds||[]).length + 1}`,
+        x: rx, y: ry, w: rw, h: rh, plants: []
+      };
+      parentArea.beds.push(bed);
+      selectedId = bed.id;
+      showProps(bed);
+      updateTree();
+      render();
+      notify('✓ Dodano grządkę');
+    }
+    bedDrawing = false; bedStart = null;
+  }
+});
+
+canvas.addEventListener('dblclick', e => {
+  if (currentTool === 'draw' && drawPoints.length >= 3) {
+    const name = prompt('Nazwa obszaru:', `Obszar ${db.areas.filter(a=>a.type==='area').length+1}`) || `Obszar ${db.nextId}`;
+    db.areas.push({
+      id: db.nextId++, type: 'area', name,
+      points: [...drawPoints],
+      color: '#2a5c35', borderColor: '#4caf6a',
+      beds: [], plants: []
+    });
+    drawing = false; drawPoints = [];
+    updateTree();
+    render();
+    setTool('select');
+    notify('✓ Dodano obszar: ' + name);
+  }
+});
+
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (drawing) { drawing = false; drawPoints = []; render(); }
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  offsetX = mx - (mx - offsetX) * factor;
+  offsetY = my - (my - offsetY) * factor;
+  scale *= factor;
+  scale = Math.max(0.3, Math.min(5, scale));
+  render();
+}, { passive: false });
+
+function zoom(f) {
+  offsetX = W/2 - (W/2 - offsetX)*f;
+  offsetY = H/2 - (H/2 - offsetY)*f;
+  scale *= f;
+  scale = Math.max(0.3, Math.min(5, scale));
+  render();
+}
+
+function resetView() { scale = 1; offsetX = 0; offsetY = 0; render(); }
+
+// ================== GEOMETRY ==================
+function pointInPolygon(pt, poly) {
+  if (!poly || poly.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = poly.length-1; i < poly.length; j=i++) {
+    const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
+    if (((yi>pt.y)!==(yj>pt.y)) && (pt.x < (xj-xi)*(pt.y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+// ================== PROPS PANEL ==================
+function showEmpty() {
+  document.getElementById('propsEmpty').style.display = 'block';
+  document.getElementById('propsContent').style.display = 'none';
+}
+
+function showProps(obj) {
+  document.getElementById('propsEmpty').style.display = 'none';
+  const cont = document.getElementById('propsContent');
+  cont.style.display = 'block';
+  cont.innerHTML = '';
+
+  const typeMap = { area:'OBSZAR', bed:'GRZĄDKA', grid:'WIELODONICZKA', plant:'ROŚLINA' };
+
+  // Header
+  const s = document.createElement('div');
+  s.className = 'props-section';
+  s.innerHTML = `
+    <div class="props-title">
+      <span>${obj.emoji||'🌱'}</span>
+      <span style="flex:1">${obj.name||'—'}</span>
+      <span class="props-type">${typeMap[obj.type]||obj.type}</span>
+    </div>
+    <div class="prop-label">Nazwa</div>
+    <input class="prop-input" id="propName" value="${obj.name||''}" onchange="updateName(${obj.id}, this.value)">
+  `;
+  cont.appendChild(s);
+
+  if (obj.type === 'area' || obj.type === 'grid') {
+    const s2 = document.createElement('div');
+    s2.className = 'props-section';
+    let bedHtml = '';
+    if (obj.type === 'area') {
+      bedHtml = `
+        <div class="prop-row"><span class="prop-key">grządki</span><span class="prop-val">${(obj.beds||[]).length}</span></div>
+        <div class="prop-row"><span class="prop-key">rośliny</span><span class="prop-val">${(obj.plants||[]).length}</span></div>
+      `;
+    } else {
+      const used = obj.cells.filter(c=>c.plant).length;
+      bedHtml = `
+        <div class="prop-row"><span class="prop-key">doniczki</span><span class="prop-val">${obj.cols}×${obj.rows}</span></div>
+        <div class="prop-row"><span class="prop-key">zajęte</span><span class="prop-val">${used}/${obj.cols*obj.rows}</span></div>
+        ${obj.telemetry ? `
+        <div class="prop-row"><span class="prop-key">temp.</span><span class="prop-val" style="color:var(--green)">${obj.telemetry.temp}°C</span></div>
+        <div class="prop-row"><span class="prop-key">wilgotność</span><span class="prop-val" style="color:var(--amber)">${obj.telemetry.humidity}%</span></div>
+        <div class="prop-row"><span class="prop-key">światło</span><span class="prop-val">${obj.telemetry.light} lx</span></div>
+        ` : ''}
+      `;
+    }
+    s2.innerHTML = bedHtml;
+    cont.appendChild(s2);
+  }
+
+  if (obj.type === 'plant') {
+    const s3 = document.createElement('div');
+    s3.className = 'props-section';
+    s3.innerHTML = `
+      <div class="prop-row"><span class="prop-key">siew</span><span class="prop-val">${obj.sown||'—'}</span></div>
+      <div class="prop-row"><span class="prop-key">status</span><span class="prop-val" style="color:var(--green)">${obj.status||'—'}</span></div>
+      <div class="prop-label">Status</div>
+      <select class="prop-input" onchange="updateStatus(${obj.id}, this.value)">
+        ${['nasiono','kiełki','siewka','wschody','sadzonka','kwitnie','owocuje','zebrane'].map(s=>`<option value="${s}" ${obj.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <div class="prop-label">Data siewu</div>
+      <input class="prop-input" type="date" value="${obj.sown||''}" onchange="updateSown(${obj.id}, this.value)">
+    `;
+    cont.appendChild(s3);
+  }
+
+  if (obj.type === 'bed') {
+    const s4 = document.createElement('div');
+    s4.className = 'props-section';
+    s4.innerHTML = `<div class="prop-row"><span class="prop-key">rośliny</span><span class="prop-val">${(obj.plants||[]).length}</span></div>`;
+    cont.appendChild(s4);
+  }
+
+  // Actions
+  const acts = document.createElement('div');
+  acts.className = 'props-section';
+  let actHtml = '';
+  if (obj.type !== 'plant') {
+    actHtml += `<button class="action-btn" onclick="addPlantToSelected()">+ Dodaj roślinę</button>`;
+  }
+  actHtml += `<button class="action-btn danger-btn" style="margin-top:4px" onclick="deleteSelected()">✕ Usuń</button>`;
+  acts.innerHTML = actHtml;
+  cont.appendChild(acts);
+}
+
+function findById(id) {
+  for (const a of db.areas) {
+    if (a.id === id) return a;
+    for (const b of (a.beds||[])) {
+      if (b.id === id) return b;
+      for (const p of (b.plants||[])) if (p.id === id) return p;
+    }
+    for (const p of (a.plants||[])) if (p.id === id) return p;
+    if (a.cells) for (const c of a.cells) if (c.plant && c.plant.id === id) return c.plant;
+  }
+  return null;
+}
+
+function updateName(id, val) {
+  const obj = findById(id);
+  if (obj) { obj.name = val; updateTree(); render(); }
+}
+
+function updateStatus(id, val) {
+  const obj = findById(id);
+  if (obj) { obj.status = val; render(); }
+}
+
+function updateSown(id, val) {
+  const obj = findById(id);
+  if (obj) { obj.sown = val; }
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  // Remove from areas list
+  db.areas = db.areas.filter(a => a.id !== selectedId);
+  // Remove beds
+  db.areas.forEach(a => {
+    a.beds = (a.beds||[]).filter(b => b.id !== selectedId);
+    a.plants = (a.plants||[]).filter(p => p.id !== selectedId);
+    (a.beds||[]).forEach(b => {
+      b.plants = (b.plants||[]).filter(p => p.id !== selectedId);
+    });
+  });
+  selectedId = null;
+  showEmpty();
+  updateTree();
+  render();
+  notify('✓ Usunięto element');
+}
+
+function addPlantToSelected() {
+  if (!selectedId) { notify('⚠ Zaznacz grządkę lub obszar'); return; }
+  showSeedBank();
+}
+
+// ================== TREE ==================
+function updateTree() {
+  const areaTree = document.getElementById('areaTree');
+  const plantTree = document.getElementById('plantTree');
+  areaTree.innerHTML = '';
+  plantTree.innerHTML = '';
+
+  db.areas.forEach(area => {
+    const div = document.createElement('div');
+    div.className = 'tree-item' + (selectedId === area.id ? ' selected' : '');
+    div.onclick = () => { selectedId = area.id; showProps(area); render(); updateTree(); };
+    const emoji = area.isBuilding ? '🏠' : area.type === 'grid' ? '⊞' : '🌿';
+    const cnt = area.type === 'grid' ? area.cells.filter(c=>c.plant).length :
+                ((area.beds||[]).length + (area.plants||[]).length);
+    div.innerHTML = `<span class="icon">${emoji}</span><span class="label">${area.name}</span><span class="count">${cnt}</span>`;
+    areaTree.appendChild(div);
+
+    (area.beds||[]).forEach(bed => {
+      const bd = document.createElement('div');
+      bd.className = 'tree-item tree-child' + (selectedId === bed.id ? ' selected' : '');
+      bd.onclick = (e) => { e.stopPropagation(); selectedId = bed.id; showProps(bed); render(); updateTree(); };
+      bd.innerHTML = `<span class="icon">▦</span><span class="label">${bed.name}</span><span class="count">${(bed.plants||[]).length}</span>`;
+      areaTree.appendChild(bd);
+    });
+  });
+
+  // Plants in selected
+  if (selectedId) {
+    const obj = findById(selectedId);
+    const plants = obj ? (obj.plants || []) : [];
+    if (plants.length > 0) {
+      plants.forEach(pl => {
+        const pd = document.createElement('div');
+        pd.className = 'tree-item' + (selectedId === pl.id ? ' selected' : '');
+        pd.onclick = () => { selectedId = pl.id; showProps(pl); render(); updateTree(); };
+        pd.innerHTML = `<span class="icon">${pl.emoji||'🌱'}</span><span class="label">${pl.name}</span><span class="count" style="color:var(--green)">${pl.status}</span>`;
+        plantTree.appendChild(pd);
+      });
+    } else {
+      plantTree.innerHTML = '<div style="padding:10px 12px;color:var(--text-dim);font-size:10px">brak roślin</div>';
+    }
+  } else {
+    plantTree.innerHTML = '<div style="padding:10px 12px;color:var(--text-dim);font-size:10px">zaznacz obszar</div>';
+  }
+}
+
+// ================== SEED BANK ==================
+function showSeedBank() {
+  const grid = document.getElementById('seedGrid');
+  grid.innerHTML = '';
+  SEEDS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'seed-card';
+    card.innerHTML = `<span class="seed-emoji">${s.emoji}</span><div class="seed-name">${s.name}</div><div class="seed-qty">${s.qty} szt</div>`;
+    card.onclick = () => plantSeed(s);
+    grid.appendChild(card);
+  });
+  document.getElementById('seedModal').classList.add('show');
+}
+
+function hideSeedBank() {
+  document.getElementById('seedModal').classList.remove('show');
+}
+
+function plantSeed(seed) {
+  if (!selectedId) { hideSeedBank(); notify('⚠ Zaznacz grządkę lub obszar'); return; }
+
+  const today = new Date().toISOString().split('T')[0];
+  const plant = { id: db.nextId++, type: 'plant', name: seed.name, emoji: seed.emoji, sown: today, status: 'nasiono' };
+
+  let planted = false;
+  for (const area of db.areas) {
+    if (area.id === selectedId) {
+      area.plants = area.plants || [];
+      area.plants.push(plant);
+      planted = true; break;
+    }
+    for (const bed of (area.beds||[])) {
+      if (bed.id === selectedId) {
+        bed.plants = bed.plants || [];
+        bed.plants.push(plant);
+        planted = true; break;
+      }
+    }
+    if (planted) break;
+  }
+
+  if (planted) {
+    hideSeedBank();
+    notify(`✓ Posiano: ${seed.emoji} ${seed.name}`);
+    updateTree();
+    render();
+  }
+}
+
+// ================== EXPORT ==================
+function exportData() {
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `garden-${db.season}.json`; a.click();
+  notify('✓ Eksportowano dane JSON');
+}
+
+// ================== NOTIFY ==================
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2500);
+}
+
+// ================== INIT ==================
+resize();
+initDemo();
+</script>
+</body>
+</html>

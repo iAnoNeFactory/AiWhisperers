@@ -1,0 +1,75 @@
+{
+  "id": "_plans",
+  "name": "Plans · Żywy dziennik intencji",
+  "version": "2.0",
+  "date": "2026-05-03",
+  "description": "Zarządzanie planami operatora — JSON-driven, lokalny dziennik z checklistami, importem i eksportem.",
+  "type": "operator-tool",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Inicjalizacja Gospodarza",
+    "parent_sid": "",
+    "contract_sha": "",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWPlans.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "6633766d8aca45995da2a02e283f6c28a5e032c2da92c46d530b5802895c9991",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [
+      "read",
+      "write"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [
+        "pl"
+      ],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "mirrors",
+      "target": ".claude/plans/"
+    },
+    {
+      "type": "used-by",
+      "target": "operator"
+    }
+  ],
+  "tags": [
+    "operator",
+    "plans",
+    "offline",
+    "localStorage",
+    "checklist"
+  ]
+}

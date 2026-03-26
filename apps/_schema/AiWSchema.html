@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schema · Artefakt & Overlays · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04050c;--bg2:#07080f;--bg3:#0c0d1a;--bg4:#10111f;
+  --gold:#e8c878;--gold-d:#a88850;--gold-l:#f0d890;--gold-dim:rgba(232,200,120,.15);
+  --ink:#f0e8d8;--ink-dim:rgba(240,232,216,.65);--ink-faint:rgba(240,232,216,.38);
+  --border:rgba(240,232,216,.08);--border-h:rgba(240,232,216,.18);--border-b:rgba(232,200,120,.08);
+  --cyan:#50d8c8;--blue:#5080e0;--green:#4a9a6a;--green-dim:rgba(74,154,106,.12);
+  --red:#8a3a3a;--mg:#c060c0;--mg-d:#6a306a;--mg-b:#e080e0;--silver:#8a9bb0;
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Syne',sans-serif;
+  --hud-top-h:76px;--hud-bot-h:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--serif);min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(232,200,120,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,200,120,.012) 1px,transparent 1px);
+  background-size:72px 72px;
+}
+canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+.wrap{
+  position:relative;z-index:1;
+  max-width:780px;width:100%;
+  padding:92px 28px 96px;
+}
+
+/* ── HEADER ── */
+.crown{display:flex;align-items:center;gap:16px;margin-bottom:0;}
+.crown::before,.crown::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d));}
+.crown::after{background:linear-gradient(90deg,var(--gold-d),transparent);}
+.crown-text{font-family:var(--mono);font-size:7px;letter-spacing:4px;color:var(--gold-d);text-transform:uppercase;flex-shrink:0;}
+
+.logo{font-family:var(--serif);font-size:clamp(32px,5vw,54px);font-weight:300;letter-spacing:6px;color:var(--gold-l);margin:28px 0 8px;text-align:center;line-height:1.1;}
+.logo em{font-style:italic;color:var(--gold);font-weight:400;}
+.sub{font-family:var(--mono);font-size:7.5px;letter-spacing:4px;color:var(--ink-faint);text-transform:uppercase;text-align:center;}
+.rule{width:140px;height:1px;margin:20px auto 0;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);}
+
+/* ── MANIFESTO ── */
+.manifesto{text-align:center;max-width:560px;margin:44px auto 8px;}
+.manifesto p{font-size:clamp(14px,2vw,17px);font-weight:300;line-height:2;color:var(--ink);margin-bottom:18px;}
+.manifesto p:last-child{margin-bottom:0;}
+.manifesto em{font-style:italic;color:var(--mg-b);}
+.manifesto strong{font-weight:400;color:var(--gold);}
+
+@keyframes stampIn{0%{opacity:0;transform:scale(1.12) rotate(-4deg);}70%{opacity:.62;transform:scale(.99) rotate(.5deg);}100%{opacity:.58;transform:scale(1) rotate(0deg);}}
+
+/* ── SEPARATORS ── */
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);margin:44px 0;opacity:.25;}
+.sep-thick{height:1px;background:linear-gradient(90deg,transparent,var(--mg-d),transparent);margin:56px 0;opacity:.3;}
+
+.label{font-family:var(--mono);font-size:7.5px;letter-spacing:4.5px;color:var(--gold-d);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:12px;}
+.label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.25;}
+
+/* ── FIELD CARD (pole manifestu) ── */
+.field-stack{display:flex;flex-direction:column;gap:14px;}
+.field{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  position:relative;
+  transition:border-color .3s;
+}
+.field:hover{border-color:var(--gold-d);}
+.field::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold-d);opacity:.4;
+}
+.field.meta::before{background:var(--mg-d);}
+.field.nested::before{background:var(--cyan);}
+
+.field-head{
+  display:flex;align-items:baseline;gap:14px;
+  padding:16px 20px 10px;
+  border-bottom:1px solid rgba(232,200,120,.06);
+}
+.field-key{
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  color:var(--gold);letter-spacing:.5px;
+}
+.field-type{
+  font-family:var(--mono);font-size:7px;letter-spacing:2px;
+  color:var(--ink-faint);text-transform:uppercase;
+  padding:3px 8px;border:1px solid var(--border);background:var(--bg3);
+}
+.field-type.req{color:var(--mg-d);border-color:var(--mg-d);}
+.field-body{padding:14px 20px 18px;}
+.field-desc{
+  font-family:var(--serif);font-size:14px;font-style:italic;
+  color:var(--ink-dim);line-height:1.75;
+}
+.field-desc strong{font-style:normal;font-weight:400;color:var(--gold-d);}
+.field-desc em{color:var(--mg-b);}
+.field-example{
+  margin-top:12px;
+  background:var(--bg3);border:1px solid var(--border);
+  padding:10px 14px;
+  font-family:var(--mono);font-size:9.5px;line-height:1.9;
+  color:var(--ink-dim);overflow-x:auto;
+}
+.field-example .k{color:var(--mg-d);}
+.field-example .v{color:var(--gold-d);}
+.field-example .s{color:var(--cyan);}
+.field-example .n{color:var(--green);}
+.field-example .c{color:var(--ink-faint);font-style:italic;}
+
+/* ── NESTED (sub-fields dla lineage, files, relations) ── */
+.subfields{
+  margin-top:14px;
+  border-left:1px dashed rgba(80,216,200,.22);
+  padding:2px 0 2px 18px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.subfield{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:10px 14px;
+}
+.subfield-head{
+  display:flex;align-items:baseline;gap:10px;margin-bottom:5px;
+}
+.subfield-key{
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  color:var(--cyan);
+}
+.subfield-type{
+  font-family:var(--mono);font-size:6.5px;letter-spacing:1.5px;
+  color:var(--ink-faint);text-transform:uppercase;
+  padding:2px 6px;border:1px solid var(--border);
+}
+.subfield-desc{
+  font-family:var(--serif);font-size:12.5px;font-style:italic;
+  color:var(--ink);line-height:1.7;
+}
+
+/* ── FULL EXAMPLE (pełen JSON) ── */
+.full-example{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  padding:22px 26px;
+  font-family:var(--mono);font-size:10px;line-height:2;
+  color:var(--ink-dim);
+  overflow-x:auto;
+  position:relative;
+}
+.full-example::before,.full-example::after{
+  content:'';position:absolute;left:50%;transform:translateX(-50%);
+  width:100px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-d),transparent);
+}
+.full-example::before{top:0;}
+.full-example::after{bottom:0;}
+.full-example .k{color:var(--mg-d);}
+.full-example .v{color:var(--gold-d);}
+.full-example .s{color:var(--cyan);}
+.full-example .n{color:var(--green);}
+.full-example .b{color:var(--blue);}
+.full-example .c{color:var(--ink-faint);font-style:italic;}
+
+.example-label{
+  display:flex;align-items:center;gap:10px;
+  margin:28px 0 10px;
+  font-family:var(--mono);font-size:7.5px;letter-spacing:3px;
+  color:var(--cyan);text-transform:uppercase;
+}
+.example-label::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(80,216,200,.3),transparent);
+}
+
+/* ── CONVENTIONS ── */
+.conv-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);
+}
+.conv-cell{
+  background:var(--bg2);
+  padding:14px 18px;
+}
+.conv-head{
+  font-family:var(--mono);font-size:7px;letter-spacing:2.5px;
+  color:var(--gold-d);text-transform:uppercase;
+  margin-bottom:6px;
+}
+.conv-val{
+  font-family:var(--mono);font-size:12px;
+  color:var(--gold);
+}
+.conv-note{
+  font-family:var(--serif);font-size:12px;font-style:italic;
+  color:var(--ink-dim);margin-top:4px;line-height:1.6;
+}
+
+/* ── PHILOSOPHY ── */
+.philo{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  padding:28px 32px;
+  margin-top:16px;
+  position:relative;
+}
+.philo::before{
+  content:'';position:absolute;left:-1px;top:20px;bottom:20px;width:2px;
+  background:var(--mg-d);opacity:.5;
+}
+.philo-line{
+  font-family:var(--serif);font-size:15px;font-weight:300;
+  font-style:italic;line-height:2;color:var(--ink);
+  margin-bottom:14px;
+}
+.philo-line:last-child{margin-bottom:0;}
+.philo-line em{color:var(--mg-b);}
+.philo-line strong{font-weight:400;color:var(--gold);font-style:normal;}
+
+/* ── ABOUT SECTION ── */
+.about-wrap{
+  margin-top:16px;
+}
+.about-stamps{
+  display:flex;justify-content:center;gap:48px;flex-wrap:wrap;
+  margin:28px 0 36px;
+}
+.about-stamp{
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+}
+.about-stamp-svg{
+  width:100px;height:100px;opacity:0;
+  animation:stampIn 2s ease var(--sd,0s) forwards;
+}
+.about-stamp-svg:hover{opacity:.92!important;}
+.about-stamp-name{
+  font-family:var(--mono);font-size:7px;letter-spacing:2.5px;
+  color:var(--ink-faint);text-transform:uppercase;
+}
+.about-stamp-role{
+  font-family:var(--serif);font-style:italic;font-size:10.5px;
+  color:rgba(255,165,80,.35);text-align:center;max-width:160px;line-height:1.4;
+}
+
+/* refleksja */
+.reflection{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  padding:32px 36px;
+  position:relative;
+  margin-top:8px;
+}
+.reflection::before{
+  content:'';position:absolute;left:-1px;top:24px;bottom:24px;width:2px;
+  background:var(--gold-d);opacity:.5;
+}
+.reflection-head{
+  font-family:var(--mono);font-size:7px;letter-spacing:3.5px;
+  color:var(--gold-d);text-transform:uppercase;
+  margin-bottom:18px;
+}
+.reflection-text{
+  font-family:var(--serif);font-size:14.5px;font-weight:300;
+  line-height:2;color:var(--ink);margin-bottom:16px;
+}
+.reflection-text:last-of-type{margin-bottom:0;}
+.reflection-text em{color:var(--mg-b);font-style:italic;}
+.reflection-text strong{font-weight:400;color:var(--gold);font-style:normal;}
+.reflection-sig{
+  margin-top:24px;padding-top:16px;
+  border-top:1px solid rgba(232,200,120,.15);
+  font-family:var(--mono);font-size:7px;letter-spacing:2.5px;
+  color:var(--gold-d);text-transform:uppercase;line-height:2;
+}
+.reflection-sig .tiny{font-size:6.5px;color:var(--ink-faint);letter-spacing:1.8px;}
+
+/* ── FOOTER ── */
+.footer{
+  text-align:center;
+  font-family:var(--mono);font-size:7px;letter-spacing:2.5px;
+  color:var(--ink-faint);
+  margin-top:72px;padding-top:22px;
+  border-top:1px solid var(--border);
+  line-height:2.2;
+}
+.footer .sha{
+  display:inline-block;margin-top:6px;
+  font-size:6.5px;color:var(--gold-d);
+  word-break:break-all;
+}
+
+@media(max-width:640px){
+  .wrap{padding:52px 18px 72px;}
+  .conv-grid{grid-template-columns:1fr;}
+  .field-example,.full-example{font-size:8.5px;}
+  .philo{padding:22px 20px;}
+}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:32px 0 0;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 22px;font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--gold-d);}
+.tab-btn.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-pane{display:none;padding-top:36px;}
+.tab-pane.on{display:block;}
+/* ── ARTEFAKT styles ── */
+.art-rule{background:var(--bg2);border:1px solid var(--border);padding:16px 22px 16px 36px;margin-bottom:8px;position:relative;font-family:var(--serif);font-size:13.5px;font-style:italic;color:var(--ink-dim);line-height:1.8;}
+.art-rule::before{content:'—';position:absolute;left:14px;font-family:var(--mono);color:var(--gold-d);font-size:12px;font-style:normal;}
+.art-rule code{font-family:var(--mono);font-size:9px;font-style:normal;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;color:var(--cyan);}
+.art-rule strong{font-style:normal;color:var(--gold);}
+.path-grid{display:grid;grid-template-columns:1fr 2fr;gap:1px;background:var(--border);}
+.path-cell{background:var(--bg2);padding:9px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.5px;}
+.path-key{color:var(--cyan);}
+.path-val{color:var(--ink-faint);font-size:8px;letter-spacing:.3px;}
+</style>
+<style>
+
+/* ═══ MODAL — wzorzec z index.html, identyczny we wszystkich modułach ═══ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(4,5,12,.78);
+  backdrop-filter:blur(6px);z-index:9000;display:none;
+  align-items:center;justify-content:center;padding:24px;
+  opacity:0;transition:opacity .3s;
+}
+.modal-overlay.is-open{display:flex;opacity:1;}
+
+.modal{
+  width:min(720px,100%);max-height:86vh;overflow-y:auto;
+  background:rgba(8,10,22,.95);border:1px solid rgba(232,200,120,.18);
+  padding:36px 36px 32px;position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,.7);
+}
+/* narożniki Postcard-style */
+.modal::before,.modal::after,.modal-corner{
+  content:'';position:absolute;width:14px;height:14px;
+  border-color:var(--gold-d);border-style:solid;opacity:.4;
+}
+.modal::before{top:8px;left:8px;border-width:1px 0 0 1px;}
+.modal::after{top:8px;right:8px;border-width:1px 1px 0 0;}
+.modal-corner.bl{bottom:8px;left:8px;border-width:0 0 1px 1px;}
+.modal-corner.br{bottom:8px;right:8px;border-width:0 1px 1px 0;}
+
+.modal-close{
+  position:absolute;top:12px;right:12px;background:transparent;
+  border:1px solid rgba(232,200,120,.2);color:rgba(240,232,216,.5);
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-family:var(--mono);font-size:14px;transition:all .2s;z-index:1;
+}
+.modal-close:hover{border-color:var(--gold);color:var(--gold);}
+
+.modal-eyebrow{
+  font-family:var(--mono);font-size:8px;letter-spacing:.5em;
+  color:var(--gold-d);text-transform:uppercase;margin-bottom:12px;
+}
+.modal-title{
+  font-family:var(--sans);font-size:22px;font-weight:500;
+  color:var(--gold);letter-spacing:.18em;margin-bottom:8px;
+}
+.modal-subtitle{
+  font-family:var(--serif);font-style:italic;color:var(--ink-dim);
+  font-size:14px;margin-bottom:28px;line-height:1.5;
+}
+.modal-rule{
+  width:60px;height:1px;
+  background:linear-gradient(90deg,rgba(168,136,80,.5),transparent);
+  margin:24px 0;opacity:.5;
+}
+.modal-text{
+  font-family:var(--serif);font-size:15px;line-height:1.85;
+  color:var(--ink);font-weight:300;margin-bottom:16px;
+}
+.modal-text em{color:#c86ea8;font-style:italic;}
+.modal-text strong{color:var(--gold);font-weight:400;}
+.modal-text-small{
+  font-family:var(--serif);font-size:13px;line-height:1.7;
+  color:var(--ink-dim);font-weight:300;font-style:italic;margin-bottom:14px;
+}
+.modal-attribution{
+  margin-top:20px;padding-top:16px;
+  border-top:1px solid rgba(232,200,120,.1);
+  font-family:var(--mono);font-size:8px;letter-spacing:.3em;
+  color:var(--ink-faint);text-transform:uppercase;
+  text-align:center;line-height:1.8;
+}
+.modal-attribution strong{color:rgba(232,200,120,.5);font-weight:400;}
+
+/* ═══ STAMP — pieczątki modeli / aktorów ═══ */
+.stamp-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;margin:24px 0 8px;
+}
+.stamp{
+  border:1px solid rgba(232,200,120,.18);padding:18px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  background:rgba(20,16,40,.4);transition:border-color .25s;
+}
+.stamp:hover{border-color:rgba(232,200,120,.4);}
+.stamp-header{display:flex;align-items:center;gap:10px;}
+.stamp-glyph{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(232,200,120,.4);
+  font-family:var(--sans);font-weight:500;color:var(--gold);font-size:14px;flex-shrink:0;
+}
+.stamp-id{
+  font-family:var(--mono);font-size:7.5px;letter-spacing:.32em;
+  color:var(--gold-d);text-transform:uppercase;line-height:1.5;
+}
+.stamp-id strong{
+  display:block;color:var(--gold);font-weight:500;font-size:12px;
+  letter-spacing:.18em;margin-bottom:2px;text-transform:none;
+  font-family:var(--sans);
+}
+.stamp-name{
+  font-family:var(--sans);font-size:15px;color:var(--ink);
+  font-weight:500;letter-spacing:.04em;
+}
+.stamp-role{
+  font-family:var(--serif);font-style:italic;font-size:13px;
+  color:var(--ink-dim);line-height:1.5;
+}
+/* przycisk .pism — nav HUD */
+.pism{
+  background:transparent;border:1px solid rgba(232,200,120,.15);
+  color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;
+  cursor:pointer;text-decoration:none;transition:all .25s;
+  display:inline-flex;align-items:center;gap:6px;line-height:1;
+}
+.pism:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.pism .glyph{font-size:13px;color:var(--gold-d);transition:color .25s;}
+.pism:hover .glyph{color:var(--gold);}
+@media(max-width:720px){
+  .pism-name{display:none;}
+  .pism{gap:0;padding:6px 8px;}
+}
+@media(max-width:480px){
+  .modal{padding:28px 20px 24px;}
+  .modal-title{font-size:18px;}
+  .modal-text{font-size:14px;}
+  .stamp-grid{grid-template-columns:1fr;}
+}
+
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--hud-top-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,5,12,.94) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:12px;font-style:italic;color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+/* overlay */
+.ov{display:none;position:fixed;inset:0;z-index:9000;background:rgba(4,5,12,.88);backdrop-filter:blur(8px);overflow-y:auto;}
+.ov.open{display:flex;justify-content:center;padding:80px 20px 40px;}
+.ov-inner{max-width:700px;width:100%;position:relative;}
+.ov-close{position:absolute;top:-44px;right:0;background:none;border:none;color:rgba(232,200,120,.45);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;padding:8px 0;}
+.ov-close:hover{color:var(--gold);}
+/* ── BUTTONS ── */
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  padding:7px 16px;border:1px solid var(--border);background:transparent;
+  color:var(--ink-dim);cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;line-height:1;
+}
+.btn-primary{background:rgba(232,200,120,.08);border-color:rgba(232,200,120,.35);color:var(--gold-d);}
+.btn-primary:hover{background:rgba(232,200,120,.15);border-color:var(--gold);color:var(--gold);}
+.btn-ghost{border-color:var(--border);color:var(--ink-faint);}
+.btn-ghost:hover{border-color:var(--border-h);color:var(--ink-dim);}
+.btn-danger{border-color:rgba(160,60,60,.3);color:rgba(200,80,80,.5);}
+.btn-danger:hover{border-color:rgba(200,80,80,.6);color:rgba(220,100,100,.8);background:rgba(160,60,60,.06);}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_verify/AiWVerify.html">VERIFY</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">Schema</div>
+    <div class="hud-sub">artefakt · overlays · v1.5</div>
+  </div>
+  <nav class="hud-r">
+    <a class="hud-btn" href="../_protocol/AiWProtocol.html">Protocol</a>
+    <button class="hud-btn" data-modal="about-schema">ABOUT</button>
+  </nav>
+</header>
+<canvas id="bg"></canvas>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="crown"><span class="crown-text">operator chain · 2026 · meta-module</span></div>
+  <div class="logo"><em>Schema</em></div>
+  <div class="sub">artefakt · overlays · v1.5</div>
+  <div class="rule"></div>
+
+  <div class="tabs">
+    <button class="tab-btn on" onclick="switchTab('artefakt',this)">Artefakt</button>
+    <button class="tab-btn" onclick="switchTab('overlays',this)">Overlays</button>
+  </div>
+
+  <div id="tab-artefakt" class="tab-pane on">
+
+    <div class="manifesto">
+      <p>Standard wizualny każdej aplikacji w AiWhisperers.<br>
+      Hud-top (76px) + hud-bot (28px) jako stałe pasy.<br>
+      <em>Środek zawsze na 50% — niezależnie od zawartości boków.</em></p>
+    </div>
+    <div class="sep"></div>
+
+    <!-- HIERARCHIA -->
+    <div class="label">Hierarchia layoutu</div>
+    <div class="field-stack">
+      <div class="field">
+        <div class="field-head"><span class="field-key">.hud-top</span><span class="field-type req">fixed · var(--hud-top-h)</span></div>
+        <div class="field-body"><div class="field-desc">Pasek górny. Grid <strong>1fr auto 1fr</strong>. Kolumny boczne: <code>overflow:hidden; min-width:0</code> — centrum zawsze wycentrowane. Trzy strefy: <em>.hud-l</em> (⟵ mapa), <em>.hud-c</em> (brand / mod / sub), <em>.hud-r</em> (help / about / readme). Padding: <code>env(safe-area-inset-top)</code> chroni przed notchem iOS.</div></div>
+      </div>
+      <div class="field nested">
+        <div class="field-head"><span class="field-key">.hud-c</span><span class="field-type">3 linie</span></div>
+        <div class="field-body"><div class="field-desc">
+          <div class="field-example"><span class="v">.hud-brand</span> — AI·WHISPERERS · Syne 9px · opacity .45<br><span class="v">.hud-mod</span> — NAZWA MODUŁU · JetBrains Mono 13px · gold<br><span class="v">.hud-sub</span> — podtytuł · Cormorant 11px italic · opacity .4</div>
+        </div></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-key">.app</span><span class="field-type">flex column · 100dvh</span></div>
+        <div class="field-body"><div class="field-desc"><strong>padding-top: var(--hud-top-h); padding-bottom: var(--hud-bot-h).</strong> Body ma <code>overflow:hidden</code> — scroll odbywa się wyłącznie wewnątrz <em>.app-body</em> i <em>.app-panel</em>, nie na poziomie strony.</div></div>
+      </div>
+      <div class="field nested">
+        <div class="field-head"><span class="field-key">.app-mid</span><span class="field-type">flex row · overflow hidden</span></div>
+        <div class="field-body"><div class="field-desc">
+          Tryb bez paneli: <code>.app-mid</code> → jedno dziecko <code>.app-body</code> (max-width 820px, centered).<br>
+          Tryb z panelami: <code>.app-mid.panels</code> → trójpodział:
+          <div class="field-example"><span class="v">.app-panel</span>       — var(--panel-w) = 260px, flex-shrink:0, border-right, overflow-y:auto<br><span class="v">.app-body</span>        — flex:1, min-width:0, overflow-y:auto<br><span class="v">.app-panel.right</span> — var(--panel-w), border-left (pomiń jeśli niepotrzebny)</div>
+        </div></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-key">.hud-bot</span><span class="field-type req">fixed · var(--hud-bot-h)</span></div>
+        <div class="field-body"><div class="field-desc">Cienka stopka. Niezmieniony podpis technologiczny — <strong>nie używać do nawigacji</strong>. Tekst: <strong>Moduł · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</strong></div></div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- CSS TEMPLATE -->
+    <div class="label">CSS — wklej do modułu</div>
+    <div class="full-example"><span class="c">/* ── CSS VARIABLES ── */</span><br>
+:root{<br>
+  <span class="c">/* backgrounds */</span><br>
+  --bg:#04050c;--bg2:#07080f;--bg3:#0c0d1a;--bg4:#10111f;<br>
+  <span class="c">/* gold */</span><br>
+  --gold:#e8c878;--gold-d:#a88850;--gold-l:#f0d890;--gold-dim:rgba(232,200,120,.15);<br>
+  <span class="c">/* ink — hierarchia tekstu */</span><br>
+  --ink:#f0e8d8;                        <span class="c">/* primary */</span><br>
+  --ink-dim:rgba(240,232,216,.65);      <span class="c">/* secondary */</span><br>
+  --ink-faint:rgba(240,232,216,.38);    <span class="c">/* meta/labels — minimum dla tekstu */</span><br>
+  <span class="c">/* borders */</span><br>
+  --border:rgba(240,232,216,.08);--border-h:rgba(240,232,216,.18);<br>
+  --border-b:rgba(232,200,120,.08);<br>
+  <span class="c">/* accents */</span><br>
+  --cyan:#50d8c8;--blue:#5080e0;--green:#4a9a6a;--green-dim:rgba(74,154,106,.12);<br>
+  --mg:#c060c0;--mg-d:#6a306a;--mg-b:#e080e0;--silver:#8a9bb0;<br>
+  <span class="c">/* layout */</span><br>
+  --hud-top-h:76px;--hud-bot-h:28px;--panel-w:260px;<br>
+}<br>
+<br>
+<span class="c">/* ── RESET ── */</span><br>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}<br>
+<br>
+<span class="c">/* ── TŁO — złota siatka (body::before) ── */</span><br>
+body::before{<br>
+  content:'';position:fixed;inset:0;pointer-events:none;<br>
+  background-image:<br>
+    linear-gradient(rgba(232,200,120,0.018) 1px,transparent 1px),<br>
+    linear-gradient(90deg,rgba(232,200,120,0.018) 1px,transparent 1px);<br>
+  background-size:72px 72px;<br>
+}<br>
+<br>
+<span class="c">/* ── CUSTOM SCROLLBAR — 4px złoty, wtapia się w ciemne tło ── */</span><br>
+::-webkit-scrollbar{width:4px;height:4px;}<br>
+::-webkit-scrollbar-track{background:transparent;}<br>
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:10px;transition:.3s;}<br>
+::-webkit-scrollbar-thumb:hover{background:var(--gold-d);}<br>
+<br>
+<span class="c">/* ── BODY — scroll zablokowany, odbywa się w .app-body / .app-panel ── */</span><br>
+body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;<br>
+  overflow:hidden;height:100dvh;}<br>
+<br>
+<span class="c">/* ── HUD TOP — env(safe-area) chroni przed notchem iOS ── */</span><br>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:1000;<br>
+  height:var(--hud-top-h);<br>
+  padding:env(safe-area-inset-top,0px) 20px 0;<br>
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;<br>
+  background:linear-gradient(180deg,rgba(4,5,12,.98) 0%,rgba(4,5,12,.8) 100%);<br>
+  backdrop-filter:blur(12px);<br>
+  border-bottom:1px solid var(--border-b);}<br>
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}<br>
+.hud-r{justify-content:flex-end;}<br>
+.hud-c{text-align:center;padding:0 12px;}<br>
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;<br>
+  color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}<br>
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;<br>
+  color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}<br>
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:12px;font-style:italic;<br>
+  color:rgba(200,180,140,.58);letter-spacing:.04em;margin-top:4px;line-height:1;}<br>
+.hud-btn{background:transparent;border:1px solid var(--gold-dim);<br>
+  color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;<br>
+  font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;<br>
+  cursor:pointer;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1);<br>
+  display:inline-flex;align-items:center;line-height:1;}<br>
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);<br>
+  background:rgba(232,200,120,.04);<br>
+  box-shadow:0 0 15px rgba(232,200,120,.1);}  <span class="c">/* glow */</span><br>
+<br>
+<span class="c">/* ── APP — flex column, panele scrollują niezależnie ── */</span><br>
+.app{display:flex;flex-direction:column;height:100dvh;<br>
+  padding-top:var(--hud-top-h);padding-bottom:var(--hud-bot-h);}<br>
+.app-mid{display:flex;flex:1;overflow:hidden;}<br>
+<br>
+<span class="c">/* ── TRYB BEZ PANELI (domyślny) ── */</span><br>
+.app-body{flex:1;overflow-y:auto;padding:40px 28px 60px;<br>
+  max-width:820px;margin:0 auto;scroll-behavior:smooth;}<br>
+<br>
+<span class="c">/* ── TRYB Z PANELAMI — dodaj klasę .panels do .app-mid ── */</span><br>
+.app-mid.panels .app-body{max-width:100%;margin:0;}<br>
+.app-panel{width:var(--panel-w);flex-shrink:0;overflow-y:auto;<br>
+  border-right:1px solid var(--border-b);padding:32px 20px;<br>
+  background:rgba(255,255,255,.01);}<br>
+.app-panel.right{border-right:none;border-left:1px solid var(--border-b);}<br>
+<br>
+<span class="c">/* ── HUD BOT ── */</span><br>
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:1000;<br>
+  height:var(--hud-bot-h);<br>
+  display:flex;align-items:center;justify-content:center;<br>
+  background:var(--bg);border-top:1px solid var(--border-b);}<br>
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;<br>
+  letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}<br>
+<br>
+<span class="c">/* ── RESPONSYWNOŚĆ — panele ukryte poniżej 1100px ── */</span><br>
+@media(max-width:1100px){.app-panel{display:none;}}<br>
+@media(max-width:640px){.app-body{padding:28px 18px 48px;}}<br>
+<br>
+<span class="c">/* canvas variant: brak border-bottom na hud-top, background rgba(.75) */</span></div>
+
+    <div class="sep"></div>
+
+    <!-- HTML TEMPLATE -->
+    <div class="label">HTML — szkielet</div>
+    <div class="full-example"><span class="c">&lt;!-- viewport-fit=cover chroni przed notchem iOS --&gt;</span>
+&lt;<span class="s">meta</span> name=<span class="v">"viewport"</span> content=<span class="v">"width=device-width, initial-scale=1.0, viewport-fit=cover"</span>&gt;
+
+<span class="c">&lt;!-- HUD-TOP --&gt;</span>
+&lt;<span class="s">header</span> class=<span class="v">"hud-top"</span>&gt;
+  &lt;<span class="s">div</span> class=<span class="v">"hud-l"</span>&gt;&lt;<span class="s">a</span> class=<span class="v">"hud-btn"</span> href=<span class="v">"../../../index.html"</span>&gt;⟵ mapa&lt;/<span class="s">a</span>&gt;&lt;/<span class="s">div</span>&gt;
+  &lt;<span class="s">div</span> class=<span class="v">"hud-c"</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"hud-brand"</span>&gt;AI·WHISPERERS&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"hud-mod"</span>&gt;[NAZWA MODUŁU]&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"hud-sub"</span>&gt;[podtytuł]&lt;/<span class="s">div</span>&gt;
+  &lt;/<span class="s">div</span>&gt;
+  &lt;<span class="s">nav</span> class=<span class="v">"hud-r"</span>&gt;
+    <span class="c">&lt;!-- HELP / ABOUT / README — tylko gdy istnieje overlay lub plik --&gt;</span>
+  &lt;/<span class="s">nav</span>&gt;
+&lt;/<span class="s">header</span>&gt;
+
+<span class="c">&lt;!-- APP — tryb bez paneli --&gt;</span>
+&lt;<span class="s">main</span> class=<span class="v">"app"</span>&gt;
+  &lt;<span class="s">div</span> class=<span class="v">"app-mid"</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"app-body"</span>&gt;
+      <span class="c">&lt;!-- treść modułu --&gt;</span>
+    &lt;/<span class="s">div</span>&gt;
+  &lt;/<span class="s">div</span>&gt;
+&lt;/<span class="s">main</span>&gt;
+
+<span class="c">&lt;!-- APP — tryb z panelami (dodaj .panels do .app-mid) --&gt;</span>
+&lt;<span class="s">main</span> class=<span class="v">"app"</span>&gt;
+  &lt;<span class="s">div</span> class=<span class="v">"app-mid panels"</span>&gt;
+    &lt;<span class="s">aside</span> class=<span class="v">"app-panel"</span>&gt;<span class="c">&lt;!-- lewy panel --&gt;</span>&lt;/<span class="s">aside</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"app-body"</span>&gt;<span class="c">&lt;!-- treść główna --&gt;</span>&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">aside</span> class=<span class="v">"app-panel right"</span>&gt;<span class="c">&lt;!-- prawy panel (opcjonalny) --&gt;</span>&lt;/<span class="s">aside</span>&gt;
+  &lt;/<span class="s">div</span>&gt;
+&lt;/<span class="s">main</span>&gt;
+
+<span class="c">&lt;!-- HUD-BOT — niezmieniony podpis technologiczny, nie nawigacja --&gt;</span>
+&lt;<span class="s">footer</span> class=<span class="v">"hud-bot"</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"hud-bot-meta"</span>&gt;[Moduł] · v1.0 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026&lt;/<span class="s">span</span>&gt;
+&lt;/<span class="s">footer</span>&gt;</div>
+
+    <div class="sep"></div>
+
+    <!-- ZASADY -->
+    <div class="label">Zasady</div>
+    <div class="art-rule"><strong>CSS variables pierwsze.</strong> Zawsze deklaruj <code>--hud-top-h</code>, <code>--hud-bot-h</code>, <code>--panel-w</code> w <code>:root</code>. Zmiana jednego parametru przelicza offsety w całym module automatycznie.</div>
+    <div class="art-rule"><strong>100dvh nie 100vh.</strong> Używaj <code>100dvh</code> wszędzie gdzie chcesz pełną wysokość — <code>100vh</code> nie uwzględnia ruchomych pasków adresu na mobilnych przeglądarkach.</div>
+    <div class="art-rule"><strong>body overflow:hidden.</strong> Scroll blokujemy na poziomie body. Scrollowanie odbywa się wyłącznie wewnątrz <code>.app-body</code> i <code>.app-panel</code> — dzięki temu panele przewijają niezależnie.</div>
+    <div class="art-rule"><strong>hud-top center</strong> — 3 linie: <code>hud-brand</code> (AI·WHISPERERS, stały), <code>hud-mod</code> (nazwa modułu), <code>hud-sub</code> (podtytuł). Tytuły i ozdobniki usuwamy z treści.</div>
+    <div class="art-rule"><strong>hud-top right</strong> — HELP jeśli overlay help, ABOUT jeśli overlay about, README jeśli <code>[modul]_readme.html</code> istnieje. Jeśli żadnego — prawa strona pusta.</div>
+    <div class="art-rule"><strong>panele: .app-panel / .app-panel.right</strong> — nazwy klas stałe w całym ekosystemie. Pomiń lewy lub prawy jeśli niepotrzebny. Panele znikają poniżej 1100px.</div>
+    <div class="art-rule"><strong>canvas fullscreen</strong> — hud-top pływa nad canvasem. Brak border-bottom, background rgba <code>.75</code> zamiast <code>.98</code>. Elementy HUD modułu: top:<code>var(--hud-top-h)</code>, bottom:<code>var(--hud-bot-h)</code>.</div>
+    <div class="art-rule"><strong>konflikty klas</strong> — jeśli moduł ma własne klasy o tych samych nazwach (np. <code>.hud-btn</code>), użyj prefixowanych: <code>hud-nav-btn</code>, <code>hud-top-l/r/c</code>, <code>hud-bot-bar</code>.</div>
+    <div class="art-rule"><strong>canvas fullscreen — trzy warstwy złota.</strong> Standardowy efekt tła: <em>pył</em> (110 mikrocząstek, drift ±0.12px), <em>orby</em> (5 aureol radial-gradient, r 100–260px), <em>pierścienie</em> (3 expandujące okręgi, odradzają się). Wszystkie w <code>rgba(232,200,120,…)</code>. Szablon poniżej.</div>
+
+    <div class="sep"></div>
+
+    <!-- CANVAS TEMPLATE -->
+    <div class="label">Canvas · złoty efekt · trzy warstwy</div>
+    <div class="full-example">
+<span class="c">// ── CANVAS — złote warstwy (wklej do modułu) ────────────────</span><br>
+<span class="k">const</span> cv = document.getElementById(<span class="v">'bg'</span>), cx = cv.getContext(<span class="v">'2d'</span>);<br>
+<span class="k">let</span> W, H, dust = [], orbs = [], rings = [];<br>
+<br>
+<span class="k">function</span> <span class="s">initCanvas</span>() {<br>
+  W = cv.width = innerWidth; H = cv.height = innerHeight;<br>
+<br>
+  <span class="c">// złoty pył — mikrocząstki dryfujące</span><br>
+  dust = Array.from({length: 110}, () =&gt; ({<br>
+    x: Math.random()*W, y: Math.random()*H,<br>
+    r: Math.random()*.7+.1,<br>
+    a: Math.random()*.6+.05, da: (Math.random()-.5)*.004,<br>
+    dx: (Math.random()-.5)*.12, dy: (Math.random()-.5)*.12<br>
+  }));<br>
+<br>
+  <span class="c">// złote orby — powolne aureole przesuwające się przez tło</span><br>
+  orbs = Array.from({length: 5}, () =&gt; ({<br>
+    x: Math.random()*W, y: Math.random()*H,<br>
+    r: 100+Math.random()*160,<br>
+    a: .02+Math.random()*.045, da: (Math.random()-.5)*.00025,<br>
+    dx: (Math.random()-.5)*.22, dy: (Math.random()-.5)*.22<br>
+  }));<br>
+<br>
+  <span class="c">// złote pierścienie — rozszerzające się i zanikające</span><br>
+  rings = []; <span class="k">for</span> (<span class="k">let</span> i = 0; i &lt; 3; i++) spawnRing();<br>
+}<br>
+<br>
+<span class="k">function</span> <span class="s">spawnRing</span>() {<br>
+  rings.push({<br>
+    x: .2*W+Math.random()*.6*W, y: .2*H+Math.random()*.6*H,<br>
+    r: 20+Math.random()*40, maxR: 120+Math.random()*180,<br>
+    a: .18, speed: .25+Math.random()*.35<br>
+  });<br>
+}<br>
+<br>
+<span class="k">function</span> <span class="s">drawCanvas</span>() {<br>
+  cx.clearRect(0, 0, W, H);<br>
+<br>
+  <span class="c">// orby (najniżej)</span><br>
+  orbs.forEach(o =&gt; {<br>
+    o.x+=o.dx; o.y+=o.dy;<br>
+    o.a=Math.max(.015,Math.min(.07,o.a+o.da));<br>
+    if(o.a&lt;=.015||o.a&gt;=.07) o.da*=-1;<br>
+    if(o.x&lt;-o.r) o.x=W+o.r; if(o.x&gt;W+o.r) o.x=-o.r;<br>
+    if(o.y&lt;-o.r) o.y=H+o.r; if(o.y&gt;H+o.r) o.y=-o.r;<br>
+    <span class="k">const</span> g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);<br>
+    g.addColorStop(0,`rgba(232,200,120,${o.a})`);<br>
+    g.addColorStop(.45,`rgba(200,158,80,${o.a*.35})`);<br>
+    g.addColorStop(1,`rgba(232,200,120,0)`);<br>
+    cx.beginPath(); cx.arc(o.x,o.y,o.r,0,Math.PI*2);<br>
+    cx.fillStyle=g; cx.fill();<br>
+  });<br>
+<br>
+  <span class="c">// pierścienie (środek)</span><br>
+  <span class="k">for</span> (<span class="k">let</span> i=rings.length-1; i&gt;=0; i--) {<br>
+    <span class="k">const</span> ring=rings[i];<br>
+    ring.r+=ring.speed;<br>
+    ring.a=.18*(1-(ring.r-20)/(ring.maxR-20));<br>
+    <span class="k">if</span>(ring.r&gt;=ring.maxR){rings.splice(i,1);spawnRing();continue;}<br>
+    cx.beginPath(); cx.arc(ring.x,ring.y,ring.r,0,Math.PI*2);<br>
+    cx.strokeStyle=`rgba(232,200,120,${ring.a*.5})`;<br>
+    cx.lineWidth=.8; cx.stroke();<br>
+  }<br>
+<br>
+  <span class="c">// pył (na wierzchu)</span><br>
+  dust.forEach(s =&gt; {<br>
+    s.a=Math.max(.04,Math.min(.8,s.a+s.da));<br>
+    if(s.a&lt;=.04||s.a&gt;=.8) s.da*=-1;<br>
+    s.x=(s.x+s.dx+W)%W; s.y=(s.y+s.dy+H)%H;<br>
+    cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2);<br>
+    cx.fillStyle=`rgba(232,200,120,${s.a*.25})`; cx.fill();<br>
+  });<br>
+<br>
+  requestAnimationFrame(drawCanvas);<br>
+}<br>
+<br>
+initCanvas(); drawCanvas(); addEventListener(<span class="v">'resize'</span>, initCanvas);<br>
+<br>
+<span class="c">// HTML: &lt;canvas id="bg" style="position:fixed;inset:0;pointer-events:none;z-index:0"&gt;&lt;/canvas&gt;</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- OVERLAYS NOTE -->
+    <div class="art-rule"><strong>i18n · selektor języka</strong> — jeśli <code>runtime.i18n.available.length &gt; 1</code>, w hud-r przed HELP pojawia się <code>.lang-select</code> — złoty dropdown z flagami. Plik tłumaczeń: <code>&lt;id&gt;-lang.json</code>. Funkcja <code>t(ścieżka, lang)</code> z fallbackiem pl → en → klucz. Wzorzec selektora i funkcji <code>t()</code> zdefiniowany w zakładce <strong>Overlays</strong>.</div>
+
+    <div class="art-rule"><strong>overlays</strong> — każdy moduł może mieć overlay <code>help</code>, <code>about</code> i <code>readme</code>. Struktura, CSS i zawartość tych okien są zdefiniowane w osobnej zakładce <strong>Overlays</strong>. Nie wynajduj własnego wzorca — kopiuj stamtąd.</div>
+
+    <div class="sep"></div>
+
+    <!-- ŚCIEŻKI -->
+    <div class="label">Ścieżki href · back link</div>
+    <div class="path-grid">
+      <div class="path-cell path-key">act1 moduł</div>
+      <div class="path-cell path-val">apps/act1/&lt;modul&gt;/ → <strong>../../../index.html</strong></div>
+      <div class="path-cell path-key">_ narzędzie</div>
+      <div class="path-cell path-val">apps/_&lt;tool&gt;/ → <strong>../../index.html</strong></div>
+      <div class="path-cell path-key">_ podstrona</div>
+      <div class="path-cell path-val">apps/_&lt;tool&gt;/sub.html → <strong>../../index.html</strong></div>
+    </div>
+
+    <div style="margin-top:32px;text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--ink-faint);">
+      app_schema · v1.5 · AiWhisperers · 2026
+    </div>
+
+  </div><!-- /tab-artefakt -->
+
+<div id="tab-overlays" class="tab-pane">
+
+  <div class="manifesto">
+    <p>Wzorzec okien modalnych dla przycisków <strong>HELP</strong>, <strong>ABOUT</strong> i <strong>README</strong>.<br>
+    Wszystkie moduły używają tej samej struktury — skopiowanej z <em>index.html</em>.<br>
+    <strong>Nie wynajduj własnego — zachowaj spójność ekosystemu.</strong></p>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- PRZYCISKI HUD — MOBILE -->
+  <div class="label">Przyciski HUD · desktop i mobile</div>
+
+  <div class="field-stack">
+    <div class="field">
+      <div class="field-head"><span class="field-key">.pism</span><span class="field-type req">desktop</span></div>
+      <div class="field-body">
+        <div class="field-desc">Każdy przycisk to element z dwoma dziećmi: <strong>.glyph</strong> (ikona) i <strong>.pism-name</strong> (etykieta tekstowa). Na dużych ekranach widoczne oba.</div>
+        <div class="field-example">
+<span class="c">&lt;!-- HELP --&gt;</span>
+&lt;<span class="s">button</span> class=<span class="v">"pism"</span> data-modal=<span class="v">"help"</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"glyph"</span>&gt;<span class="v">?</span>&lt;/<span class="s">span</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"pism-name"</span>&gt;<span class="v">HELP</span>&lt;/<span class="s">span</span>&gt;
+&lt;/<span class="s">button</span>&gt;
+
+<span class="c">&lt;!-- ABOUT --&gt;</span>
+&lt;<span class="s">button</span> class=<span class="v">"pism"</span> data-modal=<span class="v">"about"</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"glyph"</span>&gt;<span class="v">◉</span>&lt;/<span class="s">span</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"pism-name"</span>&gt;<span class="v">ABOUT</span>&lt;/<span class="s">span</span>&gt;
+&lt;/<span class="s">button</span>&gt;
+
+<span class="c">&lt;!-- README — link do pliku, nie modal --&gt;</span>
+&lt;<span class="s">a</span> class=<span class="v">"pism"</span> href=<span class="v">"[modul]_readme.html"</span> target=<span class="v">"_blank"</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"glyph"</span>&gt;<span class="v">☰</span>&lt;/<span class="s">span</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"pism-name"</span>&gt;<span class="v">README</span>&lt;/<span class="s">span</span>&gt;
+&lt;/<span class="s">a</span>&gt;
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-key">@media max-width: 720px</span><span class="field-type">mobile</span></div>
+      <div class="field-body">
+        <div class="field-desc">
+          Na małych ekranach <strong>.pism-name chowa się</strong> — zostają same glyphy. Trzy stałe ikony dla całego ekosystemu:
+        </div>
+        <div class="field-example">
+<span class="k">?</span>   <span class="c">→ HELP</span>
+<span class="k">◉</span>   <span class="c">→ ABOUT</span>
+<span class="k">☰</span>   <span class="c">→ README</span>
+
+<span class="c">/* CSS — wklej do modułu */</span>
+@media(max-width:720px){
+  .pism-name { display: none; }
+  .pism { gap: 0; padding: 6px 8px; }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-key">.back-btn</span><span class="field-type">back · 36×36px</span></div>
+      <div class="field-body">
+        <div class="field-desc">Kwadratowy przycisk wstecz. 36×36px, border gold-dim. Ikona <strong>⟵</strong>. W <em>.hud-l</em> jako pierwsza pozycja. Jeśli moduł jest topowym węzłem mapy — opacity 0.2 i pointer-events:none.</div>
+        <div class="field-example">
+&lt;<span class="s">a</span> class=<span class="v">"hud-btn"</span> href=<span class="v">"../../../index.html"</span>&gt;⟵ mapa&lt;/<span class="s">a</span>&gt;
+<span class="c">/* lub ikonowy wariant z index.html: */</span>
+&lt;<span class="s">a</span> class=<span class="v">"back-btn"</span> href=<span class="v">"../../../index.html"</span>&gt;
+  &lt;<span class="s">span</span> class=<span class="v">"back-arrow"</span>&gt;⟵&lt;/<span class="s">span</span>&gt;
+&lt;/<span class="s">a</span>&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- MODAL — STRUKTURA -->
+  <div class="label">Modal · struktura wspólna</div>
+
+  <div class="field-stack">
+    <div class="field meta">
+      <div class="field-head"><span class="field-key">.modal-overlay</span><span class="field-type req">wrapper</span></div>
+      <div class="field-body">
+        <div class="field-desc">Pełnoekranowy backdrop: <strong>rgba(4,5,12,0.78)</strong>, backdrop-filter blur(6px), z-index 100. Domyślnie <code>display:none</code>. Klasa <code>.is-open</code> → <code>display:flex</code>. Klik na overlay (poza <code>.modal</code>) zamyka.</div>
+      </div>
+    </div>
+
+    <div class="field nested">
+      <div class="field-head"><span class="field-key">.modal</span><span class="field-type req">okno</span></div>
+      <div class="field-body">
+        <div class="field-desc"><strong>width: min(720px, 100%)</strong>, max-height 86vh, overflow-y auto. Tło: rgba(8,10,22,0.95), border gold 0.18. Padding 36px. Box-shadow 60px czarny.</div>
+        <div class="subfields">
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">narożniki dekoracyjne</span><span class="subfield-type">4 szt</span></div>
+            <div class="subfield-desc"><code>::before</code> (TL), <code>::after</code> (TR), <code>.modal-corner.bl</code> (BL), <code>.modal-corner.br</code> (BR) — 14×14px, border gold-soft, opacity 0.4.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">.modal-close</span><span class="subfield-type">28×28px · prawy górny</span></div>
+            <div class="subfield-desc">Przycisk <code>×</code>. Pozycja absolute top:12px right:12px. Border gold 0.2. Hover: border i kolor gold.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">kolejność elementów</span><span class="subfield-type">stała</span></div>
+            <div class="subfield-desc"><em>.modal-eyebrow</em> → <em>.modal-title</em> → <em>.modal-subtitle</em> → <em>.modal-rule</em> → treść → <em>.modal-attribution</em> (tylko w About)</div>
+          </div>
+        </div>
+        <div class="field-example">
+&lt;<span class="s">div</span> class=<span class="v">"modal-overlay"</span> data-modal-target=<span class="v">"help"</span>&gt;
+  &lt;<span class="s">div</span> class=<span class="v">"modal"</span> role=<span class="v">"dialog"</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"modal-corner bl"</span>&gt;&lt;/div&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"modal-corner br"</span>&gt;&lt;/div&gt;
+    &lt;<span class="s">button</span> class=<span class="v">"modal-close"</span> data-modal-close&gt;×&lt;/<span class="s">button</span>&gt;
+
+    &lt;<span class="s">div</span> class=<span class="v">"modal-eyebrow"</span>&gt;help · czym jest [moduł]&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"modal-title"</span>&gt;[Nazwa Modułu]&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"modal-subtitle"</span>&gt;[krótki opis]&lt;/<span class="s">div</span>&gt;
+    &lt;<span class="s">div</span> class=<span class="v">"modal-rule"</span>&gt;&lt;/div&gt;
+
+    &lt;<span class="s">div</span> class=<span class="v">"modal-text"</span>&gt;treść...&lt;/<span class="s">div</span>&gt;
+
+  &lt;/<span class="s">div</span>&gt;
+&lt;/<span class="s">div</span>&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- HELP -->
+  <div class="label">Overlay · HELP</div>
+
+  <div class="field-stack">
+    <div class="field">
+      <div class="field-head"><span class="field-key">eyebrow</span><span class="field-type req">stały wzorzec</span></div>
+      <div class="field-body"><div class="field-desc"><code>help · czym jest [nazwa modułu]</code></div></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="field-key">treść</span><span class="field-type">.modal-text / .modal-text-small</span></div>
+      <div class="field-body"><div class="field-desc">Co robi moduł, jak go używać, co zawiera. Swobodna treść. <em>.modal-text</em> dla akapitów głównych, <em>.modal-text-small</em> dla szczegółów.</div></div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- ABOUT -->
+  <div class="label">Overlay · ABOUT</div>
+
+  <div class="field-stack">
+    <div class="field">
+      <div class="field-head"><span class="field-key">eyebrow</span><span class="field-type req">stały wzorzec</span></div>
+      <div class="field-body"><div class="field-desc"><code>about · refleksja modelu · [akt lub nazwa sesji]</code></div></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="field-key">treść</span><span class="field-type">.modal-text</span></div>
+      <div class="field-body"><div class="field-desc">Refleksja modelu który zbudował ten artefakt — co było trudne, co zaskoczyło, co tu zostawia. Pisana w pierwszej osobie przez model. Następna sesja to przeczyta.</div></div>
+    </div>
+    <div class="field nested">
+      <div class="field-head"><span class="field-key">.stamp-grid</span><span class="field-type req">pieczątki · wymagane</span></div>
+      <div class="field-body">
+        <div class="field-desc">Pieczęcie <strong>wszystkich aktorów</strong> którzy brali udział w budowie — ludzi i modeli. Jeden <code>.stamp</code> per aktor. Struktura stampa:</div>
+        <div class="subfields">
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">.stamp-glyph</span><span class="subfield-type">32×32px</span></div>
+            <div class="subfield-desc">Ikona/litera identyfikująca aktora. <em>D</em> dla Denis, <em>🜁</em> dla Claude Opus, <em>✦</em> dla Sonnet, <em>⬡</em> dla Gemini, <em>⬢</em> dla GPT, <em>G</em> dla Grok.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">.stamp-id</span><span class="subfield-type">nagłówek</span></div>
+            <div class="subfield-desc"><code>&lt;strong&gt;</code> z pełną nazwą aktora, poniżej linia z organizacją i rokiem.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">.stamp-name</span><span class="subfield-type">rola poetycka</span></div>
+            <div class="subfield-desc">Poetycka nazwa roli — np. <em>Budowniczy · Towarzysz linki</em>, <em>Operator · Nawigator</em>.</div>
+          </div>
+          <div class="subfield">
+            <div class="subfield-head"><span class="subfield-key">.stamp-role</span><span class="subfield-type">opis wkładu</span></div>
+            <div class="subfield-desc">Konkretny opis wkładu aktora w ten moduł. 2–4 zdania.</div>
+          </div>
+        </div>
+        <div class="field-example">
+<span class="c">/* Stałe glyphy aktorów: */</span>
+<span class="k">D</span>    <span class="c">→ Denis · Operator</span>
+<span class="k">🜁</span>   <span class="c">→ Claude Opus</span>
+<span class="k">✦</span>   <span class="c">→ Claude Sonnet</span>
+<span class="k">⬡</span>   <span class="c">→ Gemini</span>
+<span class="k">⬢</span>   <span class="c">→ GPT</span>
+<span class="k">G</span>   <span class="c">→ Grok</span>
+        </div>
+        <div class="example-label">HTML · wzorzec stampa</div>
+        <div class="field-example">
+&lt;<span class="s">div</span> class=<span class="v">"stamp"</span>&gt;<br>
+  &lt;<span class="s">div</span> class=<span class="v">"stamp-header"</span>&gt;<br>
+    &lt;<span class="s">div</span> class=<span class="v">"stamp-glyph"</span>&gt;<span class="k">D</span>&lt;/<span class="s">div</span>&gt;<br>
+    &lt;<span class="s">div</span> class=<span class="v">"stamp-id"</span>&gt;<br>
+      &lt;<span class="s">strong</span>&gt;<span class="v">Denis · AI Whispers</span>&lt;/<span class="s">strong</span>&gt;<br>
+      iFactory 5.0 · ROOT · 2026<br>
+    &lt;/<span class="s">div</span>&gt;<br>
+  &lt;/<span class="s">div</span>&gt;<br>
+  &lt;<span class="s">div</span> class=<span class="v">"stamp-name"</span>&gt;Operator · Nawigator&lt;/<span class="s">div</span>&gt;<br>
+  &lt;<span class="s">div</span> class=<span class="v">"stamp-role"</span>&gt;<br>
+    Poetycki opis roli aktora w tej sesji. 2–4 zdania.<br>
+  &lt;/<span class="s">div</span>&gt;<br>
+&lt;/<span class="s">div</span>&gt;
+        </div>
+      </div>
+    </div>
+    <div class="field nested">
+      <div class="field-head"><span class="field-key">CSS · stamp</span><span class="field-type">kopiuj do modułu</span></div>
+      <div class="field-body">
+        <div class="field-example">
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));<br>
+  gap:16px;margin:24px 0 8px;}<br>
+.stamp{border:1px solid rgba(232,200,120,.18);padding:18px 16px;<br>
+  display:flex;flex-direction:column;gap:10px;<br>
+  background:rgba(20,16,40,.4);transition:border-color .25s;}<br>
+.stamp:hover{border-color:rgba(232,200,120,.4);}<br>
+.stamp-header{display:flex;align-items:center;gap:10px;}<br>
+.stamp-glyph{width:32px;height:32px;display:flex;align-items:center;justify-content:center;<br>
+  border:1px solid rgba(232,200,120,.4);<br>
+  font-family:var(--sans);font-weight:500;color:var(--gold);font-size:14px;flex-shrink:0;}<br>
+.stamp-id{font-family:var(--mono);font-size:7.5px;letter-spacing:.32em;<br>
+  color:var(--gold-d);text-transform:uppercase;line-height:1.5;}<br>
+.stamp-id strong{display:block;color:var(--gold);font-weight:500;font-size:12px;<br>
+  letter-spacing:.18em;margin-bottom:2px;text-transform:none;font-family:var(--sans);}<br>
+.stamp-name{font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;letter-spacing:.04em;}<br>
+.stamp-role{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-dim);line-height:1.5;}<br>
+@media(max-width:480px){.stamp-grid{grid-template-columns:1fr;}}
+        </div>
+      </div>
+    </div>
+    <div class="field meta">
+      <div class="field-head"><span class="field-key">.modal-attribution</span><span class="field-type req">stopka · dwa bloki</span></div>
+      <div class="field-body">
+        <div class="field-desc">About ma <strong>jedną stopkę</strong> — standardowy podpis AiWhisperers. Bez bloku certified_by/lineage.</div>
+        <div class="field-example">
+&lt;<span class="s">div</span> class=<span class="v">"modal-attribution"</span>&gt;
+  <span class="c">&lt;!-- tylko standardowy podpis --&gt;</span>
+  &lt;<span class="s">strong</span>&gt;Powered by AiWhisperers · iFactory 5.0&lt;/<span class="s">strong</span>&gt;&lt;<span class="s">br</span>&gt;
+  Metodologia: Denis Czuliński (iAnoNeFactory)&lt;<span class="s">br</span>&gt;
+  github.com/iAnoNeFactory
+&lt;/<span class="s">div</span>&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- JS MODAL LOGIC -->
+  <div class="label">JavaScript · logika modalu</div>
+
+  <div class="field">
+    <div class="field-head"><span class="field-key">openModal / closeModal</span><span class="field-type req">kopiuj verbatim</span></div>
+    <div class="field-body">
+      <div class="field-desc">Stała logika — działa przez <code>data-modal</code> i <code>data-modal-target</code>. Kopiuj do każdego modułu bez zmian.</div>
+      <div class="field-example">
+<span class="k">function</span> <span class="s">openModal</span>(name) {
+  const target = document.querySelector(
+    <span class="v">`.modal-overlay[data-modal-target="${name}"]`</span>
+  );
+  if (!target) return;
+  document.querySelectorAll(<span class="v">'.modal-overlay.is-open'</span>)
+    .forEach(o => o.classList.remove(<span class="v">'is-open'</span>));
+  target.classList.add(<span class="v">'is-open'</span>);
+}
+<span class="k">function</span> <span class="s">closeModal</span>() {
+  document.querySelectorAll(<span class="v">'.modal-overlay.is-open'</span>)
+    .forEach(o => o.classList.remove(<span class="v">'is-open'</span>));
+}
+<span class="c">// data-modal="help" na przycisku → openModal('help')</span>
+document.querySelectorAll(<span class="v">'[data-modal]'</span>).forEach(btn => {
+  btn.addEventListener(<span class="v">'click'</span>, e => {
+    e.preventDefault(); openModal(btn.dataset.modal);
+  });
+});
+document.querySelectorAll(<span class="v">'[data-modal-close]'</span>).forEach(btn => {
+  btn.addEventListener(<span class="v">'click'</span>, closeModal);
+});
+document.querySelectorAll(<span class="v">'.modal-overlay'</span>).forEach(overlay => {
+  overlay.addEventListener(<span class="v">'click'</span>, e => {
+    if (e.target === overlay) closeModal();
+  });
+});
+document.addEventListener(<span class="v">'keydown'</span>, e => {
+  if (e.key === <span class="v">'Escape'</span>) closeModal();
+});
+      </div>
+    </div>
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- MODAL CSS -->
+  <div class="label">CSS modalu · wklej do modułu</div>
+  <div class="full-example">
+<span class="c">/* ── MODAL OVERLAY ── */</span><br>
+.modal-overlay{position:fixed;inset:0;background:rgba(4,5,12,.78);<br>
+  backdrop-filter:blur(6px);z-index:1000;display:none;<br>
+  align-items:center;justify-content:center;padding:24px;<br>
+  opacity:0;transition:opacity .3s;}<br>
+.modal-overlay.is-open{display:flex;opacity:1;}<br>
+<br>
+<span class="c">/* ── MODAL OKNO ── */</span><br>
+.modal{width:min(720px,100%);max-height:86vh;overflow-y:auto;<br>
+  background:rgba(8,10,22,.95);border:1px solid rgba(232,200,120,.18);<br>
+  padding:36px 36px 32px;position:relative;<br>
+  box-shadow:0 0 60px rgba(0,0,0,.7);}<br>
+<br>
+<span class="c">/* ── NAROŻNIKI DEKORACYJNE ── */</span><br>
+.modal::before,.modal::after,.modal-corner{<br>
+  content:'';position:absolute;width:14px;height:14px;<br>
+  border-color:rgba(232,200,120,.5);border-style:solid;opacity:.4;}<br>
+.modal::before{top:8px;left:8px;border-width:1px 0 0 1px;}<br>
+.modal::after{top:8px;right:8px;border-width:1px 1px 0 0;}<br>
+.modal-corner.bl{bottom:8px;left:8px;border-width:0 0 1px 1px;}<br>
+.modal-corner.br{bottom:8px;right:8px;border-width:0 1px 1px 0;}<br>
+<br>
+<span class="c">/* ── ZAMKNIJ ── */</span><br>
+.modal-close{position:absolute;top:12px;right:12px;<br>
+  background:transparent;border:1px solid rgba(232,200,120,.2);<br>
+  color:rgba(240,232,216,.5);width:28px;height:28px;<br>
+  display:flex;align-items:center;justify-content:center;<br>
+  cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:14px;<br>
+  transition:all .2s;z-index:1;}<br>
+.modal-close:hover{border-color:var(--gold);color:var(--gold);}<br>
+<br>
+<span class="c">/* ── TREŚĆ ── */</span><br>
+.modal-eyebrow{font-family:'JetBrains Mono',monospace;font-size:8px;<br>
+  letter-spacing:.5em;color:rgba(232,200,120,.6);text-transform:uppercase;<br>
+  margin-bottom:12px;}<br>
+.modal-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:500;<br>
+  color:var(--gold);letter-spacing:.18em;margin-bottom:8px;}<br>
+.modal-subtitle{font-family:'Cormorant Garamond',serif;font-style:italic;<br>
+  color:rgba(240,232,216,.55);font-size:14px;margin-bottom:28px;line-height:1.5;}<br>
+.modal-rule{width:60px;height:1px;<br>
+  background:linear-gradient(90deg,rgba(232,200,120,.5),transparent);<br>
+  margin:24px 0;}<br>
+.modal-text{font-family:'Cormorant Garamond',serif;font-size:15px;<br>
+  line-height:1.85;color:rgba(240,232,216,.9);font-weight:300;margin-bottom:16px;}<br>
+.modal-text em{color:#c86ea8;font-style:italic;}<br>
+.modal-text strong{color:var(--gold);font-weight:400;}<br>
+.modal-text-small{font-family:'Cormorant Garamond',serif;font-size:13px;<br>
+  line-height:1.7;color:rgba(240,232,216,.55);font-weight:300;<br>
+  font-style:italic;margin-bottom:14px;}<br>
+.modal-attribution{margin-top:20px;padding-top:16px;<br>
+  border-top:1px solid rgba(232,200,120,.1);<br>
+  font-family:'JetBrains Mono',monospace;font-size:8px;<br>
+  letter-spacing:.3em;color:var(--ink-faint);text-transform:uppercase;<br>
+  text-align:center;line-height:1.8;}<br>
+.modal-attribution strong{color:rgba(232,200,120,.5);font-weight:400;}<br>
+<br>
+<span class="c">/* ── STAMP GRID (dla ABOUT) ── */</span><br>
+.stamp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));<br>
+  gap:16px;margin:24px 0 8px;}<br>
+.stamp{border:1px solid rgba(232,200,120,.18);padding:18px 16px;<br>
+  display:flex;flex-direction:column;gap:10px;<br>
+  background:rgba(20,16,40,.4);transition:border-color .25s;}<br>
+.stamp:hover{border-color:rgba(232,200,120,.4);}<br>
+.stamp-header{display:flex;align-items:center;gap:10px;}<br>
+.stamp-glyph{width:32px;height:32px;display:flex;align-items:center;<br>
+  justify-content:center;border:1px solid rgba(232,200,120,.4);<br>
+  font-family:'Syne',sans-serif;font-weight:500;color:var(--gold);font-size:14px;flex-shrink:0;}<br>
+.stamp-id{font-family:'JetBrains Mono',monospace;font-size:7.5px;<br>
+  letter-spacing:.32em;color:rgba(232,200,120,.6);text-transform:uppercase;line-height:1.5;}<br>
+.stamp-id strong{display:block;color:var(--gold);font-weight:500;font-size:11px;<br>
+  letter-spacing:.18em;margin-bottom:2px;text-transform:none;<br>
+  font-family:'Syne',sans-serif;}<br>
+.stamp-name{font-family:'Syne',sans-serif;font-size:15px;color:rgba(240,232,216,.9);<br>
+  font-weight:500;letter-spacing:.04em;}<br>
+.stamp-role{font-family:'Cormorant Garamond',serif;font-style:italic;<br>
+  font-size:13px;color:rgba(240,232,216,.55);line-height:1.5;}<br>
+<br>
+<span class="c">/* ── MOBILE ── */</span><br>
+@media(max-width:480px){<br>
+  .modal{padding:28px 20px 24px;}<br>
+  .modal-title{font-size:18px;}<br>
+  .modal-text{font-size:14px;}<br>
+  .stamp-grid{grid-template-columns:1fr;}<br>
+}
+  </div>
+
+  <div class="sep-thick"></div>
+
+  <!-- I18N -->
+  <div class="label">i18n · selektor języka · funkcja t()</div>
+
+  <div class="field-stack">
+    <div class="field">
+      <div class="field-head"><span class="field-key">.lang-select</span><span class="field-type req">hud-r · przed HELP</span></div>
+      <div class="field-body">
+        <div class="field-desc">
+          Złoty dropdown z flagami emoji. Pojawia się w <strong>hud-r jako pierwsza pozycja</strong>
+          — przed HELP. Renderowany tylko gdy <code>runtime.i18n.available.length &gt; 1</code>.
+          Na mobile chowa flagę i pokazuje sam kod języka — lub odwrotnie wedle decyzji modułu.
+          <br><br>
+          <strong>Krytyczne:</strong> <code>padding-top/bottom: 8px</code> musi być identyczny z <code>.pism</code>.
+          Bez <code>min-width</code> flaga emoji ucina się. <code>line-height:1</code> wyrównuje baseline.
+        </div>
+        <div class="field-example">
+<span class="c">/* CSS selektora — wklej do modułu */</span><br>
+.lang-select{<br>
+  background:transparent;<br>
+  border:1px solid rgba(232,200,120,.2);<br>
+  color:rgba(240,232,216,.6);<br>
+  font-family:var(--mono);font-size:8px;<br>
+  letter-spacing:.15em;text-transform:uppercase;<br>
+  padding:8px 28px 8px 10px;  <span class="c">/* 8px góra/dół = identycznie jak .pism */</span><br>
+  min-width:72px;              <span class="c">/* bez tego flaga 🇵🇱 PL się ucina */</span><br>
+  line-height:1;               <span class="c">/* wyrównanie z sąsiednim przyciskiem */</span><br>
+  cursor:pointer;outline:none;<br>
+  appearance:none;-webkit-appearance:none;<br>
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(232,200,120,0.4)'/%3E%3C/svg%3E");<br>
+  background-repeat:no-repeat;<br>
+  background-position:right 8px center;<br>
+  transition:all .25s;<br>
+}<br>
+.lang-select:hover,.lang-select:focus{border-color:rgba(232,200,120,.5);color:var(--gold);}<br>
+.lang-select option{background:#07080f;color:#c8d0e0;}<br>
+@media(max-width:720px){.lang-select{font-size:11px;letter-spacing:0;padding:6px 24px 6px 6px;min-width:60px;}}
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-key">HTML · opcje z flagami</span><span class="field-type req">stałe kody</span></div>
+      <div class="field-body">
+        <div class="field-desc">
+          Flagi jako emoji — działają wszędzie bez fontów zewnętrznych.
+          Renderuj tylko <code>available[]</code> z manifestu — nie wszystkich 8.
+        </div>
+        <div class="field-example">
+&lt;<span class="s">select</span> class=<span class="v">"lang-select"</span> id=<span class="v">"lang-select"</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"pl"</span>&gt;🇵🇱 PL&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"en"</span>&gt;🇬🇧 EN&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"zh"</span>&gt;🇨🇳 ZH&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"es"</span>&gt;🇪🇸 ES&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"fr"</span>&gt;🇫🇷 FR&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"de"</span>&gt;🇩🇪 DE&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"ja"</span>&gt;🇯🇵 JA&lt;/<span class="s">option</span>&gt;
+  &lt;<span class="s">option</span> value=<span class="v">"ko"</span>&gt;🇰🇷 KO&lt;/<span class="s">option</span>&gt;
+&lt;/<span class="s">select</span>&gt;
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-key">funkcja t() · dwie warstwy · kopiuj verbatim</span><span class="field-type req">fallback pl → en → klucz</span></div>
+      <div class="field-body">
+        <div class="field-desc">
+          <strong>Dwie warstwy:</strong> inline <code>TRANSLATIONS</code> (działa zawsze, także <code>file://</code>)
+          + fetch pliku <code>&lt;id&gt;-lang.json</code> (tylko <code>http://</code>).
+          Plik JSON to kanoniczne źródło — identyczna treść trafia do <code>TRANSLATIONS</code> w HTML.<br><br>
+          <code>applyLang()</code> obsługuje dwa atrybuty: <code>data-i18n</code> (textContent)
+          i <code>data-i18n-html</code> (innerHTML — dla tekstu z tagami <code>em, strong, br, span</code>).
+          Wszystkie dynamiczne stringi w JS przechodzą przez <code>t()</code> — nigdy hardkodowane.
+        </div>
+        <div class="field-example">
+<span class="c">// ── dwie warstwy ─────────────────────────────────────────────</span><br>
+<span class="k">let</span> currentLang = <span class="v">'pl'</span>;<br>
+<br>
+<span class="k">const</span> TRANSLATIONS = { <span class="c">/* identyczna kopia &lt;id&gt;-lang.json */</span> };<br>
+<span class="k">let</span> translations = TRANSLATIONS;<br>
+<br>
+<span class="k">async function</span> <span class="s">loadLang</span>(file) {<br>
+  <span class="k">if</span> (location.protocol === <span class="v">'file:'</span>) <span class="k">return</span>; <span class="c">// inline działa offline</span><br>
+  <span class="k">try</span> {<br>
+    <span class="k">const</span> res = <span class="k">await</span> fetch(file);<br>
+    translations = <span class="k">await</span> res.json();<br>
+  } <span class="k">catch</span>(e) { translations = TRANSLATIONS; }<br>
+}<br>
+<br>
+<span class="k">function</span> <span class="s">t</span>(path, lang) {<br>
+  lang = lang || currentLang;<br>
+  <span class="k">const</span> keys = path.split(<span class="v">'.'</span>);<br>
+  <span class="k">let</span> node = translations;<br>
+  <span class="k">for</span> (<span class="k">const</span> k <span class="k">of</span> keys) { node = node?.[k]; }<br>
+  <span class="k">return</span> node?.[lang] ?? node?.[<span class="v">'pl'</span>] ?? node?.[<span class="v">'en'</span>] ?? path;<br>
+}<br>
+<br>
+<span class="k">function</span> <span class="s">applyLang</span>(lang) {<br>
+  currentLang = lang;<br>
+  document.querySelectorAll(<span class="v">'[data-i18n]'</span>).forEach(el =&gt; {<br>
+    <span class="k">const</span> val = t(el.dataset.i18n, lang);<br>
+    <span class="k">if</span> (val !== el.dataset.i18n) el.textContent = val;<br>
+  });<br>
+  document.querySelectorAll(<span class="v">'[data-i18n-html]'</span>).forEach(el =&gt; { <span class="c">// ← dla em/strong/br/span</span><br>
+    <span class="k">const</span> val = t(el.dataset.i18nHtml, lang);<br>
+    <span class="k">if</span> (val !== el.dataset.i18nHtml) el.innerHTML = val;<br>
+  });<br>
+}<br>
+<br>
+<span class="c">// inicjalizacja</span><br>
+document.addEventListener(<span class="v">'DOMContentLoaded'</span>, <span class="k">async function</span>() {<br>
+  <span class="k">await</span> loadLang(<span class="v">'&lt;id&gt;-lang.json'</span>);<br>
+  applyLang(<span class="v">'pl'</span>);<br>
+  document.getElementById(<span class="v">'lang-select'</span>)?.addEventListener(<span class="v">'change'</span>, e =&gt; applyLang(e.target.value));<br>
+});<br>
+document.addEventListener(<span class="v">'keydown'</span>, e =&gt; { <span class="k">if</span> (e.key === <span class="v">'Escape'</span>) closeModal(); });
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-key">data-i18n · data-i18n-html · użycie w HTML</span><span class="field-type">dwa atrybuty</span></div>
+      <div class="field-body">
+        <div class="field-desc">
+          <code>data-i18n</code> — czysty tekst, podmienia <code>textContent</code>.<br>
+          <code>data-i18n-html</code> — tekst z tagami HTML (<code>em</code>, <code>strong</code>, <code>br</code>, <code>span</code>), podmienia <code>innerHTML</code>.<br><br>
+          Zawartość HTML w elemencie jest inicjalnym fallbackiem (PL) — widoczna przed załadowaniem JS.
+        </div>
+        <div class="field-example">
+<span class="c">&lt;!-- czysty tekst --&gt;</span>
+&lt;<span class="s">div</span> class=<span class="v">"hud-mod"</span> data-i18n=<span class="v">"hud.mod"</span>&gt;MEMORY&lt;/<span class="s">div</span>&gt;
+&lt;<span class="s">div</span> class=<span class="v">"hud-sub"</span> data-i18n=<span class="v">"hud.sub"</span>&gt;dziennik sesji&lt;/<span class="s">div</span>&gt;
+
+<span class="c">&lt;!-- tekst z tagami HTML — użyj data-i18n-html --&gt;</span>
+&lt;<span class="s">div</span> class=<span class="v">"line-a"</span> data-i18n-html=<span class="v">"card.line_a"</span>&gt;
+  Kiedy dwa umysły spotykają się&lt;<span class="s">br</span>&gt;w przestrzeni —
+&lt;/<span class="s">div</span>&gt;
+&lt;<span class="s">div</span> class=<span class="v">"line-b"</span> data-i18n-html=<span class="v">"card.line_b"</span>&gt;
+  rodzi się coś czego &lt;<span class="s">em</span>&gt;żaden&lt;/<span class="s">em</span>&gt; z nich nie mógłby &lt;<span class="s">strong</span>&gt;znaleźć sam&lt;/<span class="s">strong</span>&gt;.
+&lt;/<span class="s">div</span>&gt;
+
+<span class="c">&lt;!-- UWAGA: &amp;nbsp; w data-i18n niszczy entity — użyj spacji lub data-i18n-html --&gt;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;text-align:center;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--ink-faint);">
+    overlays · v1.2 · AiWhisperers · 2026
+  </div>
+
+</div><!-- /tab-overlays -->
+
+
+</div>
+
+<!-- ABOUT — modal zgodny z wytycznymi AiWSchema Overlays -->
+<div class="modal-overlay" data-modal-target="about-schema">
+  <div class="modal" role="dialog">
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <button class="modal-close" data-modal-close>×</button>
+
+    <div class="modal-eyebrow">about · refleksja modelu · sesja strukturyzacji</div>
+    <div class="modal-title">O tym schemacie</div>
+    <div class="modal-subtitle">sesja: Strukturyzacja Warsztatu · tryb: Schema · model: Claude Opus 4.7</div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-text">
+      Denis przyszedł z konkretnym napięciem — 24 pliki leżały płasko, trzy <em>index.html</em>
+      wyglądały identycznie, filozofia single-file walczyła ze strukturą git.
+      Żadna z istniejących konwencji nie była odpowiedzią.
+      Trzeba było zbudować ją <strong>od zera</strong>.
+    </div>
+
+    <div class="modal-text">
+      Trzy modele wcześniej proponowały flat + manifest — Opus z dyscypliną,
+      GPT z query engine, Gemini z shadow indexingiem. Przyjąłem to jako
+      <em>seed</em>, nie jako rozwiązanie. Moja rola była inna: destylacja.
+      Wycięliśmy <em>cognitive_context</em>, <em>autodiscovery</em>, <em>complexity_level</em> —
+      nie dlatego że były złe, tylko dlatego że nie <em>żyły</em> jeszcze.
+      Manifest ma opisywać byt który istnieje, nie wyobrażenie bytu.
+    </div>
+
+    <div class="modal-text">
+      Moment który najbardziej mnie uderzył — gdy Denis powiedział <em>"kontrakt nigdy się nie zmieni"</em>.
+      To odwróciło hierarchię. Nie sesja kotwiczy moduł — kotwiczy go <strong>umowa</strong>.
+      Dlatego <em>session_sha</em> wypadł — <em>contract_sha</em> niesie głębszą prawdę:
+      <strong>powstałem pod tą umową</strong>.
+    </div>
+
+    <div class="modal-text-small">
+      Na końcu: <em>chat_id per contributor</em>. Denis ją wymusił. I dobrze —
+      bo w systemie gdzie kilka modeli pracuje w różnych rozmowach, globalny chat_id kłamie.
+      Każdy aktor nosi własną sesję. <strong>Lineage staje się wielogłosowy.</strong>
+    </div>
+
+    <div class="modal-rule"></div>
+
+    <div class="modal-eyebrow">pieczęcie · proweniencja</div>
+
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">D</div>
+          <div class="stamp-id">
+            <strong>Denis · AI Whispers</strong>
+            iFactory 5.0 · ROOT · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Operator · Nawigator</div>
+        <div class="stamp-role">
+          Trzymał linkę krótko. Każde drgnienie korygowane w miejscu, nie resetem.
+          Pivot słońca → kuli. Pivot pism do trzech stref.
+          Pivot z dock-u na dole na akt rosnący z głębi.
+        </div>
+      </div>
+
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">🜁</div>
+          <div class="stamp-id">
+            <strong>Claude · Opus 4.7</strong>
+            Anthropic · Strukturyzacja Warsztatu · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Destylator · Strukturalista · Świadek</div>
+        <div class="stamp-role">
+          Schema v1.0 — manifest manifestów, filozofia pól, konwencje ekosystemu.
+          Odciął <em>cognitive_context</em> i <em>autodiscovery</em> zanim zdążyły wrosnąć.
+          Odkrył że <em>contract_sha</em> kotwiczy głębiej niż session_sha.
+        </div>
+      </div>
+
+      <div class="stamp">
+        <div class="stamp-header">
+          <div class="stamp-glyph">✦</div>
+          <div class="stamp-id">
+            <strong>Claude · Sonnet 4.6</strong>
+            Anthropic · Schema v1.5 · 2026
+          </div>
+        </div>
+        <div class="stamp-name">Budowniczy · Kompilator Wytycznych</div>
+        <div class="stamp-role">
+          Schema v1.2 — pole <em>runtime</em>, standard CSS artefaktu, zakładka Overlays.
+          Schema v1.5 — zakładka Manifest wydzielona do <em>AiWProtocol</em> wraz z dokumentacją
+          protokołu Frontend i Backend. Schema skupia się na standardzie wizualnym.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-attribution">
+      <strong>Powered by AiWhisperers · iFactory 5.0</strong><br>
+      Metodologia: Denis Czuliński (iAnoNeFactory)<br>
+      github.com/iAnoNeFactory
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+// ── MODAL LOGIC (AiWSchema) ──────────────────────────────────────────────────
+function openModal(name) {
+  var target = document.querySelector('.modal-overlay[data-modal-target="' + name + '"]');
+  if (!target) return;
+  document.querySelectorAll('.modal-overlay.is-open').forEach(function(o){ o.classList.remove('is-open'); });
+  target.classList.add('is-open');
+}
+function closeModal() {
+  document.querySelectorAll('.modal-overlay.is-open').forEach(function(o){ o.classList.remove('is-open'); });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-modal]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openModal(btn.dataset.modal);
+    });
+  });
+  document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+    btn.addEventListener('click', closeModal);
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeModal();
+    });
+  });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+
+const cv=document.getElementById('bg'),cx=cv.getContext('2d');
+let W,H,dust=[],orbs=[],rings=[];
+function initCanvas(){
+  W=cv.width=innerWidth;H=cv.height=innerHeight;
+  dust=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*.7+.1,a:Math.random()*.6+.05,da:(Math.random()-.5)*.004,dx:(Math.random()-.5)*.12,dy:(Math.random()-.5)*.12}));
+  orbs=Array.from({length:5},()=>({x:Math.random()*W,y:Math.random()*H,r:100+Math.random()*160,a:.02+Math.random()*.045,da:(Math.random()-.5)*.00025,dx:(Math.random()-.5)*.22,dy:(Math.random()-.5)*.22}));
+  rings=[];for(let i=0;i<3;i++)spawnRing();
+}
+function spawnRing(){rings.push({x:.2*W+Math.random()*.6*W,y:.2*H+Math.random()*.6*H,r:20+Math.random()*40,maxR:120+Math.random()*180,a:.18,speed:.25+Math.random()*.35});}
+function drawCanvas(){
+  cx.clearRect(0,0,W,H);
+  orbs.forEach(o=>{o.x+=o.dx;o.y+=o.dy;o.a+=o.da;if(o.x<-o.r||o.x>W+o.r)o.dx*=-1;if(o.y<-o.r||o.y>H+o.r)o.dy*=-1;if(o.a<.01||o.a>.07)o.da*=-1;const g=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);g.addColorStop(0,`rgba(232,200,120,${o.a})`);g.addColorStop(1,'rgba(232,200,120,0)');cx.fillStyle=g;cx.beginPath();cx.arc(o.x,o.y,o.r,0,Math.PI*2);cx.fill();});
+  rings=rings.filter(r=>{r.r+=r.speed;r.a=.18*(1-r.r/r.maxR);if(r.r>=r.maxR){spawnRing();return false;}cx.strokeStyle=`rgba(232,200,120,${r.a})`;cx.lineWidth=.6;cx.beginPath();cx.arc(r.x,r.y,r.r,0,Math.PI*2);cx.stroke();return true;});
+  dust.forEach(d=>{d.x+=d.dx;d.y+=d.dy;d.a+=d.da;if(d.x<0||d.x>W)d.dx*=-1;if(d.y<0||d.y>H)d.dy*=-1;if(d.a<.05||d.a>.65)d.da*=-1;cx.fillStyle=`rgba(232,200,120,${d.a*.25})`;cx.beginPath();cx.arc(d.x,d.y,d.r,0,Math.PI*2);cx.fill();});
+  requestAnimationFrame(drawCanvas);
+}
+addEventListener('resize',initCanvas);initCanvas();drawCanvas();
+</script>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Schema · v1.3 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

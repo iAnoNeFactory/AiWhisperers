@@ -1,0 +1,38 @@
+name: Integrity Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: pip install jsonschema
+
+      - name: Check bootstrap SHA
+        run: python3 tools/check_integrity.py
+
+      - name: Validate manifests
+        run: python3 tools/validate_manifests.py
+
+      - name: Chain SHA test (Python)
+        run: python3 tests/chain_test.py
+
+      - name: Chain SHA test (Node)
+        run: node tests/chain_test.mjs

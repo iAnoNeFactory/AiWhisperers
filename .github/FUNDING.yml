@@ -1,0 +1,26 @@
+# GitHub funding configuration
+# This file controls the "Sponsor this project" button shown on the
+# repository page.
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors username
+github: iAnoNeFactory
+
+# Open Collective slug (uncomment and fill in after setting up
+# at https://opencollective.com — typically takes 1-2 days for approval)
+# open_collective: aiwhisperers
+
+# Custom funding URLs (additional channels)
+# Up to 4 URLs allowed
+custom:
+  - "https://github.com/iAnoNeFactory/aiwhisperers/blob/main/FUNDING.md"
+
+# Other platforms available but NOT recommended for AiWhisperers:
+# - patreon: not a good fit for infrastructure projects
+# - ko_fi: too informal for the project's positioning
+# - buy_me_a_coffee: same as ko_fi
+# - liberapay: viable alternative if you prefer EU-based platform
+# - tidelift: only for projects with significant enterprise adoption
+# - issuehunt: bug-bounty model, not aligned with project philosophy
+# - community_bridge: Linux Foundation channel, requires foundation membership
+# - polar: newer platform, possibly worth exploring once project matures

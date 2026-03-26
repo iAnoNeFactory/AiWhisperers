@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 Księga Tortów</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fdf6ee;
+    --blush: #f5c6c6;
+    --rose: #e8909a;
+    --dusty: #d4748a;
+    --mauve: #b05c72;
+    --chocolate: #5c2d3a;
+    --caramel: #c9843a;
+    --honey: #f0c97a;
+    --mint: #a8d5ba;
+    --mint-dark: #6ab38a;
+    --white: #fffaf7;
+    --text: #3d2020;
+    --text-light: #7a4a50;
+    --shadow: rgba(176, 92, 114, 0.15);
+    --shadow-deep: rgba(92, 45, 58, 0.25);
+    --radius: 18px;
+    --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--chocolate) 0%, var(--mauve) 60%, var(--dusty) 100%);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px var(--shadow-deep);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .app-header h1 {
+    font-family: 'Playfair Display', serif;
+    color: var(--honey);
+    font-size: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .app-header h1 span { color: var(--blush); font-style: italic; }
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--honey), var(--caramel));
+    color: var(--chocolate);
+    border: none; cursor: pointer;
+    font-family: 'Lato', sans-serif; font-weight: 700; font-size: 0.9rem;
+    padding: 10px 20px; border-radius: 30px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    transition: all 0.2s; letter-spacing: 0.03em;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+  .search-box {
+    background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 30px; padding: 8px 18px;
+    color: white; font-family: 'Lato', sans-serif; font-size: 0.9rem;
+    outline: none; width: 220px;
+    transition: background 0.2s;
+  }
+  .search-box::placeholder { color: rgba(255,255,255,0.6); }
+  .search-box:focus { background: rgba(255,255,255,0.22); }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    background: var(--white);
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--blush);
+    padding: 0 40px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Lato', sans-serif; font-weight: 700; font-size: 0.88rem;
+    padding: 14px 22px; color: var(--text-light);
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all 0.2s; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .tab-btn:hover { color: var(--mauve); }
+  .tab-btn.active { color: var(--mauve); border-bottom-color: var(--mauve); }
+
+  /* ── MAIN LAYOUT ── */
+  .main-content { padding: 36px 40px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── RECIPE GRID ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem; color: var(--chocolate);
+    margin-bottom: 28px;
+  }
+  .section-title span { color: var(--dusty); font-style: italic; }
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+  }
+  .recipe-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 4px 16px var(--shadow);
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+  }
+  .recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px var(--shadow-deep);
+    border-color: var(--blush);
+  }
+  .card-img {
+    width: 100%; height: 200px; object-fit: cover;
+    background: linear-gradient(135deg, var(--blush) 0%, var(--honey) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+  }
+  .card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .card-body { padding: 20px; }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; color: var(--chocolate); margin-bottom: 6px;
+  }
+  .card-meta {
+    display: flex; gap: 12px; align-items: center;
+    font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px;
+  }
+  .tag {
+    background: var(--blush); color: var(--mauve);
+    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700;
+  }
+  .tag.green { background: #d4f0e0; color: var(--mint-dark); }
+  .card-stars { color: var(--honey); font-size: 1rem; }
+  .card-stars .empty { color: #ddd; }
+  .card-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-sm {
+    flex: 1; padding: 8px 0; border-radius: var(--radius-sm);
+    font-family: 'Lato', sans-serif; font-weight: 700; font-size: 0.8rem;
+    cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .btn-view { background: var(--blush); color: var(--mauve); }
+  .btn-view:hover { background: var(--rose); color: white; }
+  .btn-edit { background: #f0f0e8; color: #666; }
+  .btn-edit:hover { background: var(--honey); color: var(--chocolate); }
+  .btn-del { background: #f8e8e8; color: #c44; }
+  .btn-del:hover { background: #f0b0b0; }
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: var(--text-light);
+  }
+  .empty-state .emoji { font-size: 5rem; margin-bottom: 16px; }
+  .empty-state p { font-size: 1.1rem; margin-bottom: 20px; }
+
+  /* ── RECIPE DETAIL ── */
+  .detail-header {
+    display: grid; grid-template-columns: 380px 1fr;
+    gap: 40px; margin-bottom: 36px;
+  }
+  .detail-img {
+    border-radius: var(--radius); overflow: hidden;
+    height: 340px; background: linear-gradient(135deg, var(--blush), var(--honey));
+    display: flex; align-items: center; justify-content: center; font-size: 6rem;
+  }
+  .detail-img img { width: 100%; height: 100%; object-fit: cover; }
+  .detail-info { display: flex; flex-direction: column; justify-content: space-between; }
+  .detail-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; color: var(--chocolate); line-height: 1.2;
+  }
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .detail-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin: 16px 0;
+  }
+  .stat-box {
+    background: var(--cream); border-radius: var(--radius-sm);
+    padding: 14px; text-align: center;
+    border: 1.5px solid var(--blush);
+  }
+  .stat-box .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; color: var(--mauve); font-weight: 700;
+  }
+  .stat-box .stat-lbl { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+  .detail-desc { color: var(--text-light); line-height: 1.7; font-size: 0.95rem; }
+
+  /* ── TABS IN DETAIL ── */
+  .detail-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid var(--blush); }
+  .dtab {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Lato', sans-serif; font-weight: 700; font-size: 0.85rem;
+    padding: 12px 20px; color: var(--text-light);
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .dtab.active { color: var(--mauve); border-bottom-color: var(--mauve); }
+
+  /* ── INGREDIENTS ── */
+  .ingredients-list { display: flex; flex-direction: column; gap: 10px; }
+  .ingredient-row {
+    display: grid; grid-template-columns: 1fr 120px 120px;
+    gap: 12px; align-items: center;
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 12px 18px; border: 1.5px solid var(--blush);
+  }
+  .ingredient-name { font-weight: 700; color: var(--chocolate); }
+  .ingredient-amt { color: var(--mauve); font-size: 0.9rem; text-align: center; }
+  .ingredient-unit { color: var(--text-light); font-size: 0.85rem; text-align: center; }
+  .ingredient-row.scaled { background: #fff8e8; border-color: var(--honey); }
+
+  /* ── STEPS ── */
+  .steps-list { display: flex; flex-direction: column; gap: 18px; }
+  .step-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    background: var(--white); border-radius: var(--radius);
+    padding: 20px; border: 1.5px solid var(--blush);
+  }
+  .step-num {
+    min-width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--rose), var(--mauve));
+    color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-weight: 700; color: var(--chocolate); margin-bottom: 6px; }
+  .step-desc { color: var(--text-light); line-height: 1.7; font-size: 0.92rem; }
+  .step-time {
+    background: var(--blush); color: var(--mauve);
+    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700;
+    display: inline-block; margin-top: 8px;
+  }
+
+  /* ── CALCULATOR ── */
+  .calc-card {
+    background: linear-gradient(135deg, #fff8f0, var(--white));
+    border: 2px solid var(--honey);
+    border-radius: var(--radius); padding: 28px;
+    margin-bottom: 24px;
+  }
+  .calc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; color: var(--chocolate); margin-bottom: 20px;
+  }
+  .calc-row { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
+  .calc-field { display: flex; flex-direction: column; gap: 6px; }
+  .calc-field label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; }
+  .calc-input {
+    background: white; border: 2px solid var(--blush);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-family: 'Lato', sans-serif; font-size: 1rem; color: var(--text);
+    width: 120px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .calc-input:focus { border-color: var(--rose); }
+  .calc-result {
+    background: var(--white); border: 2px solid var(--mint);
+    border-radius: var(--radius); padding: 20px; margin-top: 16px;
+  }
+  .calc-result h4 { color: var(--mint-dark); font-size: 0.9rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .scale-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--mint), var(--mint-dark));
+    color: white; border-radius: 20px; padding: 4px 14px;
+    font-size: 0.85rem; font-weight: 700; margin-bottom: 12px;
+  }
+
+  /* ── COMMENTS ── */
+  .comments-section { margin-top: 10px; }
+  .comment-form { background: var(--white); border-radius: var(--radius); padding: 20px; border: 1.5px solid var(--blush); margin-bottom: 20px; }
+  .comment-form h4 { font-family: 'Playfair Display', serif; color: var(--chocolate); margin-bottom: 14px; }
+  .star-picker { display: flex; gap: 8px; margin-bottom: 12px; }
+  .star-btn { background: none; border: none; cursor: pointer; font-size: 1.6rem; transition: transform 0.1s; }
+  .star-btn:hover { transform: scale(1.2); }
+  .form-group { margin-bottom: 12px; }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; background: var(--cream);
+    border: 2px solid var(--blush); border-radius: var(--radius-sm);
+    padding: 10px 14px; font-family: 'Lato', sans-serif; font-size: 0.9rem;
+    color: var(--text); outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--rose); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
+  .comment-item {
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 16px 20px; border: 1.5px solid var(--blush); margin-bottom: 12px;
+  }
+  .comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .comment-author { font-weight: 700; color: var(--chocolate); }
+  .comment-date { font-size: 0.8rem; color: var(--text-light); }
+  .comment-text { color: var(--text-light); line-height: 1.6; font-size: 0.9rem; }
+
+  /* ── MODAL / FORM ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(58, 20, 28, 0.55); backdrop-filter: blur(4px);
+    z-index: 200; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius);
+    width: 100%; max-width: 780px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px var(--shadow-deep);
+    padding: 36px;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; color: var(--chocolate); margin-bottom: 28px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+  .section-sep {
+    font-family: 'Playfair Display', serif;
+    color: var(--mauve); font-size: 1.1rem;
+    margin: 20px 0 12px; grid-column: 1 / -1;
+    border-bottom: 1.5px solid var(--blush); padding-bottom: 8px;
+  }
+  .dyn-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .dyn-row {
+    display: flex; gap: 8px; align-items: center;
+    background: var(--cream); border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .dyn-row input, .dyn-row textarea {
+    flex: 1; background: white; border: 1.5px solid var(--blush);
+    border-radius: var(--radius-sm); padding: 8px 10px;
+    font-family: 'Lato', sans-serif; font-size: 0.9rem; outline: none;
+  }
+  .dyn-row input:focus, .dyn-row textarea:focus { border-color: var(--rose); }
+  .dyn-row textarea { resize: vertical; min-height: 56px; }
+  .btn-add-row {
+    background: var(--blush); color: var(--mauve);
+    border: none; border-radius: var(--radius-sm); padding: 8px 16px;
+    cursor: pointer; font-size: 0.85rem; font-weight: 700;
+    transition: background 0.2s;
+  }
+  .btn-add-row:hover { background: var(--rose); color: white; }
+  .btn-remove-row {
+    background: #f8e8e8; color: #c44;
+    border: none; border-radius: 6px; padding: 6px 10px;
+    cursor: pointer; font-size: 0.8rem; flex-shrink: 0;
+  }
+  .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+  .btn-secondary {
+    background: var(--cream); color: var(--text-light);
+    border: 2px solid var(--blush); border-radius: 30px;
+    padding: 10px 24px; font-family: 'Lato', sans-serif; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: var(--blush); color: var(--mauve); }
+  .img-preview {
+    width: 100%; height: 200px; border-radius: var(--radius-sm);
+    object-fit: cover; margin-top: 8px; display: none;
+  }
+  .img-preview.visible { display: block; }
+
+  /* ── CALCULATOR PAGE ── */
+  .calc-page-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 32px; box-shadow: 0 4px 16px var(--shadow);
+    max-width: 680px;
+  }
+  .calc-formula-note {
+    background: var(--cream); border-radius: var(--radius-sm);
+    padding: 14px 18px; margin-top: 16px; font-size: 0.85rem;
+    color: var(--text-light); border-left: 4px solid var(--honey);
+  }
+
+  /* ── BACK BTN ── */
+  .btn-back {
+    background: none; border: none; cursor: pointer;
+    color: var(--mauve); font-weight: 700; font-size: 0.9rem;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 24px;
+    transition: color 0.2s;
+  }
+  .btn-back:hover { color: var(--chocolate); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--chocolate); color: var(--honey);
+    padding: 14px 24px; border-radius: var(--radius-sm);
+    font-weight: 700; font-size: 0.9rem;
+    box-shadow: 0 6px 20px var(--shadow-deep);
+    z-index: 999; opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .app-header { padding: 16px 20px; flex-wrap: wrap; gap: 10px; }
+    .main-content { padding: 20px; }
+    .detail-header { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .nav-tabs { padding: 0 16px; }
+    .search-box { width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <h1>🎂 Księga <span>Tortów</span></h1>
+  <div class="header-actions">
+    <input type="text" class="search-box" id="searchInput" placeholder="🔍 Szukaj przepisu..." oninput="renderRecipes()">
+    <button class="btn-primary" onclick="openModal()">+ Nowy przepis</button>
+  </div>
+</header>
+
+<!-- NAVIGATION -->
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="showPage('recipes', this)">📖 Przepisy</button>
+  <button class="tab-btn" onclick="showPage('calculator', this)">⚖️ Kalkulator</button>
+  <button class="tab-btn" onclick="showPage('about', this)">ℹ️ O aplikacji</button>
+</nav>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <!-- PAGE: RECIPES -->
+  <section class="page active" id="page-recipes">
+    <div id="recipeGrid"></div>
+  </section>
+
+  <!-- PAGE: DETAIL -->
+  <section class="page" id="page-detail">
+    <button class="btn-back" onclick="showPage('recipes')">← Powrót do listy</button>
+    <div id="detailContent"></div>
+  </section>
+
+  <!-- PAGE: CALCULATOR -->
+  <section class="page" id="page-calculator">
+    <h2 class="section-title">⚖️ Kalkulator <span>skalowania</span></h2>
+    <div class="calc-page-card">
+      <p style="color:var(--text-light);margin-bottom:20px;">Oblicz proporcje składników dla dowolnej średnicy i wysokości tortu.</p>
+      <div class="form-group">
+        <label class="form-label">Wybierz przepis bazowy</label>
+        <select class="form-select" id="calcRecipeSelect" onchange="updateCalcIngredients()">
+          <option value="">— wybierz przepis —</option>
+        </select>
+      </div>
+      <div class="calc-row" style="margin-top:16px;">
+        <div class="calc-field">
+          <label>Oryg. średnica (cm)</label>
+          <input type="number" class="calc-input" id="calcOrigDiam" value="24" oninput="calcScale()">
+        </div>
+        <div class="calc-field">
+          <label>Nowa średnica (cm)</label>
+          <input type="number" class="calc-input" id="calcNewDiam" value="24" oninput="calcScale()">
+        </div>
+        <div class="calc-field">
+          <label>Oryg. wysokość (cm)</label>
+          <input type="number" class="calc-input" id="calcOrigH" value="8" oninput="calcScale()">
+        </div>
+        <div class="calc-field">
+          <label>Nowa wysokość (cm)</label>
+          <input type="number" class="calc-input" id="calcNewH" value="8" oninput="calcScale()">
+        </div>
+      </div>
+      <div class="calc-formula-note">
+        🔢 Formuła: Objętość = π × r² × h → Skala = V<sub>nowa</sub> / V<sub>oryginalna</sub>
+      </div>
+      <div class="calc-result" id="calcPageResult" style="margin-top:16px;display:none;">
+        <h4>📋 Przeskalowane składniki</h4>
+        <div id="calcPageIngredients"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: ABOUT -->
+  <section class="page" id="page-about">
+    <h2 class="section-title">ℹ️ O <span>aplikacji</span></h2>
+    <div class="calc-page-card" style="max-width:600px;">
+      <p style="line-height:1.8;color:var(--text-light);">
+        <strong style="color:var(--chocolate);">Księga Tortów</strong> to prywatna baza przepisów, stworzona z miłością 🎂<br><br>
+        Wszystkie dane zapisywane są lokalnie w przeglądarce (localStorage) — bez rejestracji, bez chmury, bez opłat.<br><br>
+        <strong>Możliwości:</strong><br>
+        ✅ Baza przepisów ze zdjęciami<br>
+        ✅ Krok po kroku — metody przygotowania<br>
+        ✅ Kalkulator skalowania wg średnicy i wysokości<br>
+        ✅ Oceny i komentarze<br>
+        ✅ Pełna edycja każdego przepisu<br><br>
+        <em style="color:var(--mauve);">Wersja 1.0 — z myślą o rozbudowie 🚀</em>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL: ADD/EDIT RECIPE -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 class="modal-title" id="modalTitle">🎂 Nowy przepis</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Nazwa tortu *</label>
+        <input type="text" class="form-input" id="fName" placeholder="np. Tort czekoladowy">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategoria</label>
+        <select class="form-select" id="fCategory">
+          <option>Czekoladowy</option>
+          <option>Owocowy</option>
+          <option>Śmietankowy</option>
+          <option>Sernik</option>
+          <option>Biszkopt</option>
+          <option>Orzechowy</option>
+          <option>Inny</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Średnica (cm)</label>
+        <input type="number" class="form-input" id="fDiam" value="24">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wysokość (cm)</label>
+        <input type="number" class="form-input" id="fHeight" value="8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Czas przygotowania (min)</label>
+        <input type="number" class="form-input" id="fPrepTime" value="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Czas pieczenia (min)</label>
+        <input type="number" class="form-input" id="fBakeTime" value="45">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Opis / notatki</label>
+        <textarea class="form-textarea" id="fDesc" placeholder="Krótki opis tortu..."></textarea>
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Zdjęcie tortu</label>
+        <input type="file" class="form-input" id="fPhoto" accept="image/*" onchange="previewPhoto()">
+        <img id="photoPreview" class="img-preview" alt="Podgląd">
+      </div>
+
+      <div class="section-sep">🥣 Składniki</div>
+      <div class="form-full">
+        <div class="dyn-list" id="ingredientsList"></div>
+        <button class="btn-add-row" onclick="addIngredientRow()">+ Dodaj składnik</button>
+      </div>
+
+      <div class="section-sep">👩‍🍳 Kroki przygotowania</div>
+      <div class="form-full">
+        <div class="dyn-list" id="stepsList"></div>
+        <button class="btn-add-row" onclick="addStepRow()">+ Dodaj krok</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" onclick="saveRecipe()">💾 Zapisz przepis</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  DATA LAYER  (łatwa wymiana na backend API w przyszłości)
+// ════════════════════════════════════════════════════════════
+const DB = {
+  getRecipes() { try { return JSON.parse(localStorage.getItem('tort_recipes') || '[]'); } catch { return []; } },
+  saveRecipes(r) { localStorage.setItem('tort_recipes', JSON.stringify(r)); },
+  getComments() { try { return JSON.parse(localStorage.getItem('tort_comments') || '{}'); } catch { return {}; } },
+  saveComments(c) { localStorage.setItem('tort_comments', JSON.stringify(c)); },
+};
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let editingId = null;
+let currentDetailId = null;
+let newPhotoData = null;
+let detailTabState = 'ingredients';
+
+// ════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════
+function showPage(name, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + (name === 'detail' ? 'detail' : name)).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  if (name === 'recipes') {
+    const recipeTab = document.querySelector('.tab-btn:first-child');
+    if (recipeTab) recipeTab.classList.add('active');
+    renderRecipes();
+  }
+  if (name === 'calculator') populateCalcSelect();
+}
+
+// ════════════════════════════════════════════════════════════
+//  RECIPE LIST
+// ════════════════════════════════════════════════════════════
+function starsHtml(rating, size = '') {
+  let h = '';
+  for (let i = 1; i <= 5; i++)
+    h += `<span class="${i <= rating ? '' : 'empty'}">★</span>`;
+  return `<span class="card-stars ${size}">${h}</span>`;
+}
+
+function avgRating(id) {
+  const comments = DB.getComments()[id] || [];
+  if (!comments.length) return 0;
+  return comments.reduce((a, c) => a + (c.rating || 0), 0) / comments.length;
+}
+
+function renderRecipes() {
+  const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let recipes = DB.getRecipes();
+  if (query) recipes = recipes.filter(r =>
+    r.name.toLowerCase().includes(query) ||
+    (r.category || '').toLowerCase().includes(query) ||
+    (r.desc || '').toLowerCase().includes(query)
+  );
+
+  const grid = document.getElementById('recipeGrid');
+  if (!recipes.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="emoji">🎂</div>
+      <p>${query ? 'Nie znaleziono przepisów.' : 'Brak przepisów. Dodaj pierwszy tort!'}</p>
+      ${!query ? '<button class="btn-primary" onclick="openModal()">+ Dodaj przepis</button>' : ''}
+    </div>`;
+    return;
+  }
+
+  const title = `<h2 class="section-title">Twoje <span>przepisy</span> <small style="font-size:0.9rem;color:var(--text-light);">(${recipes.length})</small></h2>`;
+  const cards = recipes.map(r => {
+    const avg = avgRating(r.id);
+    const imgContent = r.photo
+      ? `<div class="card-img"><img src="${r.photo}" alt="${r.name}"></div>`
+      : `<div class="card-img">🎂</div>`;
+    return `<div class="recipe-card" onclick="viewRecipe('${r.id}')">
+      ${imgContent}
+      <div class="card-body">
+        <div class="card-title">${r.name}</div>
+        <div class="card-meta">
+          <span class="tag">${r.category || 'Inny'}</span>
+          <span>⌀ ${r.diameter || 24}cm</span>
+          <span>⏱ ${(r.prepTime || 0) + (r.bakeTime || 0)} min</span>
+        </div>
+        ${avg ? starsHtml(Math.round(avg)) : '<span style="color:#ccc;font-size:0.8rem;">brak ocen</span>'}
+        <div class="card-actions" onclick="event.stopPropagation()">
+          <button class="btn-sm btn-view" onclick="viewRecipe('${r.id}')">👁 Podgląd</button>
+          <button class="btn-sm btn-edit" onclick="openModal('${r.id}')">✏️ Edytuj</button>
+          <button class="btn-sm btn-del" onclick="deleteRecipe('${r.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = title + `<div class="recipe-grid">${cards}</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  RECIPE DETAIL
+// ════════════════════════════════════════════════════════════
+function viewRecipe(id) {
+  currentDetailId = id;
+  const r = DB.getRecipes().find(x => x.id === id);
+  if (!r) return;
+  detailTabState = 'ingredients';
+
+  const imgHtml = r.photo
+    ? `<div class="detail-img"><img src="${r.photo}" alt="${r.name}"></div>`
+    : `<div class="detail-img">🎂</div>`;
+
+  const avg = avgRating(id);
+  const comments = DB.getComments()[id] || [];
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      ${imgHtml}
+      <div class="detail-info">
+        <div>
+          <div class="detail-title">${r.name}</div>
+          <div class="detail-tags">
+            <span class="tag">${r.category || 'Inny'}</span>
+            ${avg ? starsHtml(Math.round(avg)) + `<small style="color:var(--text-light)">(${comments.length} ${comments.length === 1 ? 'ocena' : 'ocen'})</small>` : ''}
+          </div>
+          <p class="detail-desc">${r.desc || '<em>Brak opisu.</em>'}</p>
+        </div>
+        <div class="detail-stats">
+          <div class="stat-box"><div class="stat-val">⌀${r.diameter || 24}</div><div class="stat-lbl">Średnica cm</div></div>
+          <div class="stat-box"><div class="stat-val">${r.height || 8}</div><div class="stat-lbl">Wysokość cm</div></div>
+          <div class="stat-box"><div class="stat-val">${(r.prepTime || 0) + (r.bakeTime || 0)}'</div><div class="stat-lbl">Czas total</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KALKULATOR W DETALU -->
+    <div class="calc-card">
+      <div class="calc-title">⚖️ Kalkulator skalowania</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label>Nowa średnica (cm)</label>
+          <input type="number" class="calc-input" id="detCalcDiam" value="${r.diameter || 24}" oninput="detailCalc()">
+        </div>
+        <div class="calc-field">
+          <label>Nowa wysokość (cm)</label>
+          <input type="number" class="calc-input" id="detCalcH" value="${r.height || 8}" oninput="detailCalc()">
+        </div>
+        <div style="align-self:flex-end;">
+          <button class="btn-primary" onclick="detailCalc()">Przelicz ⚡</button>
+        </div>
+      </div>
+      <div id="detCalcResult"></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="detail-tabs">
+      <button class="dtab active" id="dtab-ingredients" onclick="switchDetailTab('ingredients')">🥣 Składniki</button>
+      <button class="dtab" id="dtab-steps" onclick="switchDetailTab('steps')">👩‍🍳 Kroki</button>
+      <button class="dtab" id="dtab-comments" onclick="switchDetailTab('comments')">💬 Komentarze (${comments.length})</button>
+    </div>
+
+    <div id="dtab-content-ingredients">${renderIngredientsTab(r)}</div>
+    <div id="dtab-content-steps" style="display:none">${renderStepsTab(r)}</div>
+    <div id="dtab-content-comments" style="display:none">${renderCommentsTab(id)}</div>
+  `;
+
+  showPage('detail');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+}
+
+function switchDetailTab(tab) {
+  ['ingredients','steps','comments'].forEach(t => {
+    document.getElementById(`dtab-content-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`dtab-${t}`)?.classList.toggle('active', t === tab);
+  });
+}
+
+function renderIngredientsTab(r) {
+  if (!r.ingredients?.length) return '<p style="color:var(--text-light);padding:20px">Brak składników.</p>';
+  return `<div class="ingredients-list" id="ingListDetail">
+    <div class="ingredient-row" style="font-weight:700;background:var(--cream)">
+      <span>Składnik</span><span style="text-align:center">Ilość</span><span style="text-align:center">Jednostka</span>
+    </div>
+    ${r.ingredients.map(i => `
+      <div class="ingredient-row">
+        <span class="ingredient-name">${i.name}</span>
+        <span class="ingredient-amt">${i.amount}</span>
+        <span class="ingredient-unit">${i.unit || ''}</span>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function renderStepsTab(r) {
+  if (!r.steps?.length) return '<p style="color:var(--text-light);padding:20px">Brak kroków.</p>';
+  return `<div class="steps-list">
+    ${r.steps.map((s, i) => `
+      <div class="step-item">
+        <div class="step-num">${i + 1}</div>
+        <div class="step-content">
+          <div class="step-title">${s.title || `Krok ${i + 1}`}</div>
+          <div class="step-desc">${s.desc || ''}</div>
+          ${s.time ? `<span class="step-time">⏱ ${s.time} min</span>` : ''}
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function renderCommentsTab(id) {
+  const comments = (DB.getComments()[id] || []).slice().reverse();
+  return `<div class="comments-section">
+    <div class="comment-form">
+      <h4>✍️ Dodaj komentarz</h4>
+      <div class="star-picker" id="starPicker">
+        ${[1,2,3,4,5].map(n => `<button class="star-btn" onclick="setCommentStar(${n})" title="${n} gwiazdek">☆</button>`).join('')}
+      </div>
+      <input type="hidden" id="commentRating" value="0">
+      <div class="form-group">
+        <label class="form-label">Imię (opcjonalnie)</label>
+        <input type="text" class="form-input" id="commentAuthor" placeholder="np. Mama">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Komentarz *</label>
+        <textarea class="form-textarea" id="commentText" placeholder="Twoja opinia o torcie..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="addComment('${id}')">Dodaj opinię</button>
+    </div>
+    ${comments.length ? comments.map(c => `
+      <div class="comment-item">
+        <div class="comment-header">
+          <span class="comment-author">${c.author || 'Anonim'} ${c.rating ? starsHtml(c.rating) : ''}</span>
+          <span class="comment-date">${c.date}</span>
+        </div>
+        <div class="comment-text">${c.text}</div>
+      </div>
+    `).join('') : '<p style="color:var(--text-light);font-style:italic">Brak komentarzy. Bądź pierwszy!</p>'}
+  </div>`;
+}
+
+function setCommentStar(n) {
+  document.getElementById('commentRating').value = n;
+  const btns = document.querySelectorAll('#starPicker .star-btn');
+  btns.forEach((b, i) => b.textContent = i < n ? '★' : '☆');
+}
+
+function addComment(id) {
+  const text = document.getElementById('commentText').value.trim();
+  if (!text) { showToast('Wpisz treść komentarza!'); return; }
+  const author = document.getElementById('commentAuthor').value.trim() || 'Anonim';
+  const rating = parseInt(document.getElementById('commentRating').value) || 0;
+  const allComments = DB.getComments();
+  if (!allComments[id]) allComments[id] = [];
+  allComments[id].push({
+    author, text, rating,
+    date: new Date().toLocaleDateString('pl-PL'),
+    id: Date.now()
+  });
+  DB.saveComments(allComments);
+  showToast('Komentarz dodany! 💬');
+  viewRecipe(id);
+  switchDetailTab('comments');
+}
+
+// ════════════════════════════════════════════════════════════
+//  SCALING CALCULATOR
+// ════════════════════════════════════════════════════════════
+function calcVolScale(origD, origH, newD, newH) {
+  const origV = Math.PI * Math.pow(origD / 2, 2) * origH;
+  const newV = Math.PI * Math.pow(newD / 2, 2) * newH;
+  return origV > 0 ? newV / origV : 1;
+}
+
+function detailCalc() {
+  const r = DB.getRecipes().find(x => x.id === currentDetailId);
+  if (!r) return;
+  const newD = parseFloat(document.getElementById('detCalcDiam').value) || r.diameter || 24;
+  const newH = parseFloat(document.getElementById('detCalcH').value) || r.height || 8;
+  const origD = r.diameter || 24;
+  const origH = r.height || 8;
+  const scale = calcVolScale(origD, origH, newD, newH);
+  const pct = Math.round(scale * 100);
+
+  if (!r.ingredients?.length) {
+    document.getElementById('detCalcResult').innerHTML = '<p style="color:var(--text-light);margin-top:12px;font-style:italic">Brak składników do przeliczenia.</p>';
+    return;
+  }
+
+  const rows = r.ingredients.map(i => {
+    const scaled = (parseFloat(i.amount) * scale).toFixed(1).replace(/\.0$/, '');
+    const changed = Math.abs(scale - 1) > 0.01;
+    return `<div class="ingredient-row ${changed ? 'scaled' : ''}">
+      <span class="ingredient-name">${i.name}</span>
+      <span class="ingredient-amt">${scaled}</span>
+      <span class="ingredient-unit">${i.unit || ''}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('detCalcResult').innerHTML = `
+    <div class="calc-result" style="margin-top:14px;">
+      <h4>📋 Wynik skalowania</h4>
+      <span class="scale-badge">Skala: ×${scale.toFixed(2)} (${pct}%)</span>
+      <div class="ingredients-list">${rows}</div>
+    </div>`;
+}
+
+function populateCalcSelect() {
+  const sel = document.getElementById('calcRecipeSelect');
+  const recipes = DB.getRecipes();
+  sel.innerHTML = '<option value="">— wybierz przepis —</option>';
+  recipes.forEach(r => { sel.innerHTML += `<option value="${r.id}">${r.name}</option>`; });
+}
+
+function updateCalcIngredients() {
+  document.getElementById('calcPageResult').style.display = 'none';
+  calcScale();
+}
+
+function calcScale() {
+  const selId = document.getElementById('calcRecipeSelect')?.value;
+  if (!selId) return;
+  const r = DB.getRecipes().find(x => x.id === selId);
+  if (!r || !r.ingredients?.length) return;
+
+  const origD = parseFloat(document.getElementById('calcOrigDiam').value) || 24;
+  const origH = parseFloat(document.getElementById('calcOrigH').value) || 8;
+  const newD = parseFloat(document.getElementById('calcNewDiam').value) || 24;
+  const newH = parseFloat(document.getElementById('calcNewH').value) || 8;
+  const scale = calcVolScale(origD, origH, newD, newH);
+
+  const rows = r.ingredients.map(i => {
+    const scaled = (parseFloat(i.amount) * scale).toFixed(1).replace(/\.0$/, '');
+    return `<div class="ingredient-row scaled">
+      <span class="ingredient-name">${i.name}</span>
+      <span class="ingredient-amt">${scaled}</span>
+      <span class="ingredient-unit">${i.unit || ''}</span>
+    </div>`;
+  }).join('');
+
+  const res = document.getElementById('calcPageResult');
+  res.style.display = 'block';
+  res.querySelector('h4').textContent = `📋 ${r.name} — skala ×${scale.toFixed(2)}`;
+  document.getElementById('calcPageIngredients').innerHTML = rows;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADD / EDIT MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(id = null) {
+  editingId = id;
+  newPhotoData = null;
+  document.getElementById('photoPreview').className = 'img-preview';
+  document.getElementById('fPhoto').value = '';
+
+  if (id) {
+    const r = DB.getRecipes().find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('modalTitle').textContent = '✏️ Edytuj przepis';
+    document.getElementById('fName').value = r.name || '';
+    document.getElementById('fCategory').value = r.category || 'Inny';
+    document.getElementById('fDiam').value = r.diameter || 24;
+    document.getElementById('fHeight').value = r.height || 8;
+    document.getElementById('fPrepTime').value = r.prepTime || 60;
+    document.getElementById('fBakeTime').value = r.bakeTime || 45;
+    document.getElementById('fDesc').value = r.desc || '';
+    if (r.photo) {
+      newPhotoData = r.photo;
+      const prev = document.getElementById('photoPreview');
+      prev.src = r.photo; prev.className = 'img-preview visible';
+    }
+    renderIngredientRows(r.ingredients || []);
+    renderStepRows(r.steps || []);
+  } else {
+    document.getElementById('modalTitle').textContent = '🎂 Nowy przepis';
+    ['fName','fDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fCategory').value = 'Czekoladowy';
+    document.getElementById('fDiam').value = 24;
+    document.getElementById('fHeight').value = 8;
+    document.getElementById('fPrepTime').value = 60;
+    document.getElementById('fBakeTime').value = 45;
+    renderIngredientRows([{name:'',amount:'',unit:''}]);
+    renderStepRows([{title:'',desc:'',time:''}]);
+  }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingId = null;
+}
+
+function previewPhoto() {
+  const file = document.getElementById('fPhoto').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    newPhotoData = e.target.result;
+    const prev = document.getElementById('photoPreview');
+    prev.src = newPhotoData; prev.className = 'img-preview visible';
+  };
+  reader.readAsDataURL(file);
+}
+
+// DYNAMIC ROWS
+function renderIngredientRows(items) {
+  const list = document.getElementById('ingredientsList');
+  list.innerHTML = '';
+  items.forEach((i, idx) => addIngredientRow(i, idx));
+}
+function addIngredientRow(item = {}) {
+  const list = document.getElementById('ingredientsList');
+  const row = document.createElement('div');
+  row.className = 'dyn-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Składnik" value="${item.name || ''}" data-key="name" style="flex:2">
+    <input type="text" placeholder="Ilość" value="${item.amount || ''}" data-key="amount" style="width:90px;flex:none">
+    <input type="text" placeholder="Jednostka" value="${item.unit || ''}" data-key="unit" style="width:90px;flex:none">
+    <button class="btn-remove-row" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(row);
+}
+
+function renderStepRows(items) {
+  const list = document.getElementById('stepsList');
+  list.innerHTML = '';
+  items.forEach(s => addStepRow(s));
+}
+function addStepRow(item = {}) {
+  const list = document.getElementById('stepsList');
+  const row = document.createElement('div');
+  row.className = 'dyn-row';
+  row.style.alignItems = 'flex-start';
+  row.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+      <input type="text" placeholder="Tytuł kroku" value="${item.title || ''}" data-key="title">
+      <textarea placeholder="Opis..." data-key="desc">${item.desc || ''}</textarea>
+      <input type="number" placeholder="Czas (min)" value="${item.time || ''}" data-key="time" style="width:130px">
+    </div>
+    <button class="btn-remove-row" onclick="this.parentElement.remove()" style="margin-top:4px">✕</button>`;
+  list.appendChild(row);
+}
+
+function collectIngredients() {
+  return [...document.querySelectorAll('#ingredientsList .dyn-row')].map(row => ({
+    name: row.querySelector('[data-key=name]').value.trim(),
+    amount: row.querySelector('[data-key=amount]').value.trim(),
+    unit: row.querySelector('[data-key=unit]').value.trim(),
+  })).filter(i => i.name);
+}
+function collectSteps() {
+  return [...document.querySelectorAll('#stepsList .dyn-row')].map(row => ({
+    title: row.querySelector('[data-key=title]').value.trim(),
+    desc: row.querySelector('[data-key=desc]').value.trim(),
+    time: row.querySelector('[data-key=time]').value.trim(),
+  })).filter(s => s.title || s.desc);
+}
+
+function saveRecipe() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { showToast('Podaj nazwę tortu!'); return; }
+
+  const recipe = {
+    id: editingId || 'r_' + Date.now(),
+    name,
+    category: document.getElementById('fCategory').value,
+    diameter: parseFloat(document.getElementById('fDiam').value) || 24,
+    height: parseFloat(document.getElementById('fHeight').value) || 8,
+    prepTime: parseInt(document.getElementById('fPrepTime').value) || 0,
+    bakeTime: parseInt(document.getElementById('fBakeTime').value) || 0,
+    desc: document.getElementById('fDesc').value.trim(),
+    photo: newPhotoData || null,
+    ingredients: collectIngredients(),
+    steps: collectSteps(),
+    createdAt: editingId ? undefined : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  let recipes = DB.getRecipes();
+  if (editingId) {
+    const idx = recipes.findIndex(r => r.id === editingId);
+    if (idx >= 0) { recipe.createdAt = recipes[idx].createdAt; recipes[idx] = recipe; }
+  } else {
+    recipes.push(recipe);
+  }
+  DB.saveRecipes(recipes);
+  closeModal();
+  renderRecipes();
+  showToast(editingId ? '✅ Przepis zaktualizowany!' : '🎂 Przepis dodany!');
+}
+
+function deleteRecipe(id) {
+  if (!confirm('Na pewno usunąć ten przepis?')) return;
+  let recipes = DB.getRecipes().filter(r => r.id !== id);
+  DB.saveRecipes(recipes);
+  renderRecipes();
+  showToast('🗑 Przepis usunięty.');
+}
+
+// ════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════════════════════════════════════
+//  CLOSE MODAL ON OUTSIDE CLICK
+// ════════════════════════════════════════════════════════════
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ════════════════════════════════════════════════════════════
+//  SAMPLE DATA (tylko jeśli baza jest pusta)
+// ════════════════════════════════════════════════════════════
+function seedSampleData() {
+  if (DB.getRecipes().length > 0) return;
+  DB.saveRecipes([{
+    id: 'r_sample1',
+    name: 'Tort czekoladowy z malinami',
+    category: 'Czekoladowy',
+    diameter: 24, height: 10,
+    prepTime: 45, bakeTime: 50,
+    desc: 'Klasyczny, wilgotny biszkopt czekoladowy przełożony kremem mascarpone z malinami. Idealny na urodziny!',
+    photo: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ingredients: [
+      {name:'Mąka pszenna', amount:'300', unit:'g'},
+      {name:'Kakao', amount:'60', unit:'g'},
+      {name:'Cukier', amount:'250', unit:'g'},
+      {name:'Masło', amount:'200', unit:'g'},
+      {name:'Jajka', amount:'4', unit:'szt'},
+      {name:'Mleko', amount:'200', unit:'ml'},
+      {name:'Proszek do pieczenia', amount:'2', unit:'łyżeczki'},
+      {name:'Mascarpone', amount:'500', unit:'g'},
+      {name:'Maliny', amount:'300', unit:'g'},
+      {name:'Śmietana 36%', amount:'200', unit:'ml'},
+    ],
+    steps: [
+      {title:'Biszkopt', desc:'Roztop masło, wymieszaj z cukrem i jajkami. Dodaj przesiane kakao, mąkę i proszek. Wlej mleko, mieszaj do gładkości.', time:'15'},
+      {title:'Pieczenie', desc:'Przelej ciasto do formy wyłożonej papierem. Piecz w 175°C przez 45-50 minut. Sprawdź patyczkiem.', time:'50'},
+      {title:'Krem mascarpone', desc:'Ubij śmietanę na sztywno. Wymieszaj mascarpone z cukrem pudrem, a następnie delikatnie połącz ze śmietaną.', time:'15'},
+      {title:'Przełożenie', desc:'Biszkopt przekrój na 3 blaty. Każdy blat nasącz syropem i przełóż kremem z malinami.', time:'20'},
+      {title:'Dekoracja', desc:'Obłóż tort kremem z zewnątrz. Udekoruj świeżymi malinami i wiórkami czekolady.', time:'20'},
+    ]
+  }]);
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+seedSampleData();
+renderRecipes();
+</script>
+</body>
+</html>

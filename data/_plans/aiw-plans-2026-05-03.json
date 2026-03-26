@@ -1,0 +1,283 @@
+[
+  {
+    "id": "plan-arena-hub",
+    "title": "Arena — hub nawigacyjny (index.html)",
+    "section": "w-toku",
+    "tag": "act i",
+    "description": "Główny punkt wejścia areny — multi-model hub z nawigacją.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-ah-01",
+        "text": "t01 — nawigacja i routing",
+        "done": false,
+        "meta": "arena-hub",
+        "subtasks": []
+      },
+      {
+        "id": "t-ah-02",
+        "text": "t02 — layout i komponenty",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ah-03",
+        "text": "t03 — treść i opisy modeli",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ah-04",
+        "text": "t04 — deploy i testy",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-genesis-pass",
+    "title": "Genesis — mechanizm zatwierdzania paczek",
+    "section": "w-toku",
+    "tag": "act i",
+    "description": "Integracja z AiWPass i łańcuchem blockchain.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-gp-01",
+        "text": "Integracja z AiWPass",
+        "done": false,
+        "meta": "blockchain",
+        "subtasks": []
+      },
+      {
+        "id": "t-gp-02",
+        "text": "Mechanizm zatwierdzania paczek",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-stamps-lineage",
+    "title": "Stamps — import pieczątek z lineage",
+    "section": "w-toku",
+    "tag": "act i",
+    "description": "Czyta contributors z manifest.json modułów.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-sl-01",
+        "text": "Parser manifest.json → contributors",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-sl-02",
+        "text": "Rendering pieczątek w stamps.html",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-data-rename",
+    "title": ".data/ — przemianowanie ihub → arena, morph → soul",
+    "section": "w-toku",
+    "tag": "tech",
+    "description": "Otwarte z sesji: nowe-fundamenty.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-dr-01",
+        "text": "Rename ihub → arena w .data/",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-dr-02",
+        "text": "Rename morph → soul w .data/",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-dr-03",
+        "text": "Zaktualizować ścieżki w engines/",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-profile-radar",
+    "title": "Profile — wykres radarowy z danych sesji AiWPass",
+    "section": "pomysly",
+    "tag": "act i",
+    "description": "9 metryk · agregacja z dziennika.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-pr-01",
+        "text": "Agregacja 9 metryk z AiWPass JSON",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-pr-02",
+        "text": "Wykres radarowy (Canvas lub SVG)",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-pr-03",
+        "text": "Animacja i interaktywność",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-index-manifest",
+    "title": "index.html — manifest-driven rendering węzłów",
+    "section": "pomysly",
+    "tag": "arch",
+    "description": "Węzły generowane dynamicznie z manifest.json per moduł.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-im-01",
+        "text": "Loader manifest.json per moduł",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-im-02",
+        "text": "Generowanie węzłów DOM z danych",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-moral-oracle",
+    "title": "moral-oracle.html — plik planowany",
+    "section": "pomysly",
+    "tag": "arena",
+    "description": "Linkowany z oracle-hub.html w arena.",
+    "created": "2026-04-20",
+    "updated": "2026-05-03",
+    "tasks": [
+      {
+        "id": "t-mo-01",
+        "text": "Projekt i scope moral-oracle",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-mo-02",
+        "text": "Implementacja i linkowanie",
+        "done": false,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-reorg",
+    "title": "Reorganizacja struktury — act1, nazewnictwo, linki",
+    "section": "ukonczone",
+    "tag": "",
+    "description": "sesja cc-2026-04-20 · nowe-fundamenty",
+    "created": "2026-04-20",
+    "updated": "2026-04-20",
+    "tasks": [
+      {
+        "id": "t-rg-01",
+        "text": "Reorganizacja act1",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-rg-02",
+        "text": "Nowe nazewnictwo",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-rg-03",
+        "text": "Aktualizacja linków",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  },
+  {
+    "id": "plan-manifests-act1",
+    "title": "Manifesty dla wszystkich modułów act1",
+    "section": "ukonczone",
+    "tag": "",
+    "description": "arena, breath, genesis, profile, stamps ✓",
+    "created": "2026-04-20",
+    "updated": "2026-04-20",
+    "tasks": [
+      {
+        "id": "t-ma-01",
+        "text": "manifest.json: arena",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ma-02",
+        "text": "manifest.json: breath",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ma-03",
+        "text": "manifest.json: genesis",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ma-04",
+        "text": "manifest.json: profile",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      },
+      {
+        "id": "t-ma-05",
+        "text": "manifest.json: stamps",
+        "done": true,
+        "meta": "",
+        "subtasks": []
+      }
+    ]
+  }
+]

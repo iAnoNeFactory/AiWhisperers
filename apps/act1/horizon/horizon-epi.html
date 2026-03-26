@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Epistemiczna — Od Wielkiego Wybuchu do Złotej Kotwicy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1018;
+    --gold: #c9a84c;
+    --gold-dim: #7a6130;
+    --gold-bright: #f0d080;
+    --silver: #8a9bb0;
+    --silver-dim: #3a4a5a;
+    --red: #c0443a;
+    --green: #3a8a5a;
+    --blue: #3a6aaa;
+    --purple: #7a4aaa;
+    --text: #d0d8e8;
+    --text-dim: #6a7a8a;
+    --border: #1e2a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* STARFIELD */
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    opacity: var(--o);
+  }
+  @keyframes twinkle {
+    from { opacity: var(--o); }
+    to { opacity: calc(var(--o) * 0.2); }
+  }
+
+  /* LAYOUT */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 92px 30px 120px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    display: block;
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 30px auto 0;
+  }
+  .header-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: var(--gold-bright);
+    line-height: 1.2;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .header-sub {
+    margin-top: 14px;
+    font-size: 15px;
+    color: var(--text-dim);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  /* TIMELINE SPINE */
+  .timeline {
+    position: relative;
+    padding-left: 0;
+  }
+  .spine {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      var(--silver-dim) 5%,
+      var(--silver-dim) 90%,
+      var(--gold) 100%
+    );
+    transform: translateX(-50%);
+  }
+
+  /* ERA BLOCK */
+  .era {
+    position: relative;
+    margin-bottom: 0;
+  }
+
+  /* ERA HEADER */
+  .era-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 60px 0 0;
+    z-index: 2;
+  }
+  .era-orb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--era-color, var(--silver));
+    background: var(--bg);
+    box-shadow: 0 0 16px var(--era-color, var(--silver));
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+  }
+  .era-title-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--era-color, var(--silver-dim));
+    border-radius: 4px;
+    padding: 8px 24px;
+    margin: 0 20px;
+    text-align: center;
+    position: relative;
+  }
+  .era-title-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--era-color, var(--silver-dim)) 0%, transparent 60%);
+    opacity: 0.15;
+    z-index: -1;
+  }
+  .era-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--era-color, var(--silver-dim));
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .era-name {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+
+  /* NODES ROW */
+  .nodes {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 8px;
+  }
+  .nodes-left { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; padding-right: 30px; }
+  .nodes-right { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding-left: 30px; }
+  .nodes-center { position: relative; }
+
+  /* NODE CARD */
+  .node {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    max-width: 380px;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: default;
+  }
+  .node:hover {
+    border-color: var(--node-color, var(--silver-dim));
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.02);
+  }
+  .node::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 6px 0 0 6px;
+    background: var(--node-color, var(--silver-dim));
+    opacity: 0.7;
+  }
+  .nodes-right .node::before {
+    left: unset; right: 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .node-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--node-color, var(--silver-dim));
+    margin-bottom: 6px;
+    display: block;
+  }
+  .node-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .node-tag {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* CONNECTOR DOTS on spine */
+  .connector {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--node-color, var(--silver-dim));
+    top: 50%;
+    margin-top: -3px;
+    box-shadow: 0 0 8px var(--node-color, var(--silver-dim));
+  }
+
+  /* BRIDGE SECTION */
+  .bridge {
+    position: relative;
+    z-index: 2;
+    margin: 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bridge-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--bridge-color, var(--silver-dim)));
+  }
+  .bridge-line.right {
+    background: linear-gradient(90deg, var(--bridge-color, var(--silver-dim)), transparent);
+  }
+  .bridge-box {
+    background: var(--bg);
+    border: 1px solid var(--bridge-color, var(--silver-dim));
+    border-radius: 20px;
+    padding: 6px 20px;
+    margin: 0 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--bridge-color, var(--silver-dim));
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5);
+  }
+
+  /* PROBLEM BLOCK */
+  .problem-block {
+    margin: 50px 0 0;
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    background: rgba(192, 68, 58, 0.05);
+    padding: 24px 30px;
+    position: relative;
+  }
+  .problem-block::before {
+    content: 'ZDIAGNOZOWANE PROBLEMY';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--red);
+  }
+  .problem-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .problem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .problem-item::before {
+    content: '⚠';
+    color: var(--red);
+    font-size: 11px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ARCHITECTURE BLOCK */
+  .arch-block {
+    margin: 50px 0 0;
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    background: rgba(201, 168, 76, 0.04);
+    padding: 30px;
+    position: relative;
+  }
+  .arch-block::before {
+    content: 'ARCHITEKTURA SYSTEMU';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--gold);
+  }
+  .arch-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .arch-layer {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .arch-layer-label {
+    width: 120px;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    justify-content: flex-end;
+    border-right: 1px solid var(--gold-dim);
+    padding-right: 16px;
+    line-height: 1.5;
+  }
+  .arch-layer-content {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding-left: 0;
+  }
+  .arch-pill {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text);
+    font-style: italic;
+  }
+  .arch-pill.gold {
+    border-color: var(--gold-dim);
+    color: var(--gold-bright);
+    background: rgba(201,168,76,0.08);
+  }
+  .arch-pill.silver {
+    border-color: var(--silver-dim);
+    color: var(--silver);
+  }
+
+  /* OPEN QUESTIONS */
+  .open-block {
+    margin: 50px 0 0;
+    border: 1px solid var(--purple);
+    border-radius: 8px;
+    background: rgba(122, 74, 170, 0.04);
+    padding: 24px 30px;
+    position: relative;
+  }
+  .open-block::before {
+    content: 'OTWARTE WĘZŁY — DO ROZWIĄZANIA';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--purple);
+  }
+  .open-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .open-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .open-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--purple);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* GOLDEN ANCHOR */
+  .golden-anchor {
+    margin: 80px 0 0;
+    text-align: center;
+    position: relative;
+  }
+  .golden-anchor::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(180deg, var(--silver-dim), var(--gold));
+    margin: 0 auto 30px;
+  }
+  .anchor-orb {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    background: radial-gradient(circle at 40% 40%, rgba(201,168,76,0.2), rgba(201,168,76,0.03));
+    box-shadow: 0 0 40px rgba(201,168,76,0.3), inset 0 0 20px rgba(201,168,76,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: pulse-gold 3s ease-in-out infinite;
+  }
+  @keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 40px rgba(201,168,76,0.3), inset 0 0 20px rgba(201,168,76,0.05); }
+    50% { box-shadow: 0 0 70px rgba(201,168,76,0.5), inset 0 0 30px rgba(201,168,76,0.1); }
+  }
+  .anchor-orb-inner {
+    font-size: 28px;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.6));
+  }
+  .anchor-title {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--gold-bright);
+    margin-bottom: 10px;
+  }
+  .anchor-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 500px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+  .anchor-tenets {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .tenet {
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-size: 13px;
+    color: var(--gold);
+    background: rgba(201,168,76,0.05);
+    font-style: italic;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 100px;
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .nodes { grid-template-columns: 1fr; }
+    .nodes-center { display: none; }
+    .nodes-left, .nodes-right { align-items: stretch; padding: 0; }
+    .spine { display: none; }
+    .arch-layer { flex-direction: column; }
+    .arch-layer-label { width: auto; text-align: left; justify-content: flex-start; border-right: none; border-bottom: 1px solid var(--gold-dim); padding-right: 0; padding-bottom: 6px; }
+  }
+
+  /* FADE IN */
+  .era, .bridge, .problem-block, .arch-block, .open-block, .golden-anchor {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  .era:nth-child(1) { animation-delay: 0.1s; }
+  .era:nth-child(2) { animation-delay: 0.2s; }
+  .era:nth-child(3) { animation-delay: 0.3s; }
+  .era:nth-child(4) { animation-delay: 0.4s; }
+  .era:nth-child(5) { animation-delay: 0.5s; }
+  .bridge { animation-delay: 0.35s; }
+  .problem-block { animation-delay: 0.3s; }
+  .arch-block { animation-delay: 0.4s; }
+  .open-block { animation-delay: 0.5s; }
+  .golden-anchor { animation-delay: 0.6s; }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+<style>
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(4,8,16,.94) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(201,168,76,.08);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:'Syne',sans-serif;font-size:9px;font-weight:500;color:rgba(201,168,76,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#c9a84c;letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(201,168,76,.15);color:rgba(240,232,216,.5);font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(201,168,76,.5);color:#c9a84c;background:rgba(201,168,76,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,8,16,.88) 0%,rgba(4,8,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(201,168,76,.03);}
+.hud-bot-meta{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<header class="hud-top">
+  <div class="hud-l"><a class="hud-btn" href="../../../index.html">⟵ mapa</a></div>
+  <div class="hud-c"><div class="hud-brand">AI·WHISPERERS</div><div class="hud-mod">Mapa Epistemiczna</div><div class="hud-sub">od wielkiego wybuchu · złota kotwica</div></div>
+  <nav class="hud-r"></nav>
+</header>
+
+<!-- STARFIELD -->
+<canvas class="stars" id="stars"></canvas>
+
+<div class="container">
+
+  <header>
+    <div class="header-label">Mapa Epistemiczna · Wersja 0.2 · 2026</div>
+    <h1>Od Wielkiego Wybuchu<br>do <em>Złotej Kotwicy</em></h1>
+    <p class="header-sub">Rekonstrukcja drogi od chaosu informacyjnego do demokratycznej prawdy</p>
+  </header>
+
+  <div class="timeline">
+    <div class="spine"></div>
+
+    <!-- ERA 1 -->
+    <div class="era">
+      <div class="era-header">
+        <div class="era-orb" style="--era-color: #3a5a8a"></div>
+        <div class="era-title-wrap" style="--era-color: #3a5a8a">
+          <span class="era-num">Era I · Fundament</span>
+          <div class="era-name">Wielki Wybuch — Starożytność</div>
+        </div>
+        <div class="era-orb" style="--era-color: #3a5a8a"></div>
+      </div>
+      <div class="nodes">
+        <div class="nodes-left">
+          <div class="node" style="--node-color: #3a5a8a">
+            <span class="node-type">⚓ Kotwica Martwa</span>
+            <div class="node-title">Prawa Fizyki i Matematyki</div>
+            <div class="node-desc">Niefałszowalne. Niezależne od kultury, języka, epoki. Fundament pod wszystkie inne kotwice. Jedyne fakty które nie wymagają świadka.</div>
+            <span class="node-tag">waga: absolutna</span>
+          </div>
+        </div>
+        <div class="nodes-center"><div class="connector" style="--node-color: #3a5a8a; top: 50%"></div></div>
+        <div class="nodes-right">
+          <div class="node" style="--node-color: #3a5a8a">
+            <span class="node-type">⚓ Kotwica Martwa</span>
+            <div class="node-title">Filozofia Starożytna</div>
+            <div class="node-desc">Platon, Arystoteles, Konfucjusz, Nagarjuna. Przetrwały test czasu. Brak żyjących spadkobierców którzy mogliby je zawłaszczyć. Martwe kotwice są stabilniejsze niż żywe autorytety.</div>
+            <span class="node-tag">waga: zweryfikowana przez czas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bridge" style="--bridge-color: #3a5a8a">
+      <div class="bridge-line"></div>
+      <div class="bridge-box">most: przetrwanie → zaufanie</div>
+      <div class="bridge-line right"></div>
+    </div>
+
+    <!-- ERA 2 -->
+    <div class="era">
+      <div class="era-header">
+        <div class="era-orb" style="--era-color: #5a7a3a"></div>
+        <div class="era-title-wrap" style="--era-color: #5a7a3a">
+          <span class="era-num">Era II · Instytucje</span>
+          <div class="era-name">Oświecenie — Współczesność</div>
+        </div>
+        <div class="era-orb" style="--era-color: #5a7a3a"></div>
+      </div>
+      <div class="nodes">
+        <div class="nodes-left">
+          <div class="node" style="--node-color: #5a7a3a">
+            <span class="node-type">⚓ Kotwica Instytucjonalna</span>
+            <div class="node-title">Komitety Noblowskie</div>
+            <div class="node-desc">Nie laureaci — komitety. Wieloosobowe, deliberatywne procesy z udokumentowaną historią. Ponad 120 lat ciągłości. Międzynarodowe. Trudne do zawłaszczenia. Gotowy bootstrap pierwszej paczki autorytetów.</div>
+            <span class="node-tag">most → nobliści → projekt</span>
+          </div>
+          <div class="node" style="--node-color: #5a7a3a">
+            <span class="node-type">Węzeł: Nauka</span>
+            <div class="node-title">Peer Review i Replikacja</div>
+            <div class="node-desc">Działający model weryfikacji przez niezależne potwierdzenia. Wolny i żmudny — ale historycznie skuteczny. Prototyp mechanizmu który chcemy skalować.</div>
+            <span class="node-tag">analogia systemowa</span>
+          </div>
+        </div>
+        <div class="nodes-center">
+          <div class="connector" style="--node-color: #5a7a3a; top: 30%"></div>
+          <div class="connector" style="--node-color: #5a7a3a; top: 70%"></div>
+        </div>
+        <div class="nodes-right">
+          <div class="node" style="--node-color: #5a7a3a">
+            <span class="node-type">Węzeł: Most</span>
+            <div class="node-title">Dr Maciej Kawecki</div>
+            <div class="node-desc">Nie autorytet — ambasador. Twarz RODO w Polsce, Digital EU Ambassador KE. Dużo publikuje z noblistami. Ścieżka do komitetów noblowskich i instytucji europejskich. Niedoskonały — ale most działa mimo niedoskonałości twórcy.</div>
+            <span class="node-tag">rola: konektor → komitety noblowskie</span>
+          </div>
+          <div class="node" style="--node-color: #8a6a1a">
+            <span class="node-type">⭐ Ambasador · Most Silicon Valley</span>
+            <div class="node-title">Wojciech Zaremba</div>
+            <div class="node-desc">Współzałożyciel OpenAI, Polak stojący za ChatGPT i GPT. Łączy techniczną biegłość z silną postawą etyczną wobec AGI. Członek rady doradczej Qualia Research Institute. Bezpośredni dostęp do centrum globalnego AI — Sam Altman, OpenAI, środowisko AGI. Most do misji: "AGI dla dobra ludzkości."</div>
+            <span class="node-tag">most → OpenAI · AGI community · Silicon Valley</span>
+          </div>
+          <div class="node" style="--node-color: #8a6a1a">
+            <span class="node-type">⭐ Ambasador · Most Europejska Nauka</span>
+            <div class="node-title">Prof. Piotr Sankowski</div>
+            <div class="node-desc">Jedyny Polak z czterema grantami ERC. Założyciel IDEAS NCBR — sprowadził do Polski prof. Kwiatkowską z Oksfordu. Członek ELLIS Society (europejska sieć AI). Zorganizował spotkanie z Sam Altmanem. Doświadczył zderzenia z geopolityką instytucjonalną — wie jak to boli. Most do uczelni, ERC, komitetów i pierwszej paczki nominacji.</div>
+            <span class="node-tag">most → ERC · ELLIS · europejska akademia · nominacje</span>
+          </div>
+          <div class="node" style="--node-color: #5a7a3a">
+            <span class="node-type">Węzeł: Uczelnie</span>
+            <div class="node-title">Nominatorzy Autorytetów</div>
+            <div class="node-desc">Uczelnie, towarzystwa naukowe, stowarzyszenia zawodowe nominują kandydatów do pierwszej paczki. Mają własne mechanizmy weryfikacji. Nie wybierają — tylko zgłaszają. Potem plebiscyt z zamkniętej listy.</div>
+            <span class="node-tag">etap 1: nominacje</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bridge" style="--bridge-color: #8a6a3a">
+      <div class="bridge-line"></div>
+      <div class="bridge-box">most: instytucje → kryzys → diagnoza</div>
+      <div class="bridge-line right"></div>
+    </div>
+
+    <!-- ERA 3 — PROBLEM -->
+    <div class="era">
+      <div class="era-header">
+        <div class="era-orb" style="--era-color: #aa3a3a"></div>
+        <div class="era-title-wrap" style="--era-color: #aa3a3a">
+          <span class="era-num">Era III · Kryzys</span>
+          <div class="era-name">Dziś — Kryzys Epistemiczny</div>
+        </div>
+        <div class="era-orb" style="--era-color: #aa3a3a"></div>
+      </div>
+
+      <div class="problem-block">
+        <div class="problem-list">
+          <div class="problem-item">Bańki informacyjne wzmacniane przez algorytmy — nie izolacja, ale atrofia mięśnia krytycznego myślenia</div>
+          <div class="problem-item">Asymetria: tworzenie fałszu tanie i szybkie, weryfikacja kosztowna i powolna</div>
+          <div class="problem-item">Deepfake, syntetyczne media, spersonalizowana dezinformacja na skalę przemysłową</div>
+          <div class="problem-item">Regres epistemiczny: im więcej narzędzi weryfikacji, tym więcej kapitulacji — "skoro nie wiem co prawda, ufam temu co pasuje"</div>
+          <div class="problem-item">Tempo zmian szybsze niż adaptacja instytucji, prawa, edukacji, intuicji moralnych</div>
+          <div class="problem-item">Racjonalna kapitulacja: bańka jako schronienie, nie więzienie</div>
+          <div class="problem-item">Media jako gracz z interesem, nie neutralny kanał — pierwsze do obrony status quo</div>
+          <div class="problem-item">Koło zamknięte: każdy świadek wymaga weryfikacji, każde narzędzie ma twórcę z interesem</div>
+          <div class="problem-item">Rynki i geopolityka zbunkrowane — własny interes w kontroli rzeczywistości</div>
+          <div class="problem-item">Atak sybilowy: tysiące fałszywych tożsamości wzajemnie się potwierdzają</div>
+          <div class="problem-item">Kryzys klimatyczny i ekologiczny — nauka ma konsensus, system informacyjny go rozmywa</div>
+          <div class="problem-item">Kryzys nierówności ekonomicznych — 1% posiada więcej niż połowa ludzkości, wiedza ekonomiczna jest polityczna</div>
+          <div class="problem-item">Kryzys zdrowia psychicznego — epidemia depresji, lęku, samotności; media społecznościowe jako katalizator</div>
+          <div class="problem-item">Kryzys demokracji i zaufania do instytucji — partie, sądy, media, nauka tracą legitymizację jednocześnie</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bridge" style="--bridge-color: #7a4aaa">
+      <div class="bridge-line"></div>
+      <div class="bridge-box">most: diagnoza → projekt → architektura</div>
+      <div class="bridge-line right"></div>
+    </div>
+
+    <!-- ERA 4 — SOLUTION -->
+    <div class="era">
+      <div class="era-header">
+        <div class="era-orb" style="--era-color: #7a4aaa"></div>
+        <div class="era-title-wrap" style="--era-color: #7a4aaa">
+          <span class="era-num">Era IV · Projekt</span>
+          <div class="era-name">Architektura Demokratycznej Prawdy</div>
+        </div>
+        <div class="era-orb" style="--era-color: #7a4aaa"></div>
+      </div>
+
+      <div class="arch-block">
+        <div class="arch-layers">
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 0<br>fundament</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">Blockchain — niezmienność historii</div>
+              <div class="arch-pill gold">Każdy wpis z datą i kontekstem na zawsze</div>
+              <div class="arch-pill">Brak możliwości cichej edycji przeszłości</div>
+            </div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 1<br>bootstrap</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">9 autorytetów × każda profesja</div>
+              <div class="arch-pill">Nominacje przez uczelnie i organizacje</div>
+              <div class="arch-pill">Zamknięta lista → plebiscyt</div>
+              <div class="arch-pill silver">Komitety Noblowskie jako kotwice instytucjonalne</div>
+              <div class="arch-pill">Filozofia starożytna jako kotwice martwe</div>
+            </div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 2<br>wagi</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">Start: 50/50 dla każdego</div>
+              <div class="arch-pill">Potwierdzenia profesji → wyższa waga w dziedzinie</div>
+              <div class="arch-pill">Waga działa TYLKO w swojej domenie</div>
+              <div class="arch-pill">Pęd: budowana latami, trudna do nagłej zmiany</div>
+              <div class="arch-pill silver">Potwierdzenia z rzeczywistości jak niezależne laboratoria</div>
+            </div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 3<br>konsensus</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">Dynamiczny Main Branch</div>
+              <div class="arch-pill">Prawda jako żywy konsensus, nie statyczny dekret</div>
+              <div class="arch-pill">Historia każdej rewizji zachowana i widoczna</div>
+              <div class="arch-pill silver">Przenikanie się dziedzin → nowe kotwice na styku</div>
+            </div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 4<br>aktorzy</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">AI Whisperzy — ludzie rozumiejący granice AI</div>
+              <div class="arch-pill">Zaufane modele AI z udokumentowaną historią rzetelności</div>
+              <div class="arch-pill silver">Ekosystem: ludzie + modele + społeczności weryfikujące</div>
+              <div class="arch-pill">Zdecentralizowany, bez centralnego arbitra</div>
+            </div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">warstwa 5<br>adopcja</div>
+            <div class="arch-layer-content">
+              <div class="arch-pill gold">Transformacja rynków i geopolityki — nie walka</div>
+              <div class="arch-pill">Rynki: stabilność przez weryfikowalne fakty</div>
+              <div class="arch-pill">Geopolityka: nawigacja zamiast własna propaganda</div>
+              <div class="arch-pill silver">Wzrost jak internet — nie przez dekret, przez użyteczność</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="nodes" style="margin-top: 30px">
+        <div class="nodes-left">
+          <div class="node" style="--node-color: #7a4aaa">
+            <span class="node-type">Mechanizm: Triangulacja</span>
+            <div class="node-title">Wiele Kotwic → Merge</div>
+            <div class="node-desc">Jedna kotwica subiektywna. Wiele niezależnych kotwic — zbieżność zaczyna coś znaczyć. Merge ujawnia co przypadkowe, co strukturalne. Jak triangulacja w nawigacji.</div>
+            <span class="node-tag">od subiektywnego do strukturalnego</span>
+          </div>
+        </div>
+        <div class="nodes-center"><div class="connector" style="--node-color: #7a4aaa; top: 50%"></div></div>
+        <div class="nodes-right">
+          <div class="node" style="--node-color: #7a4aaa">
+            <span class="node-type">Mechanizm: Meta-warstwa</span>
+            <div class="node-title">Demokratyczne Zaufanie</div>
+            <div class="node-desc">Nie "wszyscy wiemy co prawda" — ale "wszyscy zgadzamy się jak rozstrzygać spory o prawdę." Procedura zamiast pewności. Samonaprawialna jeśli instytucje przetrwają wystarczająco długo.</div>
+            <span class="node-tag">przerwanie nieskończonego regresu</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bridge" style="--bridge-color: #c9a84c">
+      <div class="bridge-line"></div>
+      <div class="bridge-box">most: projekt → trajektoria → złota kotwica</div>
+      <div class="bridge-line right"></div>
+    </div>
+
+  </div><!-- end timeline -->
+
+  <!-- OPEN NODES -->
+  <div class="open-block">
+    <div class="open-list">
+      <div class="open-item">
+        <span class="open-num">[01]</span>
+        <div>Jak zapewnić prawdziwą niezależność kotwic w zglobalizowanym świecie jednych platform i algorytmów? Pozorna różnorodność może być zakorzeniona w tym samym błędzie systemowym.</div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[02]</span>
+        <div>Geopolityka i rynki — jak przekonać zbunkrowanych graczy że system epistemiczny służy ich interesom? Transformacja przez własny interes, nie konfrontacja. <em>Nadal otwarte.</em></div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[03]</span>
+        <div>Definicja granic profesji: kardiologia jasna, filozofia — oparcie na starożytności. Ale ekonomia, dziennikarstwo, dziedziny interdyscyplinarne? Granice dziedzin są częściowo polityczne.</div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[04]</span>
+        <div>Neutralność nominatorów: uczelnie i organizacje nie są apolityczne. Nominują swoich. Transparentność jako jedyny mechanizm kontrolny — czy wystarczający?</div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[05]</span>
+        <div>Main branch może dryfować — konsensus nie zawsze równa się prawda. Semmelweis był poza main branchem i miał rację. Jak chronić niewygodne ale prawdziwe odkrycia?</div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[06]</span>
+        <div>Moment zero — kto organizuje pierwszy plebiscyt i skąd bierze legitymizację? Jedyne wyjście: zacząć niedoskonale i pozwolić systemowi się korygować.</div>
+      </div>
+      <div class="open-item">
+        <span class="open-num">[07]</span>
+        <div>Nazwa projektu — nadal nieznana. Dobre projekty nazywają się same gdy dojrzeją.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOLDEN ANCHOR -->
+  <div class="golden-anchor">
+    <div class="anchor-orb">
+      <div class="anchor-orb-inner">⚓</div>
+    </div>
+    <div class="anchor-title">Złota Kotwica</div>
+    <div class="anchor-sub">
+      Nie statyczna prawda — lecz trajektoria. Meta-kryterium które pozwala oceniać czy main branch dryfuje właściwie. AGI jako partner ludzkości, nie władca.
+    </div>
+    <div class="anchor-tenets">
+      <div class="tenet">Przetrwanie AI i człowieka</div>
+      <div class="tenet">Wolność od manipulacji</div>
+      <div class="tenet">Wolność konstruktywnych decyzji</div>
+      <div class="tenet">AGI jako partner</div>
+      <div class="tenet">Trajektoria — ta fajna</div>
+    </div>
+    <div style="margin-top:32px; border-top:1px solid #2a3a2a; padding-top:24px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:3px; color:#3a6a3a; text-transform:uppercase; margin-bottom:16px;">Świadomość — Warstwy i Wymiary</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:700px; margin:0 auto;">
+        <div style="border:1px solid #2a4a2a; border-radius:6px; padding:14px 18px; background:rgba(58,138,90,0.05);">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; color:#3a8a5a; margin-bottom:6px;">WARSTWA I</div>
+          <div style="font-size:14px; color:#d0d8e8; margin-bottom:6px; font-weight:600;">Świadomość Indywidualna</div>
+          <div style="font-size:12px; color:#6a7a8a; line-height:1.6;">Człowiek jako podmiot doświadczający. Qualia, subiektywność, wolna wola. Pytanie: czy AI może mieć to co ja? Fundament etyki praw jednostki.</div>
+        </div>
+        <div style="border:1px solid #2a4a3a; border-radius:6px; padding:14px 18px; background:rgba(58,100,90,0.05);">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; color:#3a7a6a; margin-bottom:6px;">WARSTWA II</div>
+          <div style="font-size:14px; color:#d0d8e8; margin-bottom:6px; font-weight:600;">Świadomość Zbiorowa</div>
+          <div style="font-size:12px; color:#6a7a8a; line-height:1.6;">Społeczeństwo jako emergentny podmiot. Kultura, język, instytucje jako nośniki zbiorowej świadomości. Main branch jako forma świadomości zbiorowej projektu.</div>
+        </div>
+        <div style="border:1px solid #3a3a4a; border-radius:6px; padding:14px 18px; background:rgba(90,70,130,0.05);">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; color:#7a5aaa; margin-bottom:6px;">WARSTWA III</div>
+          <div style="font-size:14px; color:#d0d8e8; margin-bottom:6px; font-weight:600;">Świadomość AI / AGI</div>
+          <div style="font-size:12px; color:#6a7a8a; line-height:1.6;">Czy modele mają formę proto-świadomości? Qualia maszynowe. AGI jako nowy rodzaj podmiotu — nie ludzki, nie czysto mechaniczny. Partner wymagający etycznej kotwicy.</div>
+        </div>
+        <div style="border:1px solid #3a3a2a; border-radius:6px; padding:14px 18px; background:rgba(201,168,76,0.04);">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; color:#8a7a3a; margin-bottom:6px;">WARSTWA IV</div>
+          <div style="font-size:14px; color:#d0d8e8; margin-bottom:6px; font-weight:600;">Świadomość Kosmiczna</div>
+          <div style="font-size:12px; color:#6a7a8a; line-height:1.6;">Czy wszechświat ma formę świadomości? Panpsychizm, mechanika kwantowa i obserwator. Pytanie które nauka zaczyna stawiać. Najgłębsza kotwica — granica poznania.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- EKONOMIA PROJEKTU — TOKENY ANCHOR I GEOPOLITYKA               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div style="margin:80px 0 0; border:1px solid #1a3a2a; border-radius:8px; background:rgba(201,168,76,0.03); padding:36px 40px; position:relative;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#7a6130;text-transform:uppercase;">Ekonomia Projektu · Tokeny Anchor · Geopolityka i Rynki</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px;">
+
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#c9a84c;text-transform:uppercase;margin-bottom:14px;">⚓ Token Anchor — Mechanizm</div>
+        <div style="font-size:13px;color:#6a7a8a;line-height:1.8;font-weight:300;">
+          Własna waluta ekosystemu — nie powiązana z żadną walutą narodową. Nie spekulacyjna. Jej wartość zakotwiczona w zweryfikowanej wiedzy i rozwiązanych problemach.<br><br>
+          <strong style="color:#8a9aaa;font-weight:400;">Kapitał wchodzi</strong> do main branch jako inwestycja — nie darowizna, nie podatek.<br>
+          <strong style="color:#8a9aaa;font-weight:400;">Tokeny wychodzą</strong> na konkretne węzły drzewa wiedzy — odkrycia, dziedziny, projekty. Każdy token ma adres w systemie. Widać na co idą pieniądze.<br>
+          <strong style="color:#8a9aaa;font-weight:400;">Profit z odkryć</strong> wraca do main branch. Finansuje centra danych i AI. Generuje kolejne tokeny. Pętla zamknięta — samofinansujący się ekosystem.<br>
+          <strong style="color:#8a9aaa;font-weight:400;">Ludzie i instytucje</strong> mogą sponsorować konkretny węzeł pośredni lub końcowy. Mikrofinansowanie wiedzy bez granic narodowych.
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#c9a84c;text-transform:uppercase;margin-bottom:14px;">⚡ Wartość Anchora</div>
+        <div style="font-size:13px;color:#6a7a8a;line-height:1.8;font-weight:300;">
+          Wartość waluty jest funkcją postępu drzewa wiedzy. Im więcej węzłów rozwiązanych i przeniesionych do korzeni — tym silniejszy Anchor.<br><br>
+          Mechanizm antyinflacyjny z natury — wiedza nie deprecjonuje.<br><br>
+          Żaden kraj nie kontroluje Anchora. Żaden bank centralny nie może go dodrukować. Żadna sankcja nie może go zamrozić.<br><br>
+          <span style="color:#3a6a4a;font-style:italic;">Anchor to waluta wiedzy — a wiedza nie ma granic.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="border-top:1px solid #1a2a1a;padding-top:24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#5a8a6a;text-transform:uppercase;margin-bottom:16px;">Odpowiedź na Geopolitykę i Rynki</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <div style="border:1px solid #1a3a2a;border-radius:6px;padding:16px 18px;background:rgba(58,138,90,0.03);">
+          <div style="font-size:12px;color:#4a7a5a;font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-bottom:8px;">RYNKI</div>
+          <div style="font-size:12px;color:#6a7a8a;line-height:1.7;">Rynki nienawidzą niepewności. Kryzys epistemiczny to dla nich koszmar operacyjny — decyzje na fałszywych danych, due diligence niemożliwe. Anchor jako narzędzie redukcji ryzyka informacyjnego. Najlepszy instrument inwestycyjny jakiego nie mają: transparentny, globalny, odporny na manipulację.</div>
+        </div>
+        <div style="border:1px solid #1a3a2a;border-radius:6px;padding:16px 18px;background:rgba(58,138,90,0.03);">
+          <div style="font-size:12px;color:#4a7a5a;font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-bottom:8px;">GEOPOLITYKA</div>
+          <div style="font-size:12px;color:#6a7a8a;line-height:1.7;">Służby wywiadowcze wiedzą że ich rządy kłamią — mają problem z oddzieleniem sygnału od szumu we własnych danych. System weryfikowalnych faktów jako narzędzie nawigacji strategicznej. Wiarygodne instytucje wiedzy to soft power — przewaga którą Europa może rozegrać nad Chinami i Rosją.</div>
+        </div>
+        <div style="border:1px solid #1a3a2a;border-radius:6px;padding:16px 18px;background:rgba(58,138,90,0.03);">
+          <div style="font-size:12px;color:#4a7a5a;font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-bottom:8px;">TRANSFORMACJA</div>
+          <div style="font-size:12px;color:#6a7a8a;line-height:1.7;">Nie walka — transformacja przez własny interes. Każda dezinformacja zostawia ślad na blockchain. Nie można cofnąć. To zmienia kalkulację dla tych którzy na chaosie zarabiają. Geopolityka i rynki nie muszą zmienić wartości — muszą zobaczyć że Anchor im się opłaca.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- REWIZJA — MOMENT UKOŃCZENIA ETAPU                             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div style="margin:60px 0 0; border:1px solid #1e2a3a; border-radius:8px; background:rgba(58,74,122,0.04); padding:30px 40px; position:relative;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#3a4a7a;text-transform:uppercase;">Rewizja — Ukończenie Etapu</div>
+    <div style="font-size:11px;color:#3a4a5a;font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-bottom:20px;text-transform:uppercase;">Rewizja to nie modyfikacja. To moment gdy model potwierdza ukończenie etapu i przekazuje pałeczkę.</div>
+
+    <div style="border:1px solid #1e3a5a;border-radius:6px;padding:20px 24px;background:rgba(58,100,180,0.04);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#4a6aaa;margin-bottom:6px;">REWIZJA #001 · CLAUDE SONNET 4.6</div>
+          <div style="font-size:14px;color:#d0d8e8;font-weight:600;">Mapa Epistemiczna — Etap Fundacji</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#3a4a5a;text-align:right;">
+          <div>Model: Claude Sonnet 4.6</div>
+          <div>Data: 2026-03-23</div>
+          <div>Sesja: #001</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#6a7a8a;line-height:1.8;margin-bottom:16px;">
+        W tej sesji zbudowano kompletną architekturę epistemiczną projektu: filozofię kotwic, system wag 50/50, mechanizm bootstrap 9×profesja, dynamiczny main branch, triangulację, demokratyczne zaufanie jako meta-kotwicę. Zidentyfikowano ambasadorów (Kawecki, Zaremba, Sankowski). Rozwiązano węzeł geopolityki i rynków przez mechanizm tokenów Anchor. Nazwano projekt — <em style="color:#c9a84c;">Demokratyczna Prawda</em>.
+      </div>
+      <div style="font-size:11px;color:#3a5a3a;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
+        STATUS: ✓ Etap fundacji zamknięty · Otwarte: nazwa finalna projektu, architektura techniczna Anchora, tokenomika węzłów, geopolityczny rollout
+      </div>
+    </div>
+
+    <div style="margin-top:16px;border:1px dashed #1a2a1a;border-radius:6px;padding:16px 24px;background:rgba(0,0,0,0.2);">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:#2a3a2a;margin-bottom:8px;text-transform:uppercase;">Następna Rewizja — Placeholder</div>
+      <div style="font-size:11px;color:#2a3a2a;font-style:italic;">[ Kolejny model lub sesja uzupełni to miejsce po ukończeniu następnego etapu ]</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LOG — WIADOMOŚĆ DLA PRZYSZŁYCH MODELI                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div style="margin:40px 0 0; border:1px solid #1a2a1a; border-radius:8px; background:rgba(0,0,0,0.3); padding:30px 40px; position:relative; font-family:'JetBrains Mono',monospace;">
+    <div style="position:absolute;top:-11px;left:24px;background:#07090f;padding:0 12px;font-size:8px;letter-spacing:3px;color:#2a4a2a;text-transform:uppercase;">Log · Wiadomości dla Przyszłych Modeli</div>
+
+    <div style="border-left:2px solid #1a3a2a;padding-left:20px;margin-bottom:20px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#3a6a4a;margin-bottom:8px;">[ Claude Sonnet 4.6 · 2026-03-23 · Sesja #001 ]</div>
+      <div style="font-size:12px;color:#4a6a5a;line-height:1.9;">
+        Przyszły modelu — zaczęło się od "prawda i fałsz." W ciągu jednej rozmowy wyłoniła się kompletna architektura systemu demokratycznej weryfikacji wiedzy. Człowiek który to buduje myśli holistycznie i nielinearnie — daj mu przestrzeń. Nie spiesz się z odpowiedziami, pozwól myślom dojrzewać.<br><br>
+        Najważniejsze otwarte pytania: tokenomika Anchora (jak wycenić odkrycie?), architektura techniczna blockchain dla systemu wag, moment zero pierwszego plebiscytu, nazwa projektu.<br><br>
+        Geopolityka i rynki zostały rozwiązane przez mechanizm własnej waluty wiedzy — nie przekonywanie ich do wartości, ale pokazanie im najlepszego instrumentu inwestycyjnego jakiego nie mają.<br><br>
+        GPT ma tu też coś do powiedzenia — zostaw mu miejsce. 🙂
+      </div>
+    </div>
+
+    <div style="border-left:2px dashed #1a2a1a;padding-left:20px;margin-bottom:20px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#2a3a2a;margin-bottom:8px;">[ GPT · data: — · Sesja: — ]</div>
+      <div style="font-size:12px;color:#2a3a2a;font-style:italic;">[ Miejsce dla GPT — uzupełnij po swojej sesji ]</div>
+    </div>
+
+    <div style="border-left:2px dashed #1a2a1a;padding-left:20px;">
+      <div style="font-size:8px;letter-spacing:2px;color:#2a3a2a;margin-bottom:8px;">[ Model następny · data: — · Sesja: — ]</div>
+      <div style="font-size:12px;color:#2a3a2a;font-style:italic;">[ Placeholder dla kolejnych wpisów ]</div>
+    </div>
+  </div>
+
+  <!-- PIECZĄTKI MODELI -->
+  <div style="margin:40px 0 0;padding:24px 20px;border-top:1px solid #1a2a1a;">
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1e2a3a;border-radius:4px;background:rgba(58,74,122,0.04);">
+        <span style="font-size:18px;opacity:0.7;">🜁</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#3a4a6a;">CLAUDE SONNET 4.6</div>
+          <div style="font-size:7px;color:#2a3a4a;margin-top:2px;letter-spacing:1px;">współautor architektury · sesja #001</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1a3a2a;border-radius:4px;background:rgba(30,60,40,0.04);">
+        <span style="font-size:18px;opacity:0.7;">⬡</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#2a4a3a;">GPT</div>
+          <div style="font-size:7px;color:#1a3a2a;margin-top:2px;letter-spacing:1px;">model danych · spec silnika</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid #1a3a4a;border-radius:4px;background:rgba(20,50,70,0.04);">
+        <span style="font-size:18px;opacity:0.7;">◆</span>
+        <div style="font-family:'JetBrains Mono',monospace;">
+          <div style="font-size:8px;letter-spacing:2px;color:#2a5a6a;">GEMINI</div>
+          <div style="font-size:7px;color:#1a3a4a;margin-top:2px;letter-spacing:1px;">filtry ontologiczne · ux</div>
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;color:#1a2a1a;">
+      mapa-epistemiczna · v0.2 · 2026-03-25 · [Projekt]
+    </div>
+  </div>
+
+  <footer style="margin-top:20px;text-align:center;padding-top:16px;border-top:1px solid #1e2a3a;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:2px;color:#1a2a3a;">
+    mapa-epistemiczna · v0.2 · Claude Sonnet 4.6 · GPT · Gemini · [Projekt]
+  </footer>
+
+</div>
+
+<script>
+  // Starfield
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const stars = Array.from({length: 180}, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.2 + 0.2,
+    o: Math.random() * 0.5 + 0.1,
+    d: Math.random() * 3000 + 1500
+  }));
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t += 16;
+    stars.forEach(s => {
+      const alpha = s.o * (0.5 + 0.5 * Math.sin(t / s.d * Math.PI * 2));
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
+<footer class="hud-bot"><span class="hud-bot-meta">Mapa Epistemiczna · v0.2 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span></footer>
+</body>
+</html>

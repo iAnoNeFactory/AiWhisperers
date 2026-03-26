@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "version": "1.1",
+    "description": "Rejestr pakietów AiWhisperers Workspace",
+    "managed_by": "AiWSpace",
+    "updated": "2026-05-03"
+  },
+  "categories": [
+    {
+      "id": "packages",
+      "label": "Packages",
+      "desc": "Projekty operatora budowane na ekosystemie"
+    },
+    {
+      "id": "family",
+      "label": "Family",
+      "desc": "Projekty rodzinne"
+    }
+  ],
+  "packages": [
+    {
+      "id": "mycakes",
+      "name": "MyCakes",
+      "icon": "🎂",
+      "tag": "packages · FastAPI + SQLite",
+      "desc": "Aplikacja zarządzania tortami. Backend Python, baza SQLite.",
+      "status": "live",
+      "category": "packages",
+      "href": "../../packages/MyCakes/index.html",
+      "host": "0.0.0.0",
+      "port": 8000,
+      "main": "packages/MyCakes/server.py",
+      "order": 1
+    },
+    {
+      "id": "growup",
+      "name": "GrowUp",
+      "icon": "🌱",
+      "tag": "packages · edukacja",
+      "desc": "Moduł nauki i treningu. Zabawki, ćwiczenia, baza wiedzy.",
+      "status": "wip",
+      "category": "family",
+      "href": "../../packages/GrowUp/index.html",
+      "order": 2
+    },
+    {
+      "id": "gardenos",
+      "name": "GardenOS",
+      "icon": "🌿",
+      "tag": "packages · ogród",
+      "desc": "System zarządzania ogrodem. Placeholder — w inkubacji.",
+      "status": "wip",
+      "category": "packages",
+      "href": "../../packages/GardenOS/index.html",
+      "order": 3
+    }
+  ]
+}

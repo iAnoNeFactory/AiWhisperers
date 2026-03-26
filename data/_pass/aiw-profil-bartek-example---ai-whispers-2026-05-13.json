@@ -1,0 +1,33 @@
+{
+  "_version": "aiw_profile_export_v2",
+  "_exported": "2026-05-13T10:43:09.549Z",
+  "_note": "AIWPass · AiWhisperers · profil operatora",
+  "profile": {
+    "operator": "Bartek Example · AI Whispers",
+    "domain": "TRIAL",
+    "node": "github example · 2026",
+    "inception": "2026-05-13",
+    "country": "Poland",
+    "pubkey": "RnriYtd4ULJ+4JOHNOluwOTbs2V9SUwCROesWxWp4Lo=",
+    "profileSha": "5f0860dd61aa0e39b8b76ac438d6e5159803a8a5c46632bd0e04385f55c95588",
+    "certifiedBy": "Denis Example · AI Whispers",
+    "parentPubkey": "t5GcohsO65nrHZU/EKrBaaFb8aIkel/Cw79q/6Rq7/w=",
+    "certificationSig": "4LWk4g9EB7qTiC9sluRVyqTUNpu3jgCYDRhN8w6+hF7B8HpZ+8Q9hrad4zg0gt/Cf4p3U474dTWvqq43hT0UAQ==",
+    "certificationTs": "2026-05-13T10:42:44.278Z"
+  },
+  "contracts": [
+    {
+      "id": "c-mp3xi10o",
+      "operator": "Bartek Example · AI Whispers",
+      "model": "GPT",
+      "version": "gpt-4o",
+      "date": "13 maja 2026",
+      "pubkey": "RnriYtd4ULJ+4JOHNOluwOTbs2V9SUwCROesWxWp4Lo=",
+      "sha_declaration": "51b104a26da0343847b12e5a22869dd8572d392b402a32ab361abca7eff66308",
+      "sha_warunki": "613756531159f26995dacff28dcc67258da62820958d0c45d2bb61967f2fed6e",
+      "sealed_at": "2026-05-13T10:40:35.496Z",
+      "sha256": "42c7d370d0b9ad33db7dea96170a04217d245b3704261e5baa40bd145a0d1f2e"
+    }
+  ],
+  "children": []
+}

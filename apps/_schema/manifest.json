@@ -1,0 +1,93 @@
+{
+  "id": "_schema",
+  "name": "Schema · Schemat Artefaktów 🎨",
+  "version": "1.5",
+  "date": "2026-05-02",
+  "description": "Meta-moduł definiujący standard wizualny artefaktów AiWhisperers: CSS layout, HUD (hud-top/hud-bot), overlays (HELP, ABOUT, README), canvas, i18n. Specyfikacja manifest.json i protokół połączeń → _protocol.",
+  "type": "schema",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Strukturyzacja Warsztatu",
+    "parent_sid": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Opus 4.7",
+        "role": "architect",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "refiner",
+        "chat_id": ""
+      },
+      {
+        "actor": "GPT-4o",
+        "role": "seed",
+        "chat_id": ""
+      },
+      {
+        "actor": "Gemini",
+        "role": "seed",
+        "chat_id": ""
+      }
+    ],
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "AiWSchema.html",
+    "docs": "",
+    "components": [
+      {
+        "path": "examples/memory.json",
+        "role": "example-single"
+      },
+      {
+        "path": "examples/horizon.json",
+        "role": "example-multi"
+      }
+    ],
+    "bootstrap": "_schema-boot.md",
+    "bootstrap_sha": "a961c6ce8e01e0131468eab18682514383311ba8c29f62b5a4624f0539bd9cdd",
+    "entry_sha": "5dbc2131be6aee849e632c9c1656d8ae7e6d2c0492895b88631df50fad817fb1",
+    "docs_sha": ""
+  },
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 0,
+    "consumers": [],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  },
+  "relations": [
+    {
+      "type": "complements",
+      "target": "_protocol"
+    },
+    {
+      "type": "validates",
+      "target": "*"
+    }
+  ],
+  "tags": [
+    "meta",
+    "schema",
+    "visual-standard",
+    "css",
+    "overlays",
+    "foundation"
+  ]
+}
