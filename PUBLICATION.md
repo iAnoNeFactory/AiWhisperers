@@ -104,11 +104,12 @@ near the date of first public release:
 
 | Anchor | Identifier | URL / proof |
 |--------|------------|-------------|
-| GitHub first push | [a017b219a6ded8c81db651f94796650000a0b8bc] | [https://github.com/iAnoNeFactory/AiWhisperers/commit/a017b219a6ded8c81db651f94796650000a0b8bc] |
+| GitHub first push | [72d6947a32324e867a08c69ffe32930af0b6c43e] | [https://github.com/iAnoNeFactory/AiWhisperers/commit/72d6947a32324e867a08c69ffe32930af0b6c43e] |
 | GitHub Release v1.0 | [tag] | [release URL] |
-| Software Heritage Archive | [SWHID] | [archive URL] |
-| Zenodo deposit | [DOI] | [doi URL] |
-| OpenTimestamps proof | [hash of this file] | [.ots file in repo] |
+| Software Heritage Archive | [swh:1:dir:708487bf77cb72e43248352df64838d42290c268] | [https://archive.softwareheritage.org/browse/directory/708487bf77cb72e43248352df64838d42290c268/?origin_url=https://github.com/iAnoNeFactory/AiWhisperers&revision=72d6947a32324e867a08c69ffe32930af0b6c43e&snapshot=72da52d70e7cdf0027a1157a5660339f56c3c7ea] |
+| Zenodo deposit | [10.5072/zenodo.499133] | [https://handle.test.datacite.org/10.5072/zenodo.499133] |
+| OpenTimestamps proof raw | [hash of this file] | [.ots file in repo] |
+| OpenTimestamps proof raw | [ 4e41ddf6e42c3013384ea20c7e25d54ef372d2469a29f5e21bc3f6cd8cef6c07] | [.ots file in repo] |
 
 *To be filled in within 1–7 days of first push, as each service
 completes its respective archival process.*
