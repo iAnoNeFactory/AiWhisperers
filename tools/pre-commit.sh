@@ -6,6 +6,10 @@
 set -e
 cd "$(git rev-parse --show-toplevel)"
 
+echo "→ Buduję sitemap.xml..."
+python3 tools/build_sitemap.py
+git add sitemap.xml
+
 echo "→ Sprawdzam entry_sha + bootstrap_sha..."
 python3 tools/check_integrity.py
 
