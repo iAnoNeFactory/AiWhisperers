@@ -144,8 +144,8 @@ see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Lineage and prior art
 
-This project was developed in private from [start date] and made
-publicly available on [first public release date]. The full record
+This project was developed in private from [13.05.2026] and made
+publicly available on [13.05.2026]. The full record
 of public disclosure, including external timestamp anchors
 (Software Heritage, Zenodo DOI, OpenTimestamps), is in
 **[PUBLICATION.md](./PUBLICATION.md)** and **[PRIOR_ART.md](./PRIOR_ART.md)**.
