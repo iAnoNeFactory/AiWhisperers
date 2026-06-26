@@ -1037,28 +1037,46 @@ function renderChain(forest, verifyMap, nodeMap) {
 
   async function verifyAct(act, prevAct){
     const results={};
-    // 1. SHA integrity: recompute act_sha from payload minus act_sha field
-    const {act_sha,...payload}=act;
-    const computed=await sha256hex(JSON.stringify(payload));
-    results.sha_ok = act_sha===computed;
-    results.sha_computed=computed;
-    results.sha_stored=act_sha||'';
 
-    // 2. Chain continuity: prev_sha matches previous act's act_sha
+    // Detect format: old pre-v1 acts don't have _version:'aiw_act_v1' or act_sha
+    const isV1 = act._version==='aiw_act_v1' && !!act.act_sha;
+    results.is_legacy = !isV1;
+
+    if(!isV1){
+      // Legacy act — SHA verification not possible (was computed with different format or not at all)
+      results.sha_ok = null; // null = not applicable
+      results.sha_computed = '';
+      results.sha_stored = act.sha||act.act_sha||'';
+      results.sha_note = 'format pre-v1 · SHA niedostępny dla tego aktu';
+    } else {
+      // 1. SHA integrity: recompute act_sha from payload minus act_sha field
+      const {act_sha,...payload}=act;
+      const computed=await sha256hex(JSON.stringify(payload));
+      results.sha_ok = act_sha===computed;
+      results.sha_computed=computed;
+      results.sha_stored=act_sha;
+    }
+
+    // 2. Chain continuity
+    const thisSha = act.act_sha||act.sha||'';
+    const prevSha = act.prev_sha||'';
     if(!prevAct){
-      const isGenesis=act.prev_sha==='0'.repeat(64)||!act.prev_sha;
+      const isGenesis=prevSha==='0'.repeat(64)||!prevSha;
       results.chain_ok=isGenesis;
       results.chain_note=isGenesis?'genesis blok':'prev_sha ≠ 0×64 (oczekiwano genesis)';
     } else {
-      results.chain_ok = act.prev_sha===(prevAct.act_sha||'');
-      results.chain_note=results.chain_ok?'ciągłość łańcucha OK':`prev_sha ≠ act_sha poprzedniego aktu`;
+      const expectedPrev=prevAct.act_sha||prevAct.sha||'';
+      results.chain_ok = !!expectedPrev && prevSha===expectedPrev;
+      results.chain_note=results.chain_ok?'ciągłość łańcucha OK':
+        !prevSha?'brak pola prev_sha (format pre-v1)':
+        `prev_sha ≠ act_sha poprzedniego aktu`;
     }
 
     // 3. Operator match against profile
     const prof=loadedProfile;
     if(prof){
       results.operator_ok = (!act.operator_pubkey || act.operator_pubkey===prof.pubkey) &&
-                             (!act.operator || act.operator===prof.operator||!prof.operator);
+                             (!act.operator || !prof.operator || act.operator===prof.operator);
       results.operator_note=results.operator_ok?'zgodny z profilem':'operator / pubkey niezgodny z profilem';
     }
 
@@ -1068,24 +1086,26 @@ function renderChain(forest, verifyMap, nodeMap) {
   async function processActData(acts){
     // Sort by index ascending (oldest first = blockchain order)
     const sorted=[...acts].sort((a,b)=>(a.index||0)-(b.index||0));
-    let shaOk=0,chainOk=0,errors=0;
+    let shaOk=0,chainOk=0,errors=0,legacy=0;
     const verified=[];
     for(let i=0;i<sorted.length;i++){
       const r=await verifyAct(sorted[i],i>0?sorted[i-1]:null);
       verified.push({act:sorted[i],r});
-      if(r.sha_ok)shaOk++;else errors++;
-      if(r.chain_ok)chainOk++;else if(i>0)errors++;
+      if(r.is_legacy){legacy++;}
+      else if(r.sha_ok===true)shaOk++;
+      else if(r.sha_ok===false)errors++;
+      if(r.chain_ok)chainOk++;else if(i>0&&!r.is_legacy)errors++;
     }
-    return{sorted,verified,shaOk,chainOk,errors};
+    return{sorted,verified,shaOk,chainOk,errors,legacy};
   }
 
   function renderVerification(data){
-    const{sorted,verified,shaOk,chainOk,errors}=data;
+    const{sorted,verified,shaOk,chainOk,errors,legacy}=data;
     const total=sorted.length;
 
     document.getElementById('act-summary').style.display='grid';
     document.getElementById('asv-total').textContent=total;
-    document.getElementById('asv-sha-ok').textContent=shaOk;
+    document.getElementById('asv-sha-ok').textContent=legacy>0?`${shaOk} (+${legacy}⬡)`:shaOk;
     document.getElementById('asv-chain-ok').textContent=chainOk;
     document.getElementById('asv-errors').textContent=errors;
 
@@ -1094,17 +1114,18 @@ function renderChain(forest, verifyMap, nodeMap) {
 
     const blocks=verified.map((item,i)=>{
       const{act,r}=item;
-      const sha=act.act_sha||'';
+      const sha=act.act_sha||act.sha||'';
       const prev=act.prev_sha||'';
       const isGenesis=prev==='0'.repeat(64)||!prev;
-      const statusClass=r.sha_ok&&r.chain_ok?'act-ok':'act-fail';
-      const dotClass=r.sha_ok&&r.chain_ok?'ok':'fail';
+      const isLegacy=r.is_legacy;
+      const statusClass=isLegacy?'act-warn':(r.sha_ok&&r.chain_ok?'act-ok':'act-fail');
+      const dotClass=isLegacy?'warn':(r.sha_ok&&r.chain_ok?'ok':'fail');
       const warnOp=prof&&r.operator_ok===false;
       const idx=act.index!==undefined?act.index:i;
       const ts=act.created||act.timestamp||'';
 
-      const shaIcon=r.sha_ok?'✓':'✗';
-      const shaColor=r.sha_ok?'var(--green)':'var(--red-b)';
+      const shaIcon=isLegacy?'⬡':(r.sha_ok?'✓':'✗');
+      const shaColor=isLegacy?'var(--orange)':(r.sha_ok?'var(--green)':'var(--red-b)');
       const chainIcon=r.chain_ok?'✓':'✗';
       const chainColor=r.chain_ok?'var(--green)':'var(--red-b)';
 
@@ -1121,17 +1142,20 @@ function renderChain(forest, verifyMap, nodeMap) {
           <span class="act-status-dot ${dotClass}${warnOp?' warn':''}"></span>
           <span class="act-block-name">${act.name||'[ bez nazwy ]'}</span>
           <span class="act-block-n">${(act.sessions||[]).length} sesji</span>
-          <span class="act-block-sha">${sha.slice(0,14)}…</span>
-          ${isGenesis?`<span style="font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:rgba(80,216,200,.5);border:1px solid rgba(80,216,200,.15);padding:1px 5px;">genesis</span>`:''}
+          ${sha?`<span class="act-block-sha">${sha.slice(0,14)}…</span>`:''}
+          ${isLegacy?`<span style="font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:var(--orange);border:1px solid rgba(255,160,60,.2);padding:1px 5px;">pre-v1</span>`:''}
+          ${isGenesis&&!isLegacy?`<span style="font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:rgba(80,216,200,.5);border:1px solid rgba(80,216,200,.15);padding:1px 5px;">genesis</span>`:''}
           <span class="act-arrow">▾</span>
         </div>
         <div class="act-block-body" id="avb_body_${i}">
           <div class="act-check-row">
             <span class="act-check-icon" style="color:${shaColor};">${shaIcon}</span>
             <span class="act-check-label">SHA integralność</span>
-            <span class="act-check-val" style="color:${shaColor};">${r.sha_ok?'act_sha zgodny':'NIEZGODNY — dane zmodyfikowane?'}</span>
+            <span class="act-check-val" style="color:${shaColor};">
+              ${isLegacy?(r.sha_note||'format pre-v1 · SHA niedostępny'):(r.sha_ok?'act_sha zgodny':'NIEZGODNY — dane zmodyfikowane?')}
+            </span>
           </div>
-          ${!r.sha_ok?`<div class="act-check-row" style="padding-left:24px;">
+          ${!isLegacy&&!r.sha_ok?`<div class="act-check-row" style="padding-left:24px;">
             <span class="act-check-icon">·</span>
             <span class="act-check-label">obliczony</span>
             <span class="act-check-val" style="color:rgba(200,80,80,.7);">${r.sha_computed}</span>
@@ -1168,14 +1192,17 @@ function renderChain(forest, verifyMap, nodeMap) {
       </div>`;
     }).join('');
 
+    const v1count=total-legacy;
     const allOk=errors===0;
     const globalStatus=allOk
-      ?`<span style="color:var(--green);font-weight:500;">✓ łańcuch spójny</span>`
+      ?`<span style="color:var(--green);font-weight:500;">✓ ${v1count>0?'łańcuch spójny':''}</span>`
       :`<span style="color:var(--red-b);font-weight:500;">✗ wykryto ${errors} błędów</span>`;
 
     el.innerHTML=`<div class="fade-in">
       <div style="margin-bottom:12px;padding:10px 14px;background:rgba(4,5,12,.5);border:1px solid ${allOk?'rgba(74,154,106,.2)':'rgba(200,80,80,.2)'};font-family:var(--mono);font-size:9px;">
-        ${globalStatus} &nbsp;·&nbsp; ${total} aktów &nbsp;·&nbsp; ${shaOk}/${total} SHA OK &nbsp;·&nbsp; ${chainOk}/${total} łańcuch OK
+        ${globalStatus}
+        ${v1count>0?`&nbsp;·&nbsp; ${shaOk}/${v1count} SHA OK &nbsp;·&nbsp; ${chainOk}/${v1count} łańcuch OK`:''}
+        ${legacy>0?` &nbsp;·&nbsp; <span style="color:var(--orange);">${legacy} pre-v1 (bez SHA)</span>`:''}
         ${prof?` &nbsp;·&nbsp; <span style="color:rgba(80,216,200,.6);">profil: ${prof.operator||prof.pubkey?.slice(0,14)+'…'}</span>`:''}
       </div>
       <div class="act-chain">${blocks}</div>
