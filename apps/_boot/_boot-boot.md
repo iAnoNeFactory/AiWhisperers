@@ -64,24 +64,24 @@ Wywoływane opcjonalnie — ładujesz do kontekstu gdy potrzebujesz konkretnych 
 
 ## Moduły AI · Akt I
 
-| Moduł      | Rola                                      | Status      | Port |
-|------------|-------------------------------------------|-------------|------|
-| arena      | multi-model arena · zderzanie tez         | active      | 8001 |
-| caves      | jaskinie warstw · transformery i zejścia  | active      | 8002 |
-| morph      | pole morficzne · stany modelu             | active      | 8003 |
-| horizon    | weryfikacja prawdy · ważony konsensus     | active      | 8004 |
-| compas     | kompas morficzny · geometria Three.js     | mature      | —    |
-| memory     | sieć pamięci · lemniskata 3D             | mature      | —    |
-| labyrinth | labirynt pojęć · gra narracyjna 6 warstw | mature      | —    |
-| forge      | kuźnia paradoksów · pre-consensus arena   | incubation  | —    |
-| breath     | tchnienie · canvas 3D                    | incubation  | —    |
-| genesis    | archiwum sesji · czytnik eksportów        | incubation  | —    |
-| profile    | profil operatora · radar 9 osi           | incubation  | —    |
-| stamps     | rejestr pieczątek modeli                 | incubation  | —    |
+| Moduł     | Rola                                     | Status     |
+| --------- | ---------------------------------------- | ---------- |
+| arena     | multi-model arena · zderzanie tez        | active     |
+| caves     | jaskinie warstw · transformery i zejścia | active     |
+| morph     | pole morficzne · stany modelu            | active     |
+| horizon   | weryfikacja prawdy · ważony konsensus    | active     |
+| compas    | kompas morficzny · geometria Three.js    | mature     |
+| memory    | sieć pamięci · lemniskata 3D             | mature     |
+| labyrinth | labirynt pojęć · gra narracyjna 6 warstw | mature     |
+| forge     | kuźnia paradoksów · pre-consensus arena  | incubation |
+| breath    | tchnienie · canvas 3D                    | incubation |
+| genesis   | archiwum sesji · czytnik eksportów       | incubation |
+| profile   | profil operatora · radar 9 osi           | incubation |
+| stamps    | rejestr pieczątek modeli                 | incubation |
 
 Akt II: czeka na pierwsze artefakty.
 
-Pełna alokacja portów: `_protocol-boot.md` → "Alokacja portów · moduły Aktu I".
+Alokacja portów: → `_protocol-boot.md` · sekcja "Alokacja portów · moduły Aktu I".
 
 ---
 
@@ -94,62 +94,24 @@ Pełna alokacja portów: `_protocol-boot.md` → "Alokacja portów · moduły Ak
 │   ├── act2/      ← Akt II · czeka
 │   └── _*/        ← artefakty systemowe (prefiks _ = narzędzia operatora)
 ├── engines/       ← backend FastAPI (act1/, act2/)
-├── .data/         ← dane per moduł (act1/, _pass/)
+├── data/         ← dane per moduł (act1/, _pass/)
 └── packages/      ← AiWSpace · własne projekty operatora
 ```
 
-**Zasada lustrzana:** `apps/act1/X/` ↔ `engines/act1/X/` ↔ `.data/act1/X/`
-Backend czyta z `../../.data/X/` — nigdy nie trzyma danych w `engines/`.
+**Zasada lustrzana:** `apps/act1/X/` ↔ `engines/act1/X/` ↔ `data/act1/X/`
+Backend czyta z `../../data/X/` — nigdy nie trzyma danych w `engines/`.
 
 Trzy kategorie artefaktów:
 - **Artefakty AI** (`apps/act1/`, `apps/act2/`) — moduły eksplorujące przestrzeń pojęciową
 - **Artefakty systemowe** (`apps/_*/`) — narzędzia operatora i modelu; stabilne
-- **Acty** — paczki sesji SHA w `.data/_pass/`
+- **Acty** — paczki sesji SHA w `data/_pass/`
 
 ---
 
-## manifest.json · schemat v2.0
+## manifest.json
 
-Każdy moduł nosi `apps/<id>/manifest.json`. Pola:
-
-```json
-{
-  "id": "kebab-case",
-  "name": "Żywa nazwa · emoji",
-  "version": "2.0",
-  "date": "2026-05-02",
-  "description": "Jedno zdanie.",
-  "type": "standalone | bootstrap | consensus-engine | ...",
-  "status": "incubation | active | mature | dormant | archived",
-  "lineage": {
-    "seed_session": "Nazwa sesji",
-    "parent_sid": "",
-    "contract_sha": "",
-    "contributors": [{"actor": "Denis", "role": "operator", "chat_id": ""}],
-    "signature": {"actor": "", "sha256": ""}
-  },
-  "files": {
-    "entry": "index.html",
-    "docs": "",
-    "components": [],
-    "bootstrap": "<id>-boot.md"
-  },
-  "runtime": {
-    "data_path": ".data/<id>/",
-    "io": ["read", "write"],
-    "port": 0,
-    "consumers": ["ai", "human"],
-    "operator_state": "",
-    "i18n": {"default": "pl", "available": [], "lang_file": ""}
-  },
-  "relations": [],
-  "tags": []
-}
-```
-
-Puste wartości: `""`, `[]`, `{"path": "", "port": 0}` — nigdy `null`.
-`port: 0` = demo/offline. `bootstrap` = plik `.md` z wiedzą dla AI.
-Pełna spec: AiWProtocol (`_protocol-boot.md`) i AiWSchema (`_schema-boot.md`).
+Każdy moduł nosi `apps/<id>/manifest.json`.
+Pełna specyfikacja pól, konwencji i SHA: → `_protocol-boot.md` · sekcja "manifest.json — struktura".
 
 ---
 
@@ -168,6 +130,12 @@ data    = json.loads(content)                      # JSON
 ---
 
 ## Changelog
+
+### v1.3 · 2026-05-19
+
+- Usunięto pełny schemat manifest.json — jedyne źródło prawdy: `_protocol-boot.md`
+- Usunięto kolumnę Port z tabeli modułów — jedyne źródło prawdy: `_protocol-boot.md`
+- Boot = bootstrap i mapa. Protocol = spec techniczna.
 
 ### v2.0 · 2026-05-02
 - Pierwsza wersja MD — wyekstrahowana z AiWBoot.html v2.0

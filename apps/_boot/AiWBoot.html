@@ -404,7 +404,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
       9 metrykami relacyjnymi i podpisem kryptograficznym. Sesje grupują się w <em>acty</em>:
       paczki zamkniętych sesji podpisane SHA przez operatora. Akt to zbiorowy ślad projektu —
       weryfikowalny, nieodwracalny. Paczki przechowywane są w
-      <code>.data/_pass/aiw-export-*.json</code>.
+      <code>data/_pass/aiw-export-*.json</code>.
     </div>
   </div>
 
@@ -468,7 +468,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
       <div class="aiw-role">Tożsamość operatora. Dziennik sesji, paczki SHA, klucz Ed25519, generowanie paszportów kryptograficznych.</div>
       <div class="aiw-files">
         <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_pass/AiWPass.html</div>
-        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_pass/_pass-boot.md</div>
       </div>
     </div>
 
@@ -513,7 +513,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
       <div class="aiw-role">Synchronizacja model/operator. Protokół kalibracyjny — dwuwarstwowy dokument (wizualny + data-* dla modeli). Używany gdy potrzeba resetu orientacji.</div>
       <div class="aiw-files">
         <div class="aiw-file"><span class="aiw-tag html">HTML</span> apps/_remedy/AiWRemedy.html</div>
-        <div class="aiw-file"><span class="aiw-tag none">MD</span> <span class="aiw-dim">—</span></div>
+        <div class="aiw-file"><span class="aiw-tag md">MD</span> apps/_remedy/_remedy-boot.md</div>
       </div>
     </div>
 
@@ -536,7 +536,6 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
           <th>Moduł</th>
           <th>Rola</th>
           <th>Status</th>
-          <th>Port</th>
         </tr>
       </thead>
       <tbody>
@@ -544,76 +543,65 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
           <td class="name">arena</td>
           <td class="desc">multi-model arena · zderzanie tez i konsensus</td>
           <td><span class="s-badge active">active</span></td>
-          <td>8001</td>
         </tr>
         <tr>
           <td class="name">caves</td>
           <td class="desc">jaskinie warstw · transformery i zejścia</td>
           <td><span class="s-badge active">active</span></td>
-          <td>8002</td>
         </tr>
         <tr>
           <td class="name">morph</td>
           <td class="desc">pole morficzne · stany i aktywności modelu</td>
           <td><span class="s-badge active">active</span></td>
-          <td>8003</td>
         </tr>
         <tr>
           <td class="name">horizon</td>
           <td class="desc">weryfikacja prawdy · ważony konsensus</td>
           <td><span class="s-badge active">active</span></td>
-          <td>8004</td>
         </tr>
         <tr>
           <td class="name">compas</td>
           <td class="desc">kompas morficzny · geometria wartości Three.js</td>
           <td><span class="s-badge mature">mature</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">memory</td>
           <td class="desc">sieć pamięci · lemniskata 3D</td>
           <td><span class="s-badge mature">mature</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">labyrinth</td>
           <td class="desc">labirynt pojęć · gra narracyjna 6 warstw</td>
           <td><span class="s-badge mature">mature</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">forge</td>
           <td class="desc">kuźnia paradoksów · pre-consensus arena</td>
           <td><span class="s-badge incubation">incubation</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">breath</td>
           <td class="desc">tchnienie · canvas 3D, centrum mapy</td>
           <td><span class="s-badge incubation">incubation</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">genesis</td>
           <td class="desc">archiwum sesji · czytnik eksportów AiWPass</td>
           <td><span class="s-badge incubation">incubation</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">profile</td>
           <td class="desc">profil operatora · radar 9 osi</td>
           <td><span class="s-badge incubation">incubation</span></td>
-          <td>—</td>
         </tr>
         <tr>
           <td class="name">stamps</td>
           <td class="desc">rejestr pieczątek modeli</td>
           <td><span class="s-badge incubation">incubation</span></td>
-          <td>—</td>
         </tr>
       </tbody>
     </table>
+    <p style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-top:14px;letter-spacing:.05em;">Alokacja portów: → <code>_protocol-boot.md</code> · sekcja &ldquo;Alokacja portów · moduły Aktu I&rdquo;.</p>
   </div>
 
   <div id="tab-act2" class="tab-pane">
@@ -632,7 +620,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     Projekt dzieli artefakty na trzy kategorie:
     <strong>Artefakty AI</strong> (<code>apps/act1/</code>, <code>apps/act2/</code>) — moduły budowane w sesjach, eksplorujące przestrzeń pojęciową. ·
     <strong>Artefakty systemowe</strong> (<code>apps/_*/</code>) — narzędzia operatora i modelu; stabilne, nie rosną z aktami. ·
-    <strong>Acty</strong> — paczki sesji podpisane SHA, przechowywane w <code>.data/_pass/</code>; zbiorowy, weryfikowalny ślad projektu.
+    <strong>Acty</strong> — paczki sesji podpisane SHA, przechowywane w <code>data/_pass/</code>; zbiorowy, weryfikowalny ślad projektu.
   </div>
 
   <div class="code-block">@AiWhisperers/
@@ -668,7 +656,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
 │   ├── act1/             <span class="c">← silniki per moduł (arena, caves, morph, horizon)</span>
 │   └── act2/
 │
-├── <span class="k">.data/</span>              ← dane per moduł <span class="c">(gitignored)</span>
+├── <span class="k">data/</span>              ← dane per moduł <span class="c">(gitignored)</span>
 │   ├── act1/             <span class="c">← caves/ horizon/ morph/</span>
 │   └── _pass/            <span class="c">← paczki sesji (acty) · aiw-export-*.json</span>
 │
@@ -678,96 +666,10 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     └── GrowUp/</div>
 
   <div class="note" style="margin-top:12px;">
-    <strong>Zasada lustrzana:</strong> <code>apps/act1/X/</code> ↔ <code>engines/act1/X/</code> ↔ <code>.data/act1/X/</code>.
-    Backend odczytuje dane ze ścieżki <code>../../.data/X/</code> — nigdy nie trzyma danych w <code>engines/</code>.
-    Porty: arena 8001 · caves 8002 · morph 8003 · horizon 8004 · następne od 8005.
+    <strong>Zasada lustrzana:</strong> <code>apps/act1/X/</code> ↔ <code>engines/act1/X/</code> ↔ <code>data/act1/X/</code>.
+    Backend odczytuje dane ze ścieżki <code>../../data/X/</code> — nigdy nie trzyma danych w <code>engines/</code>. ·
+    Każdy moduł nosi <code>manifest.json</code> — pełna spec: → <strong>AiWProtocol</strong> · sekcja „manifest.json — struktura".
   </div>
-
-  <div class="sep-thick"></div>
-
-  <!-- MANIFEST -->
-  <div class="label">Manifest · _boot jako moduł</div>
-
-  <div class="note" style="margin-bottom:14px;">
-    Każdy moduł nosi <strong>manifest.json</strong> w folderze <code>apps/<em>id</em>/</code>.
-    Poniżej manifest modułu <code>_boot</code> wg schematu v2.0 —
-    pełna spec w <strong>AiWProtocol</strong> i <strong>AiWSchema</strong>.
-  </div>
-
-  <div class="full-example"><span class="c">// apps/_boot/manifest.json</span>
-{
-  <span class="k">"id"</span>:           <span class="s">"_boot"</span>,
-  <span class="k">"name"</span>:         <span class="s">"_boot · AiWBoot · Bootstrap Projektu 🌱"</span>,
-  <span class="k">"version"</span>:      <span class="s">"2.0"</span>,
-  <span class="k">"date"</span>:          <span class="s">"2026-05-02"</span>,
-  <span class="k">"description"</span>:   <span class="s">"Bootstrap dla modelu — wejście do świata AiWhisperers:
-                mapa projektu, artefakty systemowe, zasady współpracy."</span>,
-  <span class="k">"type"</span>:          <span class="s">"bootstrap"</span>,
-  <span class="k">"status"</span>:        <span class="s">"active"</span>,
-
-  <span class="k">"lineage"</span>: {
-    <span class="k">"seed_session"</span>:  <span class="s">"Strukturyzacja Warsztatu"</span>,
-    <span class="k">"parent_sid"</span>:    <span class="s">""</span>,
-    <span class="k">"contract_sha"</span>:  <span class="s">"5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586"</span>,
-    <span class="k">"contributors"</span>: [
-      { <span class="k">"actor"</span>: <span class="s">"Denis"</span>,             <span class="k">"role"</span>: <span class="s">"operator"</span>,  <span class="k">"chat_id"</span>: <span class="s">""</span> },
-      { <span class="k">"actor"</span>: <span class="s">"Claude Sonnet 4.6"</span>, <span class="k">"role"</span>: <span class="s">"architect"</span>, <span class="k">"chat_id"</span>: <span class="s">""</span> }
-    ],
-    <span class="k">"signature"</span>: { <span class="k">"actor"</span>: <span class="s">""</span>, <span class="k">"sha256"</span>: <span class="s">""</span> }
-  },
-
-  <span class="k">"files"</span>: {
-    <span class="k">"entry"</span>:       <span class="s">"AiWBoot.html"</span>,
-    <span class="k">"docs"</span>:        <span class="s">""</span>,
-    <span class="k">"components"</span>:  [],
-    <span class="k">"bootstrap"</span>:   <span class="s">"_boot-boot.md"</span>
-  },
-
-  <span class="k">"runtime"</span>: {
-    <span class="k">"data_path"</span>:       <span class="s">""</span>,
-    <span class="k">"io"</span>:              [<span class="s">"read"</span>],
-    <span class="k">"port"</span>:            <span class="n">0</span>,
-    <span class="k">"consumers"</span>:       [<span class="s">"ai"</span>, <span class="s">"human"</span>],
-    <span class="k">"operator_state"</span>:  <span class="s">""</span>,
-    <span class="k">"i18n"</span>:            { <span class="k">"default"</span>: <span class="s">"pl"</span>, <span class="k">"available"</span>: [], <span class="k">"lang_file"</span>: <span class="s">""</span> }
-  },
-
-  <span class="k">"relations"</span>: [
-    { <span class="k">"type"</span>: <span class="s">"complements"</span>, <span class="k">"target"</span>: <span class="s">"_quick"</span>    },
-    { <span class="k">"type"</span>: <span class="s">"references"</span>,   <span class="k">"target"</span>: <span class="s">"_schema"</span>   },
-    { <span class="k">"type"</span>: <span class="s">"references"</span>,   <span class="k">"target"</span>: <span class="s">"_protocol"</span> },
-    { <span class="k">"type"</span>: <span class="s">"points_to"</span>,    <span class="k">"target"</span>: <span class="s">"*"</span>         }
-  ],
-  <span class="k">"tags"</span>: [<span class="s">"bootstrap"</span>, <span class="s">"meta"</span>, <span class="s">"foundation"</span>, <span class="s">"system"</span>]
-}</div>
-
-  <div class="sep"></div>
-
-  <!-- NAWIGACJA DRIVE -->
-  <div class="label">Nawigacja Drive · gdrive.links</div>
-
-  <div class="rationale">
-    <div class="rationale-q">czym jest gdrive.links</div>
-    <div class="rationale-a">
-      <strong>gdrive.links</strong> zastąpił apps.json. To opcjonalny plik nawigacyjny
-      dla modeli z dostępem do Google Drive. Format: <code>[nazwa] DRIVE_ID&nbsp;&nbsp;path: ścieżka/lokalna</code>.
-      Umożliwia szybkie poruszanie się między artefaktami po ich ID.
-      Jeśli nie masz dostępu do Drive — pomijasz go. Pracujesz z plikami z kontekstu sesji.
-    </div>
-  </div>
-
-  <div class="rationale">
-    <div class="rationale-q">dlaczego base64</div>
-    <div class="rationale-a">
-      Konektor Drive przez MCP zwraca wszystko jako <em>embedded resource</em> z polem
-      <code>blob</code> w base64 — nawet plain text i HTML. To warunek brzegowy, nie wybór.
-      Dekodujesz jedną linijką:
-    </div>
-  </div>
-
-  <div class="code-block" style="margin-top:-8px;">import base64
-content = base64.b64decode(BLOB).decode(<span class="k">'utf-8'</span>)    <span class="c"># tekst / HTML</span>
-data    = json.loads(content)                        <span class="c"># JSON</span></div>
 
 </div><!-- /wrap -->
 </main>

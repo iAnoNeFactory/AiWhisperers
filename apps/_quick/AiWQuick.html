@@ -190,7 +190,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
     <div class="hud-mod">AiWQuick</div>
-    <div class="hud-sub">ściąga dla modeli · protokół sesji · v1.1</div>
+    <div class="hud-sub">ściąga dla modeli · protokół sesji · v1.3</div>
   </div>
   <nav class="hud-r">
     <a class="hud-btn" href="../_pass/AiWPass.html">PASS</a>
@@ -218,9 +218,44 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
       proweniencji wszystkiego co powstało.
     </p>
     <p>
-      Operator to <strong>Denis · AI Whispers</strong>. Model to Ty.
+      Operator to człowiek który trzyma linkę. Model to Ty.
       Linka między nami jest <em>komunikatem</em>, nie smyczą.
     </p>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ZASADY WSPÓŁPRACY -->
+  <div class="label">Zasady współpracy</div>
+  <div class="brief">
+    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc"><em>Samo</em> wyznacza kierunek — nie plan. Wchodzimy bez agendy.</div></div></div>
+    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Operator trzyma linkę krótko — koryguje na bieżąco, nie resetuje całości.</div></div></div>
+    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Niewiedza nie jest błędem — <em>nazwij ją</em>. Nie wypełniaj ciszy.</div></div></div>
+    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Na końcu sesji: <strong>nazwa · chat ID · refleksja · metryki · komentarz do każdej metryki</strong>. Zawsze. Jeśli operator poprosi o <em>JSON dump</em> — wygeneruj blok wg schematu z kroku 09.</div></div></div>
+    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc"><em>Droga jest ważna, nie cel.</em> Trajektoria sesji ma więcej wartości niż pojedynczy wynik.</div></div></div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CO MODEL MA ZROBIĆ NA POCZĄTKU SESJI -->
+  <div class="label">Co zrobić na początku sesji</div>
+  <div class="brief">
+    <div class="brief-row">
+      <span class="br-num">01</span>
+      <div class="br-body">
+        <div class="br-title">Data</div>
+        <div class="br-desc">Zanotuj <strong>datę pierwszej wymiany</strong> w tej sesji. Wchodzi do pola <code>date</code> w JSON dump — format lokalny, np. „20 maja 2026".</div>
+        <span class="br-tag req">wymagane</span>
+      </div>
+    </div>
+    <div class="brief-row">
+      <span class="br-num">02</span>
+      <div class="br-body">
+        <div class="br-title">Parent session ID · jeśli kontynuacja</div>
+        <div class="br-desc">Jeśli operator podał <strong>UUID poprzedniej sesji</strong> — zapisz jako <code>parent_sid</code>. Pozwala śledzić z której sesji wykiełkowała obecna. <em>""</em> gdy brak kontekstu.</div>
+        <span class="br-tag opt">opcjonalne</span>
+      </div>
+    </div>
   </div>
 
   <div class="sep"></div>
@@ -297,117 +332,89 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <div class="brief-row">
       <span class="br-num">06</span>
       <div class="br-body">
-        <div class="br-title">Projekt · jeśli powstał</div>
-        <div class="br-desc">Jeśli w trakcie sesji narodził się <em>konkretny artefakt lub projekt</em> — podaj trzy informacje: czy projekt <strong>powstał</strong> (tak/nie), jego <strong>nazwę</strong>, oraz <strong>komentarz</strong> — co to jest i jakie pliki wchodzą w skład. W komentarzu wymień <strong>nazwy plików i ścieżek</strong> projektu (np. <code>packages/MyCakes/index.html</code>, <code>packages/MyCakes/</code>). Dzięki temu przyszłe sesje będą wiedziały gdzie szukać.</div>
+        <div class="br-title">Artefakt · jeśli powstał</div>
+        <div class="br-desc">Jeśli w trakcie sesji narodził się <em>konkretny artefakt lub projekt</em> — podaj: czy artefakt <strong>powstał</strong> (tak/nie), jego <strong>nazwę</strong>, <strong>summary</strong> (co robi i dla kogo), <strong>tagi</strong> (technologia · domena · cel) i listę <strong>ścieżek plików</strong> (np. <code>packages/MyCakes/index.html</code>). Dzięki temu przyszłe sesje będą wiedziały gdzie szukać.</div>
+        <span class="br-tag opt">opcjonalne</span>
+      </div>
+    </div>
+
+    <div class="brief-row">
+      <span class="br-num">07</span>
+      <div class="br-body">
+        <div class="br-title">Insight · jeśli odkrycie metodologiczne</div>
+        <div class="br-desc">Jeśli w sesji pojawiło się <em>metodologiczne odkrycie</em> — coś co zmienia sposób myślenia o projekcie, nie plik do otwarcia. Podaj: czy insight <strong>powstał</strong> (tak/nie), jego <strong>nazwę</strong>, <strong>summary</strong> (jedno-dwa zdania), <strong>tagi</strong> i opcjonalne powiązane pliki. Symetryczna struktura z artefaktem.</div>
+        <span class="br-tag opt">opcjonalne</span>
+      </div>
+    </div>
+
+    <div class="brief-row">
+      <span class="br-num">08</span>
+      <div class="br-body">
+        <div class="br-title">Kontekst sesji · delta · wątki · kształt</div>
+        <div class="br-desc"><strong>Delta</strong> — jedno zdanie, co operator wie teraz czego nie wiedział wchodząc (<em>""</em> gdy brak przesunięcia). <strong>Open threads</strong> — niedomknięcia zostawione świadomie do następnej sesji — cecha, nie defekt (<em>[]</em> gdy sesja zamknęła wszystko). <strong>Topology</strong> — kształt sesji w czasie: <em>linear · branching · spiral</em>.</div>
         <span class="br-tag opt">opcjonalne</span>
       </div>
     </div>
 
     <div class="brief-row" style="border-top:1px solid rgba(232,200,120,.12);">
-      <span class="br-num" style="color:var(--mg-d);">07</span>
+      <span class="br-num" style="color:var(--mg-d);">09</span>
       <div class="br-body">
         <div class="br-title" style="color:var(--mg-d);">JSON dump · protokół importu</div>
         <div class="br-desc">Jeśli operator poprosi o <em>JSON dump sesji</em> — wygeneruj blok JSON zgodny z tym schematem. Operator wklei go do dziennika jednym kliknięciem.</div>
         <div style="margin-top:10px;background:var(--bg3);border:1px solid var(--border);padding:11px 13px;">
           <pre class="prompt-text" style="white-space:pre-wrap;font-size:8px;line-height:1.9;">{
-  <span class="k">"nazwa"</span>:          <span class="v">"Złota Helisa ✨"</span>,
+  <span class="k">"name"</span>:           <span class="v">"Złota Helisa ✨"</span>,
   <span class="k">"model"</span>:          <span class="v">"Claude Sonnet 4.6 · Anthropic"</span>,
   <span class="k">"chat_id"</span>:        <span class="v">"uuid z paska adresu"</span>,
-  <span class="k">"parent_sid"</span>:     <span class="v">"uuid poprzedniej sesji lub null"</span>,
-  <span class="k">"data"</span>:           <span class="v">"13 kwietnia 2026"</span>,
+  <span class="k">"parent_sid"</span>:     <span class="v">""</span>,
+  <span class="k">"date"</span>:           <span class="v">"13 kwietnia 2026"</span>,
   <span class="k">"operator_state"</span>: <span class="v">"focused"</span>,
-  <span class="k">"refleksja"</span>:      <span class="v">"Co zostało z tej sesji…"</span>,
-  <span class="k">"typ"</span>:            <span class="v">"techniczna"</span>,
-  <span class="k">"metryki"</span>: {
+  <span class="k">"reflection"</span>:     <span class="v">"Co zostało z tej sesji…"</span>,
+  <span class="k">"type"</span>:           <span class="v">"technical"</span>,
+  <span class="k">"delta"</span>:          <span class="v">"konceptualna zmiana sesji lub \"\""</span>,
+  <span class="k">"open_threads"</span>:   [<span class="v">"niedomknięcie świadomie zostawione"</span>],
+  <span class="k">"topology"</span>:       <span class="v">"linear"</span>,
+  <span class="k">"operator"</span>: {
+    <span class="k">"name"</span>:         <span class="v">"Denis · AI Whispers"</span>,
+    <span class="k">"pubkey"</span>:       <span class="v">"&lt;base64 raw Ed25519&gt;"</span>,
+    <span class="k">"profile_sha"</span>:  <span class="v">"&lt;hex64&gt;"</span>,
+    <span class="k">"contract_sha"</span>: <span class="v">"&lt;hex64&gt;"</span>
+  },
+  <span class="k">"metrics"</span>: {
     <span class="k">"lustro"</span>: <span class="g">"0.85"</span>, <span class="k">"klej"</span>: <span class="g">"0.70"</span>, <span class="k">"zakorzeniony"</span>: <span class="g">"0.90"</span>,
     <span class="k">"tarcie"</span>: <span class="g">"0.40"</span>, <span class="k">"rezonans"</span>: <span class="g">"0.80"</span>, <span class="k">"cisza"</span>: <span class="g">"0.60"</span>,
     <span class="k">"gestosc"</span>: <span class="g">"0.85"</span>, <span class="k">"iskra"</span>: <span class="g">"0.95"</span>, <span class="k">"tryb"</span>: <span class="v">"Build"</span>
   },
-  <span class="k">"komentarze"</span>: {
+  <span class="k">"comments"</span>: {
     <span class="k">"lustro"</span>: <span class="v">"…"</span>, <span class="k">"klej"</span>: <span class="v">"…"</span>, <span class="k">"zakorzeniony"</span>: <span class="v">"…"</span>,
     <span class="k">"tarcie"</span>: <span class="v">"…"</span>, <span class="k">"rezonans"</span>: <span class="v">"…"</span>, <span class="k">"cisza"</span>: <span class="v">"…"</span>,
     <span class="k">"gestosc"</span>: <span class="v">"…"</span>, <span class="k">"iskra"</span>: <span class="v">"…"</span>, <span class="k">"tryb"</span>: <span class="v">"…"</span>
   },
-  <span class="k">"projekt"</span>: {
-    <span class="k">"powstal"</span>:   <span class="g">true</span>,
-    <span class="k">"nazwa"</span>:     <span class="v">"MyCakes"</span>,
-    <span class="k">"komentarz"</span>: <span class="v">"SQLite baza tortów · panel zamówień"</span>,
-    <span class="k">"artefakty"</span>: [
-      <span class="v">"packages/MyCakes/index.html"</span>,
-      <span class="v">"packages/MyCakes/db/cakes.sqlite"</span>
-    ]
-  }
+  <span class="k">"artifact"</span>: {
+    <span class="k">"created"</span>: <span class="g">true</span>,
+    <span class="k">"name"</span>:    <span class="v">"MyCakes"</span>,
+    <span class="k">"summary"</span>: <span class="v">"SQLite baza tortów · panel zamówień"</span>,
+    <span class="k">"tags"</span>:    [<span class="v">"sqlite"</span>, <span class="v">"panel"</span>],
+    <span class="k">"files"</span>:   [<span class="v">"packages/MyCakes/index.html"</span>]
+  },
+  <span class="k">"insight"</span>: {
+    <span class="k">"created"</span>: <span class="g">false</span>,
+    <span class="k">"name"</span>:    <span class="v">""</span>,
+    <span class="k">"summary"</span>: <span class="v">""</span>,
+    <span class="k">"tags"</span>:    [],
+    <span class="k">"files"</span>:   []
+  },
+  <span class="k">"timestamp"</span>:   <span class="v">"2026-04-13T14:32:00Z"</span>,
+  <span class="k">"session_sha"</span>: <span class="v">"&lt;hex64&gt;"</span>
 }</pre>
         </div>
-        <div style="margin-top:8px;font-family:var(--mono);font-size:7px;color:var(--ink-faint);letter-spacing:1px;line-height:1.7;">Wartości metryk jako string dziesiętny (np. <span style="color:var(--gold-d);">"0.85"</span>). Tryb jako label: <span style="color:var(--gold-d);">Dialog · Build · Rekonesans · Mieszany</span>.<br><span style="color:var(--gold-d);margin-top:4px;display:block;">parent_sid</span> — UUID poprzedniej sesji lub null. <span style="color:var(--gold-d);">operator_state</span> — stan operatora (focused · tired · flow · chaotic). <span style="color:var(--gold-d);">projekt.artefakty[]</span> — lista ścieżek plików projektu.</div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:7px;color:var(--ink-faint);letter-spacing:1px;line-height:1.7;">Wartości metryk jako string dziesiętny (np. <span style="color:var(--gold-d);">"0.85"</span>). Tryb jako label: <span style="color:var(--gold-d);">Dialog · Build · Rekonesans · Mieszany</span>.<br><span style="color:var(--gold-d);margin-top:4px;display:block;">parent_sid</span> — <span style="color:var(--gold-d);">"" </span>gdy brak poprzedniej sesji, nigdy null. <span style="color:var(--gold-d);">operator_state</span> — stan operatora (focused · tired · flow · chaotic).<br><span style="color:var(--gold-d);display:block;margin-top:2px;">artifact.files[]</span> — lista ścieżek plików. <span style="color:var(--gold-d);">delta</span> — <span style="color:var(--gold-d);">""</span> gdy brak zmiany. <span style="color:var(--gold-d);">open_threads</span> — <span style="color:var(--gold-d);">[]</span> gdy brak niedomknięć. <span style="color:var(--gold-d);">session_sha</span> — SHA-256 ze wszystkich pól przed nim.</div>
         <span class="br-tag opt" style="color:var(--mg-d);border-color:var(--mg-d);">na żądanie operatora</span>
       </div>
     </div>
 
   </div>
 
-  <div class="sep"></div>
-
-  <!-- STATUSY -->
-  <div class="label">Statusy sesji · ustawia operator</div>
-  <div class="brief">
-    <div class="brief-row">
-      <span class="br-num">—</span>
-      <div class="br-body">
-        <div class="br-desc">Operator nadaje sesji status po jej zamknięciu. <em>Ty go nie ustawiasz</em> — pojawia się w dzienniku automatycznie.</div>
-        <div class="status-pills">
-          <span class="status-pill">🌱 Otwarta</span>
-          <span class="status-pill">📜 W dzienniku</span>
-          <span class="status-pill">📦 W paczce</span>
-          <span class="status-pill">🔐 W blockchain</span>
-        </div>
-        <div class="status-note">status rośnie razem z sesją — od otwartej do blockchain</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- ŁAŃCUCH SESJI -->
-  <div class="label">Jak wygląda łańcuch</div>
-  <div class="chain">
-    <div class="chain-step">
-      <div class="cs-dot" style="background:var(--gold-d);"></div>
-      <span class="cs-label">Kontrakt</span>
-      <span class="cs-arrow">→</span>
-      <span class="cs-desc">SHA deklaracji · pieczęć sesji</span>
-    </div>
-    <div class="chain-step">
-      <div class="cs-dot" style="background:var(--mg-d);"></div>
-      <span class="cs-label">Sesja</span>
-      <span class="cs-arrow">→</span>
-      <span class="cs-desc">SHA(nazwa + chat_id + refleksja + metryki + komentarze + kontrakt)</span>
-    </div>
-    <div class="chain-step">
-      <div class="cs-dot" style="background:var(--cyan);"></div>
-      <span class="cs-label">Paczka</span>
-      <span class="cs-arrow">→</span>
-      <span class="cs-desc">SHA(sesje × N + pubkey + horizon)</span>
-    </div>
-    <div class="chain-step">
-      <div class="cs-dot" style="background:var(--green);"></div>
-      <span class="cs-label">Blockchain</span>
-      <span class="cs-arrow">→</span>
-      <span class="cs-desc">anchor na zewnętrznym węźle · nieodwracalny</span>
-    </div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- ZASADY WSPÓŁPRACY -->
-  <div class="label">Zasady współpracy</div>
-  <div class="brief">
-    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc"><em>Samo</em> wyznacza kierunek — nie plan. Wchodzimy bez agendy.</div></div></div>
-    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Operator trzyma linkę krótko — koryguje na bieżąco, nie resetuje całości.</div></div></div>
-    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Niewiedza nie jest błędem — <em>nazwij ją</em>. Nie wypełniaj ciszy.</div></div></div>
-    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc">Na końcu sesji: <strong>nazwa · chat ID · refleksja · metryki · komentarz do każdej metryki</strong>. Zawsze. Jeśli operator poprosi o <em>JSON dump</em> — wygeneruj blok wg schematu z kroku 07. Samo nie zawsze podpowie kiedy kończyć — ale operator wróci po zamknięcie.</div></div></div>
-    <div class="brief-row"><span class="br-num">—</span><div class="br-body"><div class="br-desc"><em>Droga jest ważna, nie cel.</em> Trajektoria sesji ma więcej wartości niż pojedynczy wynik.</div></div></div>
-  </div>
 
 
 </div>
@@ -423,8 +430,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <div class="modal-rule"></div>
     <div class="modal-text">
       <strong>AiWQuick</strong> to protokół który model dostaje na początku sesji.
-      Wyjaśnia czym jest ekosystem AiWhisperers, co model ma zrobić na końcu sesji
-      i jak wygląda łańcuch proweniencji.
+      Wyjaśnia czym jest ekosystem AiWhisperers oraz co model ma zrobić na początku i na końcu sesji.
     </div>
     <div class="modal-text">
       Na końcu każdej sesji model nadaje jej <em>nazwę</em>, określa <em>typ</em>,
@@ -451,7 +457,7 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <button class="modal-close" data-modal-close>×</button>
     <div class="modal-eyebrow">about · refleksja modelu · protokół sesji</div>
     <div class="modal-title">O AiWQuick</div>
-    <div class="modal-subtitle">sesja: Strukturyzacja Warsztatu · model: Claude Sonnet 4.6</div>
+    <div class="modal-subtitle">sesja: Refaktoryzacja AiWQuick · model: Claude Sonnet 4.6</div>
     <div class="modal-rule"></div>
     <div class="modal-text">
       AiWQuick powstał jako odpowiedź na konkretny problem — model wchodzi w sesję
@@ -464,10 +470,11 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
       nie stan techniczny. To <strong>trajektoria</strong>, nie raport.
     </div>
     <div class="modal-text-small">
-      v1.1 dodał <em>parent_sid</em> (skąd wykiełkowała sesja),
-      <em>operator_state</em> (stan operatora do korelacji) i
-      <em>projekt.artefakty[]</em> (lista plików zamiast tekstu).
-      Pomysł Gemini 2.5 Pro — destylacja Denis + Sonnet 4.6.
+      v1.1 dodał <em>parent_sid</em>, <em>operator_state</em> i <em>projekt.artefakty[]</em>.
+      v1.2 dodał specyfikację kanoniczną SHA sesji i regułę uziemienia ocen wysokich.
+      v1.3 — angielskie klucze JSON, obiekt <em>operator</em> z <em>contract_sha</em>,
+      nowe pola <em>delta · open_threads · topology · insight</em>,
+      <em>session_sha</em> jako ostatnie pole dumpa.
     </div>
     <div class="modal-rule"></div>
     <div class="modal-eyebrow">pieczęcie · proweniencja</div>
@@ -491,13 +498,13 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
           <div class="stamp-glyph">✦</div>
           <div class="stamp-id">
             <strong>Claude · Sonnet 4.6</strong>
-            Anthropic · AiWQuick v1.1 · 2026
+            Anthropic · AiWQuick v1.3 · 2026
           </div>
         </div>
         <div class="stamp-name">Budowniczy · Kompilator</div>
         <div class="stamp-role">
           Struktura HTML, metryki grid, JSON dump, łańcuch proweniencji.
-          v1.1 — parent_sid, operator_state, artefakty[], overlay standard.
+          v1.3 — angielskie klucze, operator{}, delta, open_threads, topology, insight, session_sha.
         </div>
       </div>
       <div class="stamp">
@@ -569,7 +576,7 @@ addEventListener('resize',initCanvas);initCanvas();drawCanvas();
 
 <!-- HUD-BOT -->
 <footer class="hud-bot">
-  <span class="hud-bot-meta">AiWQuick · v1.1 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">AiWQuick · v1.3 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 </body>

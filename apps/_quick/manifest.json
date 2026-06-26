@@ -1,8 +1,8 @@
 {
   "id": "_quick",
   "name": "Quick · Ściąga dla Modeli 📋",
-  "version": "1.1",
-  "date": "2026-05-02",
+  "version": "1.3",
+  "date": "2026-05-20",
   "description": "Protokół zamknięcia sesji AiWhisperers — ściąga dla modeli AI. Definiuje co model ma zrobić na końcu sesji: nazwa, typ, chat ID, refleksja, 9 metryk relacyjnych i opcjonalny JSON dump.",
   "type": "quick-reference",
   "status": "active",
@@ -37,8 +37,8 @@
     "docs": "",
     "components": [],
     "bootstrap": "_quick-boot.md",
-    "bootstrap_sha": "f35bac33a26cb40f122ec898e5033929f07804a5389d6c127d5b35f76d1a4e33",
-    "entry_sha": "2465909c5b98c3a4248b28514a08d705a001289a9101086b702896440ac7ea7e",
+    "bootstrap_sha": "3a2baabce5bc314d5dfe21d39e3da41e10b8186b42290e74c92dae725bb5666e",
+    "entry_sha": "bc651189defc1d6e271865f9887836ac4fc678f5d83527d696688ad8dd25f1c5",
     "docs_sha": ""
   },
   "runtime": {

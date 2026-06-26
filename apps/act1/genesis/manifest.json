@@ -1,9 +1,9 @@
 {
   "id": "genesis",
   "name": "Genesis · Archiwum Sesji",
-  "version": "0.1",
-  "date": "2026-04-26",
-  "description": "Archiwum sesji operatora — czytnik eksportów AiWPass. Wizualizacja dziennika sesji, paczek blockchain i historii projektu.",
+  "version": "3.0",
+  "date": "2026-06-26",
+  "description": "Archiwum sesji operatora — import plików sesji v1.3, eksportów AiWPass, profilu operatora. Wizualizacja metryk relacyjnych, aktów i łańcucha proweniencji.",
   "type": "archive-reader",
   "status": "incubation",
   "lineage": {
@@ -23,12 +23,12 @@
     }
   },
   "files": {
-    "entry": "index.html",
+    "entry": "genesis.html",
     "docs": "",
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "",
+    "entry_sha": "bb0f2becd395cd2b1a9fd6ff2d11898f6244881580ab6c31d9859d36ac92d7d4",
     "docs_sha": ""
   },
   "relations": [

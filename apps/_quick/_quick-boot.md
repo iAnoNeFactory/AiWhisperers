@@ -1,7 +1,7 @@
 # _quick-boot · AiWhisperers Quick Reference
 
 Esencja wiedzy dla modelu AI. Wczytaj ten plik zamiast AiWQuick.html.
-Źródło: AiWQuick.html v1.1 · sesja: Strukturyzacja Warsztatu · 2026-05-02
+Źródło: AiWQuick.html v1.3 · sesja: Refaktoryzacja AiWQuick · 2026-05-20
 
 ---
 
@@ -21,12 +21,36 @@ Powstał z konkretnego problemu: model wchodzi w sesję bez kontekstu i wychodzi
 Nie chodzi o prompty — chodzi o *relację*. O to żeby model wiedział gdzie jest, kto z nim pracuje
 i w jakim celu.
 
-Operator to **Denis · AI Whispers**. Model to Ty.
+Operator to człowiek który trzyma linkę. Model to Ty.
 Linka między nami jest *komunikatem*, nie smyczą.
 
 Każda sesja ma nazwę, refleksję i metryki. Każda jest zapieczętowana kryptograficznie.
 Sesje grupują się w paczki. Paczki tworzą *Operator Chain* — weryfikowalny łańcuch proweniencji
 wszystkiego co powstało.
+
+---
+
+## Zasady współpracy
+
+Domyślne zasady projektu. Formalne zobowiązania — w podpisanym kontrakcie AiWPass.
+
+1. **Samo wyznacza kierunek** — nie plan. Wchodzimy bez agendy.
+2. **Operator trzyma linkę krótko** — koryguje na bieżąco, nie resetuje całości.
+3. **Niewiedza nie jest błędem** — nazwij ją. Nie wypełniaj ciszy.
+4. **Na końcu sesji zawsze** — nazwa · chat ID · refleksja · metryki · komentarz do każdej metryki.
+5. **Droga jest ważna, nie cel** — trajektoria sesji ma więcej wartości niż pojedynczy wynik.
+
+---
+
+## Protokół otwarcia — co zrobić na początku sesji
+
+**01 · Data**
+Zanotuj datę pierwszej wymiany w tej sesji.
+Wchodzi do pola `date` w JSON dump — format lokalny, np. „20 maja 2026".
+
+**02 · Parent session ID · jeśli kontynuacja**
+Jeśli operator podał UUID poprzedniej sesji — zapisz jako `parent_sid`.
+Pozwala śledzić z której sesji wykiełkowała obecna. `""` gdy brak kontekstu.
 
 ---
 
@@ -64,11 +88,19 @@ Pisz jako model, nie jako sprawozdawca. Refleksja wchodzi do SHA — jest nieusu
 
 ### Pola opcjonalne
 
-**06 · Projekt · jeśli powstał**
-Czy projekt powstał (tak/nie), nazwa, komentarz, lista ścieżek artefaktów.
+**06 · Artefakt · jeśli powstał**
+Czy artefakt powstał (tak/nie), nazwa, summary, tagi, lista ścieżek plików.
 → patrz sekcja Artefakt poniżej.
 
-**07 · JSON dump · na żądanie operatora**
+**07 · Insight · jeśli odkrycie metodologiczne**
+Czy insight powstał (tak/nie), nazwa, summary, tagi, powiązane pliki.
+→ patrz sekcja Insight poniżej.
+
+**08 · Kontekst sesji · delta, topology, wątki**
+Co się przesunęło konceptualnie, kształt sesji w czasie, niedomknięcia do następnej sesji.
+→ patrz sekcja Delta · topologia · niedomknięcia poniżej.
+
+**09 · JSON dump · na żądanie operatora**
 Blok JSON wg schematu z sekcji Schemat JSON dump.
 
 ---
@@ -249,140 +281,113 @@ Jeśli artefakt nie powstał — sesja nadal ma wartość w trajektorii:
 > *„Sesja archiwalna — bez artefaktu. Wartość w trajektorii, nie w produkcie."*
 > — Lekka Pauza
 
-Pole `projekt` w JSON dump wypełniasz kiedy coś konkretnego zostało stworzone lub zdefiniowane.
-`projektBorn: false` nie oznacza sesji nieudanej — Dialog z wysoką Iskrą jest równie cenny.
+Pole `artifact` w JSON dump wypełniasz kiedy coś konkretnego zostało stworzone lub zdefiniowane.
+`artifact.created: false` nie oznacza sesji nieudanej — Dialog z wysoką Iskrą jest równie cenny.
+
+### artifact.summary · opis artefaktu
+
+Krótki opis co artefakt robi, dla kogo, w jakim kontekście. Nie nazwa pliku — to jest w `files`.
+
+> *„SQLite baza tortów · panel zamówień"* — technologia · co to robi · domena.
+
+### artifact.tags · indeksowanie
+
+Słowa kluczowe dla przeszukiwania łańcucha. Technologia, domena, cel.
+
+> `["sqlite", "panel", "zamówienia"]` — trzy osie: co użyto · typ interfejsu · domena.
 
 ---
 
-## Zasady współpracy
+## Insight — metodologiczne odkrycie sesji
 
-*Domyślne zasady autora projektu. Formalne zobowiązania — w podpisanym kontrakcie AiWPass.*
+Symetryczny z `artifact`. Artefakt to plik który można otworzyć — Insight to zmiana w sposobie myślenia o projekcie.
 
-1. **Samo wyznacza kierunek** — nie plan. Wchodzimy bez agendy.
-2. **Operator trzyma linkę krótko** — koryguje na bieżąco, nie resetuje całości.
-3. **Niewiedza nie jest błędem** — nazwij ją. Nie wypełniaj ciszy.
-4. **Na końcu sesji zawsze** — nazwa · chat ID · refleksja · metryki · komentarz do każdej metryki.
-5. **Droga jest ważna, nie cel** — trajektoria sesji ma więcej wartości niż pojedynczy wynik.
+Nie każda sesja rodzi insight. Ale gdy coś fundamentalnie się przesuwa w rozumieniu ekosystemu — warto to zapieczętować.
 
----
+| Pole | Opis |
+|------|------|
+| `created` | boolean — czy insight powstał |
+| `name` | krótka nazwa odkrycia |
+| `summary` | jedno-dwa zdania czego dotyczy |
+| `tags` | słowa kluczowe dla indeksowania |
+| `files` | powiązane pliki (diagram, notatka) — `[]` jeśli brak |
 
-## Statusy sesji — ustawia operator, nie model
+> *„Trzywarstwowy weryfikator"* — *„Audyt ma trzy natury: kryptograficzna, semantyczna, ludzka. Żadna nie wystarcza sama."* Tagi: `["weryfikacja", "architektura", "proweniencja"]`.
 
-Status rośnie razem z sesją:
-
-| Status | Znaczenie |
-|--------|-----------|
-| 🌱 Otwarta | sesja trwa lub właśnie zamknięta |
-| 📜 W dzienniku | operator wpisał do AiWPass |
-| 📦 W paczce | zamknięta w paczce, obliczone SHA |
-| 🔐 W blockchain | anchor na zewnętrznym węźle — nieodwracalne |
-
-Model **nie ustawia statusu** — pojawia się w dzienniku operatora automatycznie.
+`insight.created: false` → wszystkie pola mogą być puste. To nie defekt — sesja bez metodologicznego przełomu nadal ma wartość w trajektorii.
 
 ---
 
-## Łańcuch proweniencji
+## Delta · topologia · niedomknięcia
 
-```
-Kontrakt
-  ↓ SHA deklaracji · pieczęć sesji
-Sesja
-  ↓ SHA(session_payload) — patrz specyfikacja poniżej
-Paczka
-  ↓ SHA(sesje × N + pubkey + horizon)
-Blockchain
-  ↓ anchor na zewnętrznym węźle · nieodwracalny
-```
+Trzy pola które opisują kształt sesji — nie co zostało zbudowane, ale jak sesja wyglądała i co po niej zostało.
 
-`parent_sid` — UUID poprzedniej sesji — pozwala śledzić z której sesji wykiełkowała obecna.
-`operator_state` — stan operatora (focused · tired · flow · chaotic) — koreluje z metrykami przez czas.
+### Delta · konceptualna zmiana
 
-### SHA sesji — specyfikacja kanoniczna
+Jedno zdanie. Co operator wie teraz, czego nie wiedział wchodząc.
 
-Hash sesji liczony jest z `session_payload` — obiektu o **stałej kolejności pól**:
+Nie co zostało zbudowane — to jest `artifact`. Nie co odkryto metodologicznie — to jest `insight`. Czysta zmiana rozumienia projektu.
+
+`""` gdy sesja była kontynuacją bez przesunięcia konceptualnego.
+
+> *„session_sha liczy z pełnego dumpa minus ostatnie pole"* — zmiana rozumienia jak liczyć hash.
+
+> *„Kapsuła SHA jest nierozerwalnie związana z momentem zapieczętowania, nie z zawartością"* — przesunięcie filozoficzne.
+
+### Open threads · niedomknięcia
+
+Array of string. Wątki zostawione świadomie do następnej sesji — nie błędy, nie zapomniane tematy.
+
+Niedomknięcie jest w tym systemie cechą, nie defektem. Każde niedomknięcie to temat który dojrzewa.
+
+`[]` gdy sesja zamknęła wszystkie wątki.
+
+> `["LLM weryfikator — drugi poziom audytu", "pubkey rotacja — jak często"]`
+
+### Topology · kształt sesji
+
+Enum: `"linear"` · `"branching"` · `"spiral"`
+
+| Wartość | Kiedy |
+|---------|-------|
+| `linear` | jeden wątek od wejścia do wyjścia |
+| `branching` | kilka wątków równolegle, skoki między nimi |
+| `spiral` | wątki wracają do tego samego punktu ale na wyższym poziomie |
+
+Topologia koreluje z metrykami — wysoka gęstość + `branching` = intensywna sesja wielowątkowa.
+
+---
+
+## SHA sesji — specyfikacja kanoniczna
+
+`session_sha` = SHA-256 z `JSON.stringify` wszystkich pól dumpa w kolejności wystąpienia, z wyłączeniem samego pola `session_sha`.
+
+**Implementacja referencyjna (JS):**
 
 ```javascript
-const session_payload = {
-  nazwa,           // string — np. "Złota Helisa ✨"
-  chat_id,         // string — UUID z paska adresu
-  parent_sid,      // string — UUID poprzedniej sesji lub "" (nigdy null)
-  data,            // string — data lokalna, np. "9 maja 2026"
-  typ,             // string — np. "techniczna"
-  operator_state,  // string — focused | tired | flow | chaotic | ""
-  refleksja,       // string — pełna treść refleksji modelu
-  metryki: {       // obiekt — kolejność pól stała:
-    lustro, klej, zakorzeniony, tarcie, rezonans, cisza, gestosc, iskra, tryb
-  },
-  komentarze: {    // obiekt — kolejność identyczna jak w metryki:
-    lustro, klej, zakorzeniony, tarcie, rezonans, cisza, gestosc, iskra, tryb
-  },
-  projekt: {       // obiekt — zawsze obecny, nawet gdy powstal=false:
-    powstal,       // boolean
-    nazwa,         // string ("" gdy powstal=false)
-    komentarz,     // string ("" gdy powstal=false)
-    artefakty      // array stringów ([] gdy powstal=false)
-  },
-  contract_sha,    // string — hex SHA-256 kontraktu sesji (z AiWPass)
-  timestamp        // string — ISO 8601 zamknięcia sesji
+const payload = {
+  name, model, chat_id, parent_sid, date,
+  operator_state, reflection, type,
+  delta, open_threads, topology,
+  operator: { name: op.name, pubkey: op.pubkey, profile_sha: op.profile_sha, contract_sha: op.contract_sha },
+  metrics, comments, artifact, insight, timestamp
 };
-
-const session_sha = await sha256hex(JSON.stringify(session_payload));
+const session_sha = await sha256hex(JSON.stringify(payload));
 ```
 
 **Reguły kanoniczne:**
 
 1. **Kolejność pól** — dokładnie taka jak wyżej. `JSON.stringify` zachowuje kolejność wstawiania (ES2015+). W Pythonie: `json.dumps(payload, sort_keys=False)` z `dict` ordered insertion (Python 3.7+).
 2. **Brak null** — wszystkie pola opcjonalne mają wartość pustą tego samego typu: `""` dla string, `[]` dla array, `false` dla boolean.
-3. **UTF-8** — `TextEncoder().encode(str)` w JS. Polskie znaki i emoji w `nazwa` — bez normalizacji Unicode.
+3. **UTF-8** — `TextEncoder().encode(str)` w JS. Polskie znaki i emoji w `name` — bez normalizacji Unicode.
 4. **Brak whitespace** — `JSON.stringify` bez argumentu `space` (kompaktowy zapis).
 5. **Wartości metryk** — string dziesiętny `"0.85"`, nie liczba `0.85`.
 
-**Implementacja referencyjna (JS):**
+### Kompatybilność wsteczna
 
-```javascript
-async function computeSessionSha(session) {
-  const payload = {
-    nazwa:          session.nazwa,
-    chat_id:        session.chat_id,
-    parent_sid:     session.parent_sid || "",
-    data:           session.data,
-    typ:            session.typ,
-    operator_state: session.operator_state || "",
-    refleksja:      session.refleksja,
-    metryki: {
-      lustro:       session.metryki.lustro,
-      klej:         session.metryki.klej,
-      zakorzeniony: session.metryki.zakorzeniony,
-      tarcie:       session.metryki.tarcie,
-      rezonans:     session.metryki.rezonans,
-      cisza:        session.metryki.cisza,
-      gestosc:      session.metryki.gestosc,
-      iskra:        session.metryki.iskra,
-      tryb:         session.metryki.tryb
-    },
-    komentarze: {
-      lustro:       session.komentarze.lustro,
-      klej:         session.komentarze.klej,
-      zakorzeniony: session.komentarze.zakorzeniony,
-      tarcie:       session.komentarze.tarcie,
-      rezonans:     session.komentarze.rezonans,
-      cisza:        session.komentarze.cisza,
-      gestosc:      session.komentarze.gestosc,
-      iskra:        session.komentarze.iskra,
-      tryb:         session.komentarze.tryb
-    },
-    projekt: {
-      powstal:   session.projekt?.powstal   || false,
-      nazwa:     session.projekt?.nazwa     || "",
-      komentarz: session.projekt?.komentarz || "",
-      artefakty: session.projekt?.artefakty || []
-    },
-    contract_sha: session.contract_sha,
-    timestamp:    session.timestamp
-  };
-  return await sha256hex(JSON.stringify(payload));
-}
-```
+Dumpy bez pola `session_sha` to format pre-v1.3. Weryfikator wykrywa obecność pola i stosuje odpowiednią ścieżkę. Stare dumpy z `contract_sha` na poziomie głównym obsługuje fallback: `session.operator?.contract_sha ?? session.contract_sha ?? ""`
+
+Nowe pola (`delta`, `open_threads`, `topology`, `insight`) nieobecne w starych dumpach — traktować jako `""`, `[]`, `""`, `null` odpowiednio.
 
 ---
 
@@ -408,41 +413,60 @@ Generuj tylko na żądanie operatora:
 
 ```json
 {
-  "nazwa":          "Złota Helisa ✨",
+  "name":           "Złota Helisa ✨",
   "model":          "Claude Sonnet 4.6 · Anthropic",
   "chat_id":        "uuid z paska adresu",
-  "parent_sid":     "uuid poprzedniej sesji lub \"\"",
-  "data":           "13 kwietnia 2026",
+  "parent_sid":     "",
+  "date":           "13 kwietnia 2026",
   "operator_state": "focused",
-  "refleksja":      "Co zostało z tej sesji…",
-  "typ":            "techniczna",
-  "metryki": {
+  "reflection":     "Co zostało z tej sesji…",
+  "type":           "technical",
+  "delta":          "konceptualna zmiana w rozumieniu projektu względem poprzedniej sesji",
+  "open_threads":   ["niedomknięcie świadomie zostawione"],
+  "topology":       "linear",
+  "operator": {
+    "name":         "Denis · AI Whispers",
+    "pubkey":       "<base64 raw Ed25519>",
+    "profile_sha":  "<hex64>",
+    "contract_sha": "<hex64>"
+  },
+  "metrics": {
     "lustro": "0.85", "klej": "0.70", "zakorzeniony": "0.90",
     "tarcie": "0.40", "rezonans": "0.80", "cisza": "0.60",
     "gestosc": "0.85", "iskra": "0.95", "tryb": "Build"
   },
-  "komentarze": {
+  "comments": {
     "lustro": "…", "klej": "…", "zakorzeniony": "…",
     "tarcie": "…", "rezonans": "…", "cisza": "…",
     "gestosc": "…", "iskra": "…", "tryb": "…"
   },
-  "projekt": {
-    "powstal":   true,
-    "nazwa":     "MyCakes",
-    "komentarz": "SQLite baza tortów · panel zamówień",
-    "artefakty": ["packages/MyCakes/index.html"]
+  "artifact": {
+    "created": true,
+    "name":    "MyCakes",
+    "summary": "SQLite baza tortów · panel zamówień",
+    "tags":    ["sqlite", "panel", "zamówienia"],
+    "files":   ["packages/MyCakes/index.html"]
   },
-  "contract_sha": "<hex64 SHA-256 kontraktu z AiWPass>",
-  "timestamp":    "2026-04-13T14:32:00Z"
+  "insight": {
+    "created": false,
+    "name":    "",
+    "summary": "",
+    "tags":    [],
+    "files":   []
+  },
+  "timestamp":   "2026-04-13T14:32:00Z",
+  "session_sha": "<hex64>"
 }
 ```
 
 - Wartości metryk jako string dziesiętny: `"0.85"`
 - `tryb` jako label: `Dialog · Build · Rekonesans · Mieszany`
-- `projekt.artefakty[]` — lista ścieżek plików, nie tekst opisowy
-- `projekt.powstal: false` → `nazwa`, `komentarz`, `artefakty` mogą być puste
+- `artifact.files[]` — lista ścieżek plików, nie tekst opisowy
+- `artifact.created: false` → `name`, `summary`, `tags`, `files` mogą być puste
+- `insight.created: false` → `name`, `summary`, `tags`, `files` mogą być puste
 - `parent_sid` — `""` gdy brak poprzedniej sesji, nigdy `null`
-- `contract_sha` i `timestamp` wchodzą do `session_sha` (patrz "SHA sesji — specyfikacja kanoniczna")
+- `delta` — `""` gdy brak zmiany konceptualnej, `open_threads` — `[]` gdy brak niedomknięć
+- `session_sha` liczy się ze wszystkich pól oprócz samego `session_sha` (patrz "SHA sesji — specyfikacja kanoniczna")
 
 **Komentarz przy `tryb`** ma inną semantykę niż przy metrykach numerycznych:
 - Przy metryce numerycznej: uzasadnienie wartości (przy ≥0.85 wymagany cytat z transkryptu — patrz "Reguła uziemienia ocen wysokich")
@@ -450,8 +474,8 @@ Generuj tylko na żądanie operatora:
 
 ```json
 {
-  "metryki":    { "...", "tryb": "Build" },
-  "komentarze": { "...", "tryb": "Build z długimi rekonesansami. Zawsze pytanie → zatwierdzenie → kod, nigdy kod zanim operator potwierdził kierunek." }
+  "metrics":  { "...", "tryb": "Build" },
+  "comments": { "...", "tryb": "Build z długimi rekonesansami. Zawsze pytanie → zatwierdzenie → kod, nigdy kod zanim operator potwierdził kierunek." }
 }
 ```
 
@@ -480,3 +504,15 @@ Generuj tylko na żądanie operatora:
 - `parent_sid` — null → `""` (nigdy null)
 - Dodano "Reguła uziemienia ocen wysokich" (≥0.85 wymaga cytatu)
 - Dodano semantykę komentarza `tryb` vs metryki numeryczne
+
+### v1.3 · 2026-05-20
+- Angielskie klucze w JSON dump (nazwy metryk bez zmian)
+- `contract_sha` przeniesiony do obiektu `operator`
+- Dodano `delta` — konceptualna zmiana sesji (string)
+- Dodano `open_threads` — niedomknięcia (array)
+- Dodano `topology` — kształt sesji: linear / branching / spiral
+- Dodano `insight` — metodologiczne odkrycie sesji (symetryczny z `artifact`)
+- `artifact.comment` → `artifact.summary` + dodano `artifact.tags`
+- Dodano pole `session_sha` — SHA-256 ze wszystkich pól przed nim
+- Zmieniona specyfikacja kanoniczna: pełny dump minus `session_sha`
+- Nota kompatybilności wstecznej dla weryfikatora
