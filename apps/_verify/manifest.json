@@ -1,9 +1,9 @@
 {
   "id": "_verify",
   "name": "AiWVerify · Audytor ✓",
-  "version": "2.0",
-  "date": "2026-05-09",
-  "description": "Weryfikator kryptograficzny — kontrakty, profile Ed25519, łańcuch tożsamości, integralność bootstrap_sha modułów. Działa lokalnie przez Web Crypto API bez serwera.",
+  "version": "2.2",
+  "date": "2026-06-26",
+  "description": "Weryfikator kryptograficzny — kontrakty, profile Ed25519, łańcuch tożsamości, integralność bootstrap_sha modułów, weryfikacja blockchain aktów (SHA + ciągłość). Działa lokalnie przez Web Crypto API bez serwera.",
   "type": "standalone",
   "status": "active",
   "lineage": {
@@ -33,7 +33,7 @@
     "components": [],
     "bootstrap": "_verify-boot.md",
     "bootstrap_sha": "bf4ad2c7b9e0b086a17e6b7cf58e2307a9a8762f008906661047279c446e4ec3",
-    "entry_sha": "3c3cae8caac80828ace7807838d389cef332db81ef52dffc2be3f6dd8b04e072",
+    "entry_sha": "1707d767e44c3146c851e630c329a850eeae8ad365421279cc2b05951fca0505",
     "docs_sha": ""
   },
   "runtime": {

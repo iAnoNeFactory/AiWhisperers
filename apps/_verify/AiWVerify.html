@@ -152,6 +152,48 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 .fade-in{animation:fadeUp .3s ease forwards;}
+
+/* ── AKTY VERIFICATION ── */
+.act-drop-zone{border:1px dashed rgba(80,216,200,.2);background:rgba(7,8,15,.5);padding:40px 28px;text-align:center;cursor:pointer;transition:all .25s;position:relative;margin-bottom:20px;}
+.act-drop-zone:hover,.act-drop-zone.drag{border-color:rgba(80,216,200,.5);background:rgba(80,216,200,.02);}
+.act-drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.act-drop-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px;}
+.act-drop-hint{font-family:var(--serif);font-size:13px;font-style:italic;color:rgba(80,216,200,.3);}
+.act-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:18px;}
+.act-sum-cell{background:var(--bg2);border:1px solid var(--border);padding:12px 10px 8px;}
+.act-sum-key{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:5px;}
+.act-sum-val{font-family:var(--mono);font-size:14px;}
+.act-chain{display:flex;flex-direction:column;gap:0;}
+.act-block{background:var(--bg2);border:1px solid var(--border);margin-bottom:3px;position:relative;}
+.act-block.act-ok{border-left:3px solid var(--green);}
+.act-block.act-fail{border-left:3px solid var(--red-b);}
+.act-block.act-warn{border-left:3px solid var(--orange);}
+.act-block-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;}
+.act-block-hdr:hover{background:rgba(240,232,216,.02);}
+.act-block-idx{font-family:var(--mono);font-size:7px;color:rgba(80,216,200,.4);flex-shrink:0;width:22px;}
+.act-block-name{font-family:var(--sans);font-size:10px;font-weight:700;color:var(--ink-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-block-n{font-family:var(--mono);font-size:7px;color:var(--ink-faint);}
+.act-block-sha{font-family:var(--mono);font-size:6.5px;color:rgba(232,200,120,.35);}
+.act-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.act-status-dot.ok{background:var(--green);box-shadow:0 0 5px var(--green);}
+.act-status-dot.fail{background:var(--red-b);box-shadow:0 0 5px var(--red-b);}
+.act-status-dot.warn{background:var(--orange);box-shadow:0 0 5px var(--orange);}
+.act-arrow{font-family:var(--mono);font-size:8px;color:var(--ink-faint);flex-shrink:0;}
+.act-block-body{display:none;padding:0 14px 12px 34px;border-top:1px solid var(--border);}
+.act-block-body.open{display:block;}
+.act-check-row{display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.02);}
+.act-check-row:last-child{border-bottom:none;}
+.act-check-icon{font-family:var(--mono);font-size:9px;flex-shrink:0;width:14px;text-align:center;margin-top:1px;}
+.act-check-label{font-family:var(--mono);font-size:7.5px;color:var(--ink-faint);flex-shrink:0;width:110px;}
+.act-check-val{font-family:var(--mono);font-size:7px;color:var(--ink-dim);word-break:break-all;line-height:1.65;}
+.act-chain-link{display:flex;align-items:center;gap:6px;padding:4px 0 4px 2px;margin:6px 0 4px;}
+.acl-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(80,216,200,.25),transparent);}
+.acl-label{font-family:var(--mono);font-size:6px;letter-spacing:.2em;text-transform:uppercase;color:rgba(80,216,200,.3);}
+.act-session-list{margin-top:8px;display:flex;flex-direction:column;gap:2px;}
+.act-sess-row{display:flex;align-items:center;gap:8px;padding:5px 9px;background:rgba(4,5,12,.5);border:1px solid rgba(240,232,216,.04);}
+.act-sess-name{font-family:var(--sans);font-size:9px;font-weight:700;color:var(--ink-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-sess-sha{font-family:var(--mono);font-size:6px;color:rgba(232,200,120,.3);flex-shrink:0;}
+.act-sess-date{font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -248,13 +290,42 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 <!-- ═══ AKTY ════════════════════════════════════════════════ -->
 <div id="view-akty" class="tab-view">
-  <div class="wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:18px;">
-    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:rgba(192,96,192,.3);">w rozwoju</div>
-    <div style="font-family:var(--serif);font-size:22px;font-style:italic;color:rgba(200,160,220,.25);">Akty</div>
-    <div style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ink-faint);text-align:center;max-width:420px;line-height:1.8;">
-      Weryfikacja paczek — <code>aiw-export-*.json</code>,<br>
-      łańcuch aktów · SHA zbiorowy · anchor blockchain
+  <div class="wrap">
+    <div style="margin-bottom:24px;">
+      <div class="section-label">Blockchain Aktów · Weryfikacja</div>
     </div>
+
+    <div class="act-drop-zone" id="act-drop-zone">
+      <input type="file" id="act-file-input" accept=".json" multiple>
+      <div class="act-drop-lbl">↑ załaduj blockchain lub pojedynczy akt</div>
+      <div class="act-drop-hint">aiw-blockchain-*.json · aiw-act-*.json · lub upuść pliki</div>
+    </div>
+
+    <div id="act-profile-info" style="display:none;margin-bottom:14px;padding:9px 14px;background:rgba(4,5,12,.5);border:1px solid rgba(80,216,200,.12);">
+      <span style="font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(80,216,200,.5);text-transform:uppercase;">profil załadowany · </span>
+      <span id="act-profile-name" style="font-family:var(--mono);font-size:8px;color:var(--cyan);"></span>
+    </div>
+
+    <div id="act-summary" class="act-summary" style="display:none;">
+      <div class="act-sum-cell">
+        <div class="act-sum-key">aktów</div>
+        <div class="act-sum-val" id="asv-total">0</div>
+      </div>
+      <div class="act-sum-cell">
+        <div class="act-sum-key">SHA OK</div>
+        <div class="act-sum-val ok" id="asv-sha-ok">0</div>
+      </div>
+      <div class="act-sum-cell">
+        <div class="act-sum-key">Łańcuch OK</div>
+        <div class="act-sum-val ok" id="asv-chain-ok">0</div>
+      </div>
+      <div class="act-sum-cell">
+        <div class="act-sum-key">Błędy</div>
+        <div class="act-sum-val fail" id="asv-errors">0</div>
+      </div>
+    </div>
+
+    <div id="act-chain-result"></div>
   </div>
 </div>
 
@@ -316,7 +387,7 @@ addEventListener('resize', initCanvas);
 initCanvas(); drawCanvas();
 
 // ── TABS ──────────────────────────────────────────────────
-const HUD_SUBS = { kontrakt: 'weryfikacja kontraktów · audytor', profil: 'weryfikacja profili · lineage', lancuch: 'łańcuch tożsamości · auto-chain', sesja: 'weryfikacja sesji · session_sha · w rozwoju', artefakty: 'integralność artefaktów · entry_sha + bootstrap_sha', akty: 'weryfikacja paczek · łańcuch aktów · w rozwoju' };
+const HUD_SUBS = { kontrakt: 'weryfikacja kontraktów · audytor', profil: 'weryfikacja profili · lineage', lancuch: 'łańcuch tożsamości · auto-chain', sesja: 'weryfikacja sesji · session_sha · w rozwoju', artefakty: 'integralność artefaktów · entry_sha + bootstrap_sha', akty: 'weryfikacja blockchain aktów · SHA · ciągłość łańcucha' };
 document.querySelectorAll('.main-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
@@ -936,6 +1007,223 @@ function renderChain(forest, verifyMap, nodeMap) {
   </div>`;
 }
 
+// ── AKTY BLOCKCHAIN VERIFICATION ───────────────────────────────
+(function(){
+  async function sha256hex(str){
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  let loadedProfile=null;
+
+  function getLoadedProfile(){
+    // Try to grab profile already loaded in the kontrakt/profil tabs
+    try{
+      const el=document.getElementById('act-profile-name');
+      if(loadedProfile){el.textContent=loadedProfile.operator||loadedProfile.pubkey||'załadowany';document.getElementById('act-profile-info').style.display='block';}
+    }catch(e){}
+    return loadedProfile;
+  }
+
+  // Watch for profile loads from other tabs (pubkey in profileData global if exists)
+  function refreshProfileFromGlobal(){
+    if(typeof profileData!=='undefined'&&profileData&&profileData.pubkey){
+      loadedProfile=profileData;
+      const el=document.getElementById('act-profile-name');
+      if(el) el.textContent=profileData.operator||profileData.pubkey.slice(0,18)+'…';
+      document.getElementById('act-profile-info').style.display='block';
+    }
+  }
+
+  async function verifyAct(act, prevAct){
+    const results={};
+    // 1. SHA integrity: recompute act_sha from payload minus act_sha field
+    const {act_sha,...payload}=act;
+    const computed=await sha256hex(JSON.stringify(payload));
+    results.sha_ok = act_sha===computed;
+    results.sha_computed=computed;
+    results.sha_stored=act_sha||'';
+
+    // 2. Chain continuity: prev_sha matches previous act's act_sha
+    if(!prevAct){
+      const isGenesis=act.prev_sha==='0'.repeat(64)||!act.prev_sha;
+      results.chain_ok=isGenesis;
+      results.chain_note=isGenesis?'genesis blok':'prev_sha ≠ 0×64 (oczekiwano genesis)';
+    } else {
+      results.chain_ok = act.prev_sha===(prevAct.act_sha||'');
+      results.chain_note=results.chain_ok?'ciągłość łańcucha OK':`prev_sha ≠ act_sha poprzedniego aktu`;
+    }
+
+    // 3. Operator match against profile
+    const prof=loadedProfile;
+    if(prof){
+      results.operator_ok = (!act.operator_pubkey || act.operator_pubkey===prof.pubkey) &&
+                             (!act.operator || act.operator===prof.operator||!prof.operator);
+      results.operator_note=results.operator_ok?'zgodny z profilem':'operator / pubkey niezgodny z profilem';
+    }
+
+    return results;
+  }
+
+  async function processActData(acts){
+    // Sort by index ascending (oldest first = blockchain order)
+    const sorted=[...acts].sort((a,b)=>(a.index||0)-(b.index||0));
+    let shaOk=0,chainOk=0,errors=0;
+    const verified=[];
+    for(let i=0;i<sorted.length;i++){
+      const r=await verifyAct(sorted[i],i>0?sorted[i-1]:null);
+      verified.push({act:sorted[i],r});
+      if(r.sha_ok)shaOk++;else errors++;
+      if(r.chain_ok)chainOk++;else if(i>0)errors++;
+    }
+    return{sorted,verified,shaOk,chainOk,errors};
+  }
+
+  function renderVerification(data){
+    const{sorted,verified,shaOk,chainOk,errors}=data;
+    const total=sorted.length;
+
+    document.getElementById('act-summary').style.display='grid';
+    document.getElementById('asv-total').textContent=total;
+    document.getElementById('asv-sha-ok').textContent=shaOk;
+    document.getElementById('asv-chain-ok').textContent=chainOk;
+    document.getElementById('asv-errors').textContent=errors;
+
+    const prof=loadedProfile;
+    const el=document.getElementById('act-chain-result');
+
+    const blocks=verified.map((item,i)=>{
+      const{act,r}=item;
+      const sha=act.act_sha||'';
+      const prev=act.prev_sha||'';
+      const isGenesis=prev==='0'.repeat(64)||!prev;
+      const statusClass=r.sha_ok&&r.chain_ok?'act-ok':'act-fail';
+      const dotClass=r.sha_ok&&r.chain_ok?'ok':'fail';
+      const warnOp=prof&&r.operator_ok===false;
+      const idx=act.index!==undefined?act.index:i;
+      const ts=act.created||act.timestamp||'';
+
+      const shaIcon=r.sha_ok?'✓':'✗';
+      const shaColor=r.sha_ok?'var(--green)':'var(--red-b)';
+      const chainIcon=r.chain_ok?'✓':'✗';
+      const chainColor=r.chain_ok?'var(--green)':'var(--red-b)';
+
+      const sessRows=(act.sessions||[]).map(s=>`
+        <div class="act-sess-row">
+          <span class="act-sess-name">${s.name||'—'}</span>
+          <span class="act-sess-date">${s.date||''}</span>
+          <span class="act-sess-sha">${(s.session_sha||s.sha||'').slice(0,12)||'no sha'}</span>
+        </div>`).join('');
+
+      return `<div class="act-block ${statusClass}" id="avb_${i}">
+        <div class="act-block-hdr" onclick="(function(el){var b=document.getElementById('avb_body_${i}');var open=b.classList.toggle('open');el.querySelector('.act-arrow').textContent=open?'▴':'▾';})(this)">
+          <span class="act-block-idx">#${idx}</span>
+          <span class="act-status-dot ${dotClass}${warnOp?' warn':''}"></span>
+          <span class="act-block-name">${act.name||'[ bez nazwy ]'}</span>
+          <span class="act-block-n">${(act.sessions||[]).length} sesji</span>
+          <span class="act-block-sha">${sha.slice(0,14)}…</span>
+          ${isGenesis?`<span style="font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:rgba(80,216,200,.5);border:1px solid rgba(80,216,200,.15);padding:1px 5px;">genesis</span>`:''}
+          <span class="act-arrow">▾</span>
+        </div>
+        <div class="act-block-body" id="avb_body_${i}">
+          <div class="act-check-row">
+            <span class="act-check-icon" style="color:${shaColor};">${shaIcon}</span>
+            <span class="act-check-label">SHA integralność</span>
+            <span class="act-check-val" style="color:${shaColor};">${r.sha_ok?'act_sha zgodny':'NIEZGODNY — dane zmodyfikowane?'}</span>
+          </div>
+          ${!r.sha_ok?`<div class="act-check-row" style="padding-left:24px;">
+            <span class="act-check-icon">·</span>
+            <span class="act-check-label">obliczony</span>
+            <span class="act-check-val" style="color:rgba(200,80,80,.7);">${r.sha_computed}</span>
+          </div>`:''}
+          <div class="act-check-row">
+            <span class="act-check-icon" style="color:${chainColor};">${chainIcon}</span>
+            <span class="act-check-label">Łańcuch</span>
+            <span class="act-check-val" style="color:${chainColor};">${r.chain_note}</span>
+          </div>
+          ${prof?`<div class="act-check-row">
+            <span class="act-check-icon" style="color:${r.operator_ok?'var(--green)':'var(--red-b)'};">${r.operator_ok?'✓':'✗'}</span>
+            <span class="act-check-label">Operator</span>
+            <span class="act-check-val" style="color:${r.operator_ok?'var(--green)':'var(--red-b)'};">${r.operator_note||''}</span>
+          </div>`:''}
+          ${sha?`<div class="act-check-row">
+            <span class="act-check-icon" style="color:rgba(232,200,120,.3);">·</span>
+            <span class="act-check-label">act_sha</span>
+            <span class="act-check-val" style="color:rgba(232,200,120,.35);">${sha}</span>
+          </div>`:''}
+          ${prev&&!isGenesis?`<div class="act-check-row">
+            <span class="act-check-icon" style="color:rgba(80,216,200,.3);">·</span>
+            <span class="act-check-label">prev_sha</span>
+            <span class="act-check-val" style="color:rgba(80,216,200,.3);">${prev}</span>
+          </div>`:''}
+          ${ts?`<div class="act-check-row">
+            <span class="act-check-icon" style="color:var(--ink-faint);">·</span>
+            <span class="act-check-label">created</span>
+            <span class="act-check-val">${ts}</span>
+          </div>`:''}
+          ${(act.sessions||[]).length?`
+          <div style="margin-top:8px;font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">sesje · ${(act.sessions||[]).length}</div>
+          <div class="act-session-list">${sessRows}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const allOk=errors===0;
+    const globalStatus=allOk
+      ?`<span style="color:var(--green);font-weight:500;">✓ łańcuch spójny</span>`
+      :`<span style="color:var(--red-b);font-weight:500;">✗ wykryto ${errors} błędów</span>`;
+
+    el.innerHTML=`<div class="fade-in">
+      <div style="margin-bottom:12px;padding:10px 14px;background:rgba(4,5,12,.5);border:1px solid ${allOk?'rgba(74,154,106,.2)':'rgba(200,80,80,.2)'};font-family:var(--mono);font-size:9px;">
+        ${globalStatus} &nbsp;·&nbsp; ${total} aktów &nbsp;·&nbsp; ${shaOk}/${total} SHA OK &nbsp;·&nbsp; ${chainOk}/${total} łańcuch OK
+        ${prof?` &nbsp;·&nbsp; <span style="color:rgba(80,216,200,.6);">profil: ${prof.operator||prof.pubkey?.slice(0,14)+'…'}</span>`:''}
+      </div>
+      <div class="act-chain">${blocks}</div>
+    </div>`;
+  }
+
+  async function loadActFiles(files){
+    let acts=[];
+    for(const file of files){
+      try{
+        const d=JSON.parse(await file.text());
+        if(d._version==='aiw_blockchain_v1'&&Array.isArray(d.acts)){
+          acts=acts.concat(d.acts);
+        } else if(d._version==='aiw_act_v1'){
+          acts.push(d);
+        } else if(Array.isArray(d)){
+          // Array of acts
+          d.forEach(item=>{if(item._version==='aiw_act_v1'||item.act_sha)acts.push(item);});
+        } else {
+          console.warn('AiWVerify: nierozpoznany format w',file.name);
+        }
+      }catch(e){console.warn('AiWVerify: błąd parsowania',file.name,e);}
+    }
+    if(!acts.length){
+      document.getElementById('act-chain-result').innerHTML=`<div style="font-family:var(--serif);font-size:13px;font-style:italic;color:var(--text-d);padding:10px 0;">Nie znaleziono aktów w wczytanych plikach.</div>`;
+      return;
+    }
+    refreshProfileFromGlobal();
+    const data=await processActData(acts);
+    renderVerification(data);
+  }
+
+  // Wire drop zone and file input
+  const dz=document.getElementById('act-drop-zone');
+  const fi=document.getElementById('act-file-input');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop',async e=>{
+    e.preventDefault();dz.classList.remove('drag');
+    const files=Array.from(e.dataTransfer?.files||[]).filter(f=>f.name.endsWith('.json'));
+    if(files.length)await loadActFiles(files);
+  });
+  fi.addEventListener('change',async function(){
+    if(this.files?.length)await loadActFiles(Array.from(this.files));
+    this.value='';
+  });
+})();
+
 // Overlay close — binding po załadowaniu DOM (overlaye są za tym blokiem)
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.v-panel-close').forEach(btn =>
@@ -1084,7 +1372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="v-sec">
           <div class="v-sec-title">Planowane funkcje</div>
           <div class="v-sec-text">
-            Weryfikacja paczek aktów — <code>aiw-export-*.json</code>. Sprawdzanie SHA zbiorowego aktu, ciągłości łańcucha aktów, zgodności z anchorem blockchain.<br><br>
+            Weryfikacja blockchain aktów — <code>aiw-blockchain-*.json</code> lub pojedynczych <code>aiw-act-*.json</code>. Eksportuj z Genesis (tab Akty → ⬇ eksportuj). Weryfikacja: SHA integralności każdego aktu, ciągłość łańcucha (<code>prev_sha</code>), zgodność operatora z załadowanym profilem.<br><br>
             Format wejściowy: pliki eksportu paczek z AiWPass (<code>.data/_pass/</code>).
           </div>
         </div>
