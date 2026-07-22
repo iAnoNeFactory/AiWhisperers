@@ -52,6 +52,7 @@ Wywoływane opcjonalnie — ładujesz do kontekstu gdy potrzebujesz konkretnych 
 | AiWBoot      | bootstrap projektu (ten plik)                     | apps/_boot/AiWBoot.html         | apps/_boot/_boot-boot.md             |
 | AiWQuick     | protokół zamknięcia sesji · 9 metryk              | apps/_quick/AiWQuick.html       | apps/_quick/_quick-boot.md           |
 | AiWPass      | tożsamość operatora · kontrakty · łańcuch SHA     | apps/_pass/AiWPass.html         | apps/_pass/_pass-boot.md             |
+| AiWSessions  | archiwum sesji operatora · import, akty, łańcuch  | apps/_sessions/AiWSessions.html | —                                    |
 | AiWVerify    | audytor · weryfikacja kontraktów, profili, SHA    | apps/_verify/AiWVerify.html     | apps/_verify/_verify-boot.md         |
 | AiWSchema    | standard wizualny artefaktów · CSS · HUD · canvas | apps/_schema/AiWSchema.html     | apps/_schema/_schema-boot.md         |
 | AiWProtocol  | schemat manifest.json · REST · WebSocket          | apps/_protocol/AiWProtocol.html | apps/_protocol/_protocol-boot.md     |
@@ -73,9 +74,9 @@ Wywoływane opcjonalnie — ładujesz do kontekstu gdy potrzebujesz konkretnych 
 | compas    | kompas morficzny · geometria Three.js    | mature     |
 | memory    | sieć pamięci · lemniskata 3D             | mature     |
 | labyrinth | labirynt pojęć · gra narracyjna 6 warstw | mature     |
+| wall      | tablica projektu · artykuły i notatki    | mature     |
 | forge     | kuźnia paradoksów · pre-consensus arena  | incubation |
 | breath    | tchnienie · canvas 3D                    | incubation |
-| genesis   | archiwum sesji · czytnik eksportów       | incubation |
 | profile   | profil operatora · radar 9 osi           | incubation |
 | stamps    | rejestr pieczątek modeli                 | incubation |
 

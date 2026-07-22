@@ -1,8 +1,8 @@
 {
   "id": "index",
   "name": "AiWhisperers · Mapa Poznania 🗺️",
-  "version": "2.1",
-  "date": "2026-05-09",
+  "version": "2.2",
+  "date": "2026-07-22",
   "description": "Główna mapa ekosystemu AiWhisperers — konstelacja modułów AI, dolny bar narzędzi operatora, live indicator breath, animowane glyphe canvas.",
   "type": "standalone",
   "status": "active",
@@ -32,8 +32,8 @@
     "docs": "readme.html",
     "components": [],
     "bootstrap": "_index-boot.md",
-    "bootstrap_sha": "fbf47a59c16237ab6e4a82e4e934714c35857d555e88e59572b80f477e9a6c15",
-    "entry_sha": "958dab2c990bbfa62a21b6a8e212225dd12cf1ee6dcca050330f8e69b54d0d44",
+    "bootstrap_sha": "0bc16de0ea1c3399b03f130ebedcf5a844d8070d684724c7ecf6dfe01970bf00",
+    "entry_sha": "95dd5c8613059865ef88daf9a5ccc716dc56bc652657c0b8213d876b3bdf1d4a",
     "docs_sha": "67c705325566fcfac4650c559633cb5a5836ef9e506ca5e85ed5b7ce370ed532"
   },
   "runtime": {
@@ -60,6 +60,10 @@
     {
       "type": "complements",
       "target": "_verify"
+    },
+    {
+      "type": "complements",
+      "target": "_sessions"
     }
   ],
   "tags": [

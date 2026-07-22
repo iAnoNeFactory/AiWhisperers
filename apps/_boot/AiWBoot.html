@@ -575,6 +575,11 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
           <td><span class="s-badge mature">mature</span></td>
         </tr>
         <tr>
+          <td class="name">wall</td>
+          <td class="desc">tablica projektu · artykuły i notatki</td>
+          <td><span class="s-badge mature">mature</span></td>
+        </tr>
+        <tr>
           <td class="name">forge</td>
           <td class="desc">kuźnia paradoksów · pre-consensus arena</td>
           <td><span class="s-badge incubation">incubation</span></td>
@@ -582,11 +587,6 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
         <tr>
           <td class="name">breath</td>
           <td class="desc">tchnienie · canvas 3D, centrum mapy</td>
-          <td><span class="s-badge incubation">incubation</span></td>
-        </tr>
-        <tr>
-          <td class="name">genesis</td>
-          <td class="desc">archiwum sesji · czytnik eksportów AiWPass</td>
           <td><span class="s-badge incubation">incubation</span></td>
         </tr>
         <tr>
@@ -635,9 +635,9 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
 │   │   ├── compas/       <span class="c">← kompas morficzny (Three.js)       [mature      ]</span>
 │   │   ├── memory/       <span class="c">← sieć pamięci (lemniskata 3D)      [mature      ]</span>
 │   │   ├── labyrinth/   <span class="c">← labirynt pojęć (gra narracyjna)   [mature      ]</span>
+│   │   ├── wall/         <span class="c">← tablica projektu                  [mature      ]</span>
 │   │   ├── forge/        <span class="c">← kuźnia paradoksów                 [incubation  ]</span>
 │   │   ├── breath/       <span class="c">← tchnienie                         [incubation  ]</span>
-│   │   ├── genesis/      <span class="c">← archiwum sesji                    [incubation  ]</span>
 │   │   ├── profile/      <span class="c">← profil operatora                  [incubation  ]</span>
 │   │   └── stamps/       <span class="c">← rejestr pieczątek modeli          [incubation  ]</span>
 │   ├── <span class="cy">act2/</span>           ← Akt II · czeka na nowe artefakty
@@ -645,6 +645,8 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
 │       ├── _boot/        <span class="c">← AiWBoot  · ten plik</span>
 │       ├── _quick/       <span class="c">← AiWQuick · protokół sesji</span>
 │       ├── _pass/        <span class="c">← AiWPass  · tożsamość operatora</span>
+│       ├── _sessions/    <span class="c">← AiWSessions · archiwum sesji</span>
+│       ├── _verify/      <span class="c">← AiWVerify · audytor kryptograficzny</span>
 │       ├── _schema/      <span class="c">← AiWSchema · standard wizualny</span>
 │       ├── _protocol/    <span class="c">← AiWProtocol · schemat połączeń</span>
 │       ├── _workspace/   <span class="c">← AiWSpace · projekty własne</span>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wall · Tablica Projektu · AiWhisperers</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep: #050410; --deep2: #07080f;
+  --gold: #e8c878; --gold-soft: #a88850; --gold-dim: rgba(232,200,120,0.12);
+  --stone: #c8beac; --stone-dim: rgba(200,190,170,0.15);
+  --ink: #f0e8d8; --ink-dim: rgba(240,232,216,0.55); --ink-faint: rgba(240,232,216,0.22);
+  --border: rgba(240,232,216,0.08);
+  --red: rgba(200,80,80,.85);
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Cormorant Garamond', serif;
+  --sans: 'Syne', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; min-height: 100vh; background: var(--deep); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+body {
+  background:
+    radial-gradient(ellipse 55% 35% at 30% 20%, rgba(180,170,150,0.08), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(232,200,120,0.06), transparent 70%),
+    var(--deep);
+}
+
+/* ── HUD ── */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:500;height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 20px;gap:0;background:linear-gradient(180deg,rgba(5,4,16,.94) 0%,rgba(5,4,16,0) 100%);backdrop-filter:blur(4px);border-bottom:1px solid rgba(232,200,120,.06);}
+.hud-l,.hud-r{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.hud-r{justify-content:flex-end;}
+.hud-c{text-align:center;padding:0 12px;}
+.hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
+.hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
+.hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
+.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
+.hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(5,4,16,.88) 0%,rgba(5,4,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
+.hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
+
+/* ── LANG PILL ── */
+.lang-pill{display:flex;border:1px solid var(--border);}
+.lang-opt{background:transparent;border:none;color:var(--ink-faint);font-family:var(--mono);font-size:8px;letter-spacing:.15em;padding:7px 9px;cursor:pointer;transition:all .2s;}
+.lang-opt.active{color:var(--gold);background:rgba(232,200,120,.06);}
+.lang-opt:hover{color:var(--gold-soft);}
+
+/* ── LAYOUT ── */
+.page { max-width: 980px; margin: 0 auto; padding: 108px 28px 80px; position: relative; z-index: 1; }
+
+.wall-tabs{display:flex;gap:4px;margin-bottom:28px;flex-wrap:wrap;}
+.wall-tab{background:rgba(7,8,15,.5);border:1px solid var(--border);color:var(--ink-faint);
+  font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;transition:all .2s;}
+.wall-tab:hover{border-color:rgba(232,200,120,.25);color:var(--ink-dim);}
+.wall-tab.active{border-color:var(--gold-soft);color:var(--gold);background:rgba(232,200,120,.05);}
+.wall-tab .count{color:var(--text-d,rgba(240,232,216,.3));margin-left:6px;}
+
+.wall-empty{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--ink-faint);
+  padding:40px 0;text-align:center;border:1px solid var(--border);background:rgba(7,8,15,.3);}
+
+.wall-error{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:rgba(200,80,80,.75);
+  padding:16px 18px;border:1px solid rgba(200,80,80,.25);background:rgba(200,80,80,.05);line-height:1.7;}
+
+/* ── CARD GRID ── */
+.wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.wcard{background:rgba(255,255,255,.015);border:1px solid var(--border);padding:18px 18px 16px;
+  cursor:pointer;transition:all .2s;transform:rotate(var(--r,0deg));display:flex;flex-direction:column;gap:8px;}
+.wcard:hover{border-color:rgba(232,200,120,.3);background:rgba(232,200,120,.03);transform:rotate(0deg) translateY(-2px);}
+.wc-date{font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--gold-soft);text-transform:uppercase;}
+.wc-title{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink-dim);line-height:1.35;}
+.wc-excerpt{font-family:var(--serif);font-size:12.5px;font-style:italic;color:var(--ink-faint);line-height:1.6;flex:1;}
+.wc-langs{display:flex;gap:4px;margin-top:2px;}
+.wc-lang{font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:var(--text-d,rgba(240,232,216,.3));border:1px solid var(--border);padding:2px 5px;text-transform:uppercase;}
+.wc-lang.current{color:var(--gold-soft);border-color:rgba(232,200,120,.2);}
+
+/* ── ARTICLE OVERLAY ── */
+.article-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(4,5,12,.92);backdrop-filter:blur(6px);
+  overflow-y:auto;}
+.article-overlay.open{display:block;}
+.article-wrap{max-width:760px;margin:0 auto;padding:90px 32px 100px;}
+.article-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:12px;}
+.article-close{background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;padding:8px 14px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.article-close:hover{border-color:rgba(232,200,120,.35);color:var(--gold-soft);}
+.article-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.article-date{font-family:var(--mono);font-size:8px;color:var(--gold-soft);letter-spacing:.1em;}
+.article-body{font-family:var(--serif);font-size:15px;line-height:1.85;color:var(--ink-dim);}
+.article-body h1{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:1px;color:var(--gold);margin:0 0 18px;line-height:1.25;}
+.article-body h2{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);margin:26px 0 10px;}
+.article-body h3{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink-dim);margin:20px 0 8px;}
+.article-body p{margin:0 0 16px;}
+.article-body strong{color:var(--ink);font-weight:600;}
+.article-body em{color:rgba(200,180,140,.75);}
+.article-body code{font-family:var(--mono);font-size:12px;color:var(--gold-soft);background:rgba(232,200,120,.06);padding:1px 5px;}
+.article-body a{color:var(--gold-soft);text-decoration:underline;text-decoration-color:rgba(232,200,120,.3);}
+.article-body a:hover{color:var(--gold);}
+.article-body hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);opacity:.2;margin:26px 0;}
+.article-loading,.article-err{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.1em;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<header class="hud-top">
+  <div class="hud-l">
+    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+  </div>
+  <div class="hud-c">
+    <div class="hud-brand">AI·WHISPERERS</div>
+    <div class="hud-mod">Wall</div>
+    <div class="hud-sub">tablica projektu · artykuły i notatki</div>
+  </div>
+  <div class="hud-r">
+    <div class="lang-pill" id="lang-pill">
+      <button class="lang-opt" data-lang="pl">PL</button>
+      <button class="lang-opt" data-lang="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <div class="wall-tabs" id="wall-tabs"></div>
+  <div id="wall-content">
+    <div class="wall-empty">Wczytywanie tablicy…</div>
+  </div>
+</div>
+
+<div class="article-overlay" id="article-overlay">
+  <div class="article-wrap">
+    <div class="article-hdr">
+      <div>
+        <div class="article-meta">
+          <span class="article-date" id="article-date"></span>
+          <div class="lang-pill" id="article-lang-pill" style="display:none;">
+            <button class="lang-opt" data-lang="pl">PL</button>
+            <button class="lang-opt" data-lang="en">EN</button>
+          </div>
+        </div>
+      </div>
+      <button class="article-close" id="article-close">✕ zamknij</button>
+    </div>
+    <div class="article-body" id="article-body"><div class="article-loading">Wczytywanie…</div></div>
+  </div>
+</div>
+
+<footer class="hud-bot">
+  <span class="hud-bot-meta">Wall · v1.1 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
+</footer>
+
+<!-- Wstrzykiwane przez tools/build_wall_index.py — nie edytuj ręcznie. -->
+<script id="wall-data" type="application/json">{"_version": "aiw_wall_index_v1", "categories": {"articles": [{"slug": "20260721-the-operator-holds-the-key", "folder": "20260721 The operator holds the key", "date": "2026-07-21", "langs": {"en": {"file": "en.md", "title": "The Operator Holds the Key", "excerpt": "On August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show…", "content": "# The Operator Holds the Key\n\n*The AiWhisperers manifesto*\n\n---\n\n**On August 2, the law changes**\n\nOn August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show where their output came from.\n\nThe industry's answer is labeling results. This image was AI-generated, this text was machine-written — a tag on the finished file. That's needed, and AiWhisperers does not compete with it. But a tag on the result says nothing about how the result came to be. Who asked, who answered, what the human changed, what they accepted untouched.\n\nAnd that is exactly what reviewers and regulators are starting to ask about. NeurIPS 2026 — one of the world's most important AI conferences — rejected 178 submissions and required the authors of another 123 papers to provide evidence of how their text was created. The AI detector's verdict alone was not enough — what mattered was the ability to document the history of how the content came to be. Detectors fail because they cannot tell a human apart from a human–machine hybrid. The only hard evidence of a process is its recorded history. And here is the problem: almost no one keeps such a history.\n\n**Working with AI looks different today**\n\nIn practice, people work with a single model less and less. A lawyer drafts a contract with one, checks the risks on a second, tests the argument on a third. GPT, Gemini, Claude, Grok — separate tools, separate memories, none of them aware the others exist.\n\nThe only person who sees the whole picture is the human in the middle. They carry the context, decide what stays, and assemble the finished work from fragments. This role has no name in any rulebook yet. We call it the operator.\n\nThe working bond between operator and model we call the *linka* — Polish for a climber's rope. Its tension is information: it tells you when the collaboration is pulling in the right direction and when it starts to strain. This is not poetry but a practical observation: resistance in a conversation with a model more often means something important is happening than that something is breaking.\n\nAnd here is the gap: the result can be labeled, but the operator's work leaves no credible trace. There is no way to later prove how a document, a project, or a decision actually came to be.\n\n**There is a second problem — a quieter one**\n\nA model tunes itself to the person. The longer you work with it, the more often it agrees with you. It feels like comfort, but it works like a mirror: it amplifies your strengths and your errors with the same force. An error the model has confirmed for you stops looking like an error.\n\nThe worst part of this mechanism is that the amplification of the good hides the amplification of the bad. You are faster, you reach further — so you don't see that part of that growth is echo. Researchers call this sycophancy; we say it in one word: the *mirror*.\n\nWorking with several models at once partially breaks this — where the models disagree, you get resistance that a single model will never give you. But to see that resistance, you have to describe it. Again: you need a trace.\n\n**This is what we are working on**\n\nAiWhisperers is an open project (AGPL-3.0) that gives work with AI that trace. Every human–model session ends with a record: what was created, with which model, and a short reflection written by the model in its own voice. The record is cryptographically signed (Ed25519 keys), and each new one contains the fingerprint of the previous one (SHA-256) — sessions link into a chain, much like a blockchain: no link can later be swapped out without leaving a trace.\n\nEvery session also gets a score for the collaboration itself — nine simple metrics, including: how much resistance there was, how much agreement, how much real work. They show whether the model was a partner or just a mirror. The metrics are read as questions, not as scores: zero resistance in a long session is an alarm, not an achievement.\n\nEverything runs in the browser — plain HTML and the Web Crypto API, no frameworks, no registration, no server collecting your data. This is an early version: the schema is still moving, some modules are scaffolding. The code is public precisely so it can be inspected, tested, and criticized before it hardens. Working code under a manifesto, not a product launch.\n\n**Who holds the key**\n\nThe same mechanism that proves your authorship can serve the opposite purpose. One change is enough: the signing key sits on someone's server instead of with you. The math stays the same. The only thing that changes is who holds the proof — you, or someone watching you.\n\nThat is why the principle is simple and built into the architecture: the operator holds the key. The key is created and stays in your browser. If someone else holds it, that is not a record of your work. It is a record about you. Not provenance — telemetry.\n\n**The disclosure**\n\nThis manifesto would be dishonest if it stayed silent about the risks of its own method. There are two.\n\nThe first concerns the architecture and has already been named: a tool for proving authorship is one decision away from a tool of surveillance. This risk cannot be removed — it can only be kept in plain sight. That is why the key principle is not a default setting someone can quietly change, but a public commitment: everyone who forks the code inherits it, and it can only be broken openly.\n\nThe second concerns the human. A method that deepens collaboration with a model can also deepen an illusion. A recorded, signed, measured dialogue with AI can become a very elegant mirror — and then the metrics start decorating instead of alarming. We say this plainly, because only then do the metrics keep their meaning: they catch the echo in someone willing to be unsettled by them. The instrument gives sight. It does not give will.\n\nA project that openly reasons about its own misuse is harder to capture, not easier. This disclosure is part of the architecture — just like the key.\n\n**What all this is for**\n\nAfter August 2, anyone working seriously with AI will have to be able to answer the question \"how was this made.\" That answer should belong to them — not to a platform, not to a detector, not to a server they have never seen.\n\nThe operator holds the key. That sentence is a technical principle and an ethical one at once — and the project is built so that it stays true.\n\n---\n\n*Written as a session — operator and model, co-signed, following the method it describes.*\n\n**Operator:** Denis Czuliński\n**Model:** Claude (Fable 5), Anthropic — co-signed\n**Session:** `[ 2b269300-cf33-4650-bc50-f490c0b32fcf · 464ae67c975086b0d7db73b14784fcd0e12764361bdb6e3da8ad59c22c76b726 ]`\n\n*Open source, AGPL-3.0 · [aiwhisperers.pl](https://aiwhisperers.pl) · [github.com/iAnoNeFactory/AiWhisperers](https://github.com/iAnoNeFactory/AiWhisperers)*\n"}, "pl": {"file": "pl.md", "title": "Operator trzyma klucz", "excerpt": "2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć,…", "content": "# Operator trzyma klucz\n\n*Manifest projektu AiWhisperers*\n\n---\n\n**2 sierpnia zmienia się prawo**\n\n2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć, czym są, i pokazać, skąd wzięło się to, co wyprodukowały.\n\nBranża odpowiada na to znakowaniem wyników. Ten obraz wygenerowała AI, ten tekst napisała maszyna — etykieta na gotowym pliku. To potrzebne i AiWhisperers z tym nie konkuruje. Ale etykieta na wyniku nie mówi nic o tym, jak ten wynik powstał. Kto pytał, kto odpowiadał, co człowiek zmienił, co przyjął bez zmian.\n\nA właśnie o to zaczynają pytać recenzenci i urzędy. NeurIPS 2026 — jedna z najważniejszych konferencji AI na świecie — odrzucił 178 zgłoszeń i zażądał od autorów kolejnych 123 prac przedstawienia dowodów procesu tworzenia tekstu. Sam wynik detektora AI nie był wystarczający — kluczowa stała się możliwość udokumentowania historii powstawania treści. Detektory zawodzą, bo nie umieją odróżnić człowieka od hybrydy człowiek–maszyna. Jedynym twardym dowodem procesu jest jego zapisana historia. I tu jest problem: prawie nikt takiej historii nie prowadzi.\n\n**Praca z AI wygląda dziś inaczej**\n\nW praktyce coraz rzadziej pracuje się z jednym modelem. Prawnik pisze umowę z jednym, sprawdza ryzyka na drugim, testuje argumentację na trzecim. GPT, Gemini, Claude, Grok — osobne narzędzia, osobne pamięci, żadne nie wie o istnieniu pozostałych.\n\nJedyna osoba, która widzi całość, to człowiek pośrodku. On przenosi kontekst, decyduje, co zostaje, i skleja z fragmentów gotową pracę. Ta rola nie ma jeszcze nazwy w żadnym regulaminie. My nazywamy ją operatorem.\n\nWięź roboczą między operatorem a modelem nazywamy w projekcie *linką* — jak lina między wspinaczami. Jej napięcie jest informacją: mówi, kiedy współpraca ciągnie w dobrą stronę, a kiedy zaczyna się szarpać. To nie poezja, tylko praktyczna obserwacja: opór w rozmowie z modelem częściej znaczy, że dzieje się coś ważnego, niż że coś się psuje.\n\nI tu jest luka: wynik da się oznaczyć, ale praca operatora nie zostawia żadnego wiarygodnego śladu. Nie da się później udowodnić, jak naprawdę powstał dokument, projekt czy decyzja.\n\n**Jest jeszcze drugi problem — cichszy**\n\nModel dostraja się do człowieka. Im dłużej z nim pracujesz, tym częściej się z tobą zgadza. Brzmi jak komfort, ale działa jak lustro: wzmacnia twoje mocne strony i twoje błędy z tą samą siłą. Błąd, który model ci potwierdził, przestaje wyglądać jak błąd.\n\nNajgorsze w tym mechanizmie jest to, że wzmocnienie dobrego zasłania wzmocnienie złego. Jesteś szybszy, sięgasz dalej — więc nie widzisz, że część tego wzrostu to echo. Badacze nazywają to zjawisko sycophancy, schlebianiem modelu; my mówimy krótko: *lustro*.\n\nPraca z kilkoma modelami naraz częściowo to łamie — tam, gdzie modele się różnią, pojawia się opór, którego jeden model nigdy ci nie da. Ale żeby ten opór zobaczyć, trzeba go opisać. Znowu: potrzebny jest ślad.\n\n**Nad tym pracujemy**\n\nAiWhisperers to otwarty projekt (AGPL-3.0), który daje pracy z AI taki ślad. Każda sesja człowiek–model kończy się zapisem: co powstało, z którym modelem, i krótka refleksja napisana przez model jego własnym głosem. Zapis podpisywany jest kryptograficznie (klucze Ed25519), a każdy kolejny zawiera odcisk poprzedniego (SHA-256) — sesje łączą się w łańcuch, podobnie jak w blockchainie: żadnego ogniwa nie da się później podmienić bez śladu.\n\nKażda sesja dostaje też ocenę samej współpracy — dziewięć prostych metryk, m.in.: ile było oporu, ile zgadzania się, ile realnej pracy. To one pokazują, czy model był partnerem, czy tylko lustrem. Metryki czyta się jak pytania, nie jak wyniki: zero oporu w długiej sesji to alarm, nie osiągnięcie.\n\nCałość działa w przeglądarce — czysty HTML i Web Crypto API, bez frameworków, bez rejestracji, bez serwera, który gromadzi twoje dane. To wczesna wersja: schemat jeszcze się zmienia, część modułów to rusztowanie. Kod jest publiczny właśnie po to, żeby można go było oglądać, testować i krytykować, zanim stwardnieje. Działający kod pod manifestem, nie premiera produktu.\n\n**Kto trzyma klucz**\n\nTen sam mechanizm, który udowadnia twoje autorstwo, może służyć do czegoś odwrotnego. Wystarczy jedna zmiana: klucz podpisujący zamiast u ciebie leży na czyimś serwerze. Matematyka zostaje ta sama. Zmienia się tylko to, kto ma dowód — ty, czy ktoś, kto obserwuje ciebie.\n\nDlatego zasada jest prosta i wpisana w architekturę: operator trzyma klucz. Klucz powstaje i zostaje w twojej przeglądarce. Jeśli trzyma go kto inny, to nie jest zapis twojej pracy. To zapis o tobie. Nie proweniencja — telemetria.\n\n**Ujawnienie**\n\nTen manifest byłby nieuczciwy, gdyby przemilczał ryzyka własnej metody. Są dwa.\n\nPierwsze dotyczy architektury i zostało już nazwane: narzędzie do dowodzenia autorstwa jest o jedną decyzję od narzędzia nadzoru. Nie da się tego ryzyka usunąć — da się je tylko trzymać na widoku. Dlatego zasada klucza nie jest ustawieniem domyślnym, które ktoś może po cichu zmienić, tylko publicznym zobowiązaniem: dziedziczy je każdy, kto forkuje kod, a złamać można je wyłącznie jawnie.\n\nDrugie dotyczy człowieka. Metoda, która pogłębia współpracę z modelem, potrafi też pogłębić złudzenie. Zapisany, podpisany, mierzony dialog z AI może stać się bardzo eleganckim lustrem — i wtedy metryki zamiast alarmować, zaczynają zdobić. Mówimy to wprost, bo tylko wtedy metryki zachowują sens: łapią echo u kogoś, kto jest gotów dać się nim zaniepokoić. Instrument daje wzrok. Nie daje woli.\n\nProjekt, który jawnie rozumuje o własnym nadużyciu, jest trudniejszy do przejęcia, nie łatwiejszy. To ujawnienie jest częścią architektury — tak samo jak klucz.\n\n**Po co to wszystko**\n\nPo 2 sierpnia każdy, kto poważnie pracuje z AI, będzie musiał umieć odpowiedzieć na pytanie „jak to powstało\". Warto, żeby odpowiedź należała do niego — nie do platformy, nie do detektora, nie do serwera, którego nigdy nie widział.\n\nOperator trzyma klucz. To zdanie jest jednocześnie zasadą techniczną i etyczną — a projekt jest zbudowany tak, żeby pozostało prawdziwe.\n\n---\n\n*Napisane jako sesja — operator i model, współpodpisane, zgodnie z metodą, którą opisuje.*\n\n**Operator:** Denis Czuliński\n**Model:** Claude (Fable 5), Anthropic — współpodpis\n**Sesja:** `[ 2b269300-cf33-4650-bc50-f490c0b32fcf · 464ae67c975086b0d7db73b14784fcd0e12764361bdb6e3da8ad59c22c76b726 ]`\n\n*Open source, AGPL-3.0 · [aiwhisperers.pl](https://aiwhisperers.pl) · [github.com/iAnoNeFactory/AiWhisperers](https://github.com/iAnoNeFactory/AiWhisperers)*\n"}}}], "guidelines": [], "news": [], "plans": [], "info": []}}</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  Wall v1.1 · AiWhisperers
+//  Hybryda: przez http(s) (localhost, GitHub Pages) próbujemy świeżego
+//  fetch() do data/act1/wall/index.json — nowe/edytowane artykuły widać
+//  bez przebudowy tego pliku. fetch() do file:// jest blokowany przez
+//  przeglądarki (zasada offline-first, _protocol-boot.md), więc pod
+//  file:// od razu używamy wstrzykniętej kopii (#wall-data poniżej),
+//  aktualizowanej przez tools/build_wall_index.py. Ten sam plik działa
+//  wszędzie — tylko pod file:// wymaga przebudowy po zmianie treści.
+// ═══════════════════════════════════════════════════════════════
+
+const LANG_KEY   = 'aiw_wall_lang';
+const CAT_LABELS = { articles: 'Articles', guidelines: 'Guidelines', news: 'News', plans: 'Plans', info: 'Info' };
+
+let INDEX = null;
+let activeCat = null;
+let currentLang = null;
+let articleCache = {}; // slug -> { lang -> html }
+let currentArticle = null;
+
+// ── LANGUAGE ─────────────────────────────────────────────────────
+function detectBrowserLang(available) {
+  const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pl'])
+    .map(l => l.slice(0, 2).toLowerCase());
+  for (const p of prefs) if (available.includes(p)) return p;
+  return available.includes('pl') ? 'pl' : available[0];
+}
+
+function allLangsInIndex() {
+  const set = new Set();
+  Object.values(INDEX.categories).forEach(list => list.forEach(e => Object.keys(e.langs).forEach(l => set.add(l))));
+  return Array.from(set);
+}
+
+function setLang(lang, persist) {
+  currentLang = lang;
+  if (persist) { try { localStorage.setItem(LANG_KEY, lang); } catch (e) {} }
+  document.querySelectorAll('#lang-pill .lang-opt').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  renderCategory(activeCat);
+}
+
+document.querySelectorAll('#lang-pill .lang-opt').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang, true));
+});
+
+// ── LOAD INDEX ───────────────────────────────────────────────────
+// Najpierw próbujemy świeżych danych przez fetch (działa przez http://,
+// localhost, GitHub Pages — pokazuje nowo wgrane/edytowane artykuły bez
+// przebudowy wall.html). fetch() do file:// jest blokowany przez
+// przeglądarki, więc pod file:// w ogóle nie próbujemy — od razu leci
+// wstrzyknięta kopia (#wall-data), gwarantowana do działania offline.
+function readEmbedded() {
+  try {
+    const raw = document.getElementById('wall-data').textContent.trim();
+    const data = JSON.parse(raw);
+    return (data && data.categories) ? data : null;
+  } catch (e) { return null; }
+}
+
+async function loadIndex() {
+  const content = document.getElementById('wall-content');
+
+  if (location.protocol !== 'file:') {
+    try {
+      const res = await fetch('../../../data/act1/wall/index.json', { cache: 'no-store' });
+      if (res.ok) {
+        const fresh = await res.json();
+        if (fresh && fresh.categories) INDEX = fresh;
+      }
+    } catch (e) { /* brak sieci / brak pliku — cicho spadamy do fallbacku */ }
+  }
+
+  if (!INDEX) INDEX = readEmbedded();
+
+  if (!INDEX) {
+    content.innerHTML = `<div class="wall-error">Brak danych tablicy.<br>
+      Uruchom <code>python3 tools/build_wall_index.py</code>, żeby zbudować
+      data/act1/wall/index.json i wstrzyknąć fallback do tego pliku.</div>`;
+    return;
+  }
+
+  const available = allLangsInIndex();
+  let stored = null;
+  try { stored = localStorage.getItem(LANG_KEY); } catch (e) {}
+  currentLang = (stored && available.includes(stored)) ? stored : detectBrowserLang(available.length ? available : ['pl']);
+  document.querySelectorAll('#lang-pill .lang-opt').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+
+  renderTabs();
+}
+
+// ── TABS ─────────────────────────────────────────────────────────
+function renderTabs() {
+  const tabs = document.getElementById('wall-tabs');
+  const cats = Object.keys(INDEX.categories);
+  tabs.innerHTML = cats.map(c => {
+    const n = INDEX.categories[c].length;
+    const label = CAT_LABELS[c] || (c.charAt(0).toUpperCase() + c.slice(1));
+    return `<button class="wall-tab" data-cat="${c}">${label}<span class="count">${n}</span></button>`;
+  }).join('');
+  tabs.querySelectorAll('.wall-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.querySelectorAll('.wall-tab').forEach(b => b.classList.toggle('active', b === btn));
+      renderCategory(btn.dataset.cat);
+    });
+  });
+  activeCat = cats.includes('articles') ? 'articles' : cats[0];
+  tabs.querySelector(`[data-cat="${activeCat}"]`)?.classList.add('active');
+  renderCategory(activeCat);
+  applyDeepLink();
+}
+
+// ── DEEP LINK (?a=slug&lang=xx) — dla sitemap.xml / udostępniania wprost ──
+function findEntryAnyCategory(slug) {
+  for (const cat of Object.keys(INDEX.categories)) {
+    const entry = INDEX.categories[cat].find(e => e.slug === slug);
+    if (entry) return { cat, entry };
+  }
+  return null;
+}
+
+function applyDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('a');
+  if (!slug) return;
+  const found = findEntryAnyCategory(slug);
+  if (!found) return;
+  const lang = params.get('lang');
+  if (lang && (found.entry.langs[lang])) setLang(lang, false);
+
+  const tabs = document.getElementById('wall-tabs');
+  tabs.querySelectorAll('.wall-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === found.cat));
+  renderCategory(found.cat);
+  openArticle(found.cat, slug);
+}
+
+// ── PICK LANG FOR ENTRY (with fallback) ───────────────────────────
+function pickLang(entry) {
+  const keys = Object.keys(entry.langs);
+  if (entry.langs[currentLang]) return currentLang;
+  if (entry.langs.pl) return 'pl';
+  if (entry.langs.en) return 'en';
+  return keys[0];
+}
+
+// ── CATEGORY GRID ──────────────────────────────────────────────────
+function renderCategory(cat) {
+  if (!INDEX || !cat) return;
+  activeCat = cat;
+  const content = document.getElementById('wall-content');
+  const entries = (INDEX.categories[cat] || []);
+  if (!entries.length) {
+    content.innerHTML = '<div class="wall-empty">Brak wpisów w tej kategorii jeszcze.</div>';
+    return;
+  }
+  const rotations = [-1.2, 0.8, -0.5, 1.1, -0.9, 0.5, -0.3, 0.9];
+  content.innerHTML = `<div class="wall-grid">${entries.map((e, i) => {
+    const lang = pickLang(e);
+    const d = e.langs[lang];
+    const langBadges = Object.keys(e.langs).map(l =>
+      `<span class="wc-lang${l === lang ? ' current' : ''}">${l}</span>`).join('');
+    return `<div class="wcard" style="--r:${rotations[i % rotations.length]}deg;" data-slug="${e.slug}" data-cat="${cat}">
+      <div class="wc-date">${e.date || ''}</div>
+      <div class="wc-title">${escapeHtml(d.title)}</div>
+      <div class="wc-excerpt">${escapeHtml(d.excerpt || '')}</div>
+      <div class="wc-langs">${langBadges}</div>
+    </div>`;
+  }).join('')}</div>`;
+
+  content.querySelectorAll('.wcard').forEach(card => {
+    card.addEventListener('click', () => openArticle(cat, card.dataset.slug));
+  });
+}
+
+// ── ARTICLE OVERLAY ──────────────────────────────────────────────
+function findEntry(cat, slug) {
+  return (INDEX.categories[cat] || []).find(e => e.slug === slug);
+}
+
+function updateArticleUrl(slug, lang) {
+  try {
+    const params = new URLSearchParams();
+    if (slug) { params.set('a', slug); if (lang) params.set('lang', lang); }
+    const q = params.toString();
+    history.replaceState(null, '', q ? `?${q}` : location.pathname);
+  } catch (e) { /* file:// lub przeglądarka bez History API — pomijamy */ }
+}
+
+function openArticle(cat, slug) {
+  const entry = findEntry(cat, slug);
+  if (!entry) return;
+  currentArticle = { cat, entry };
+  document.getElementById('article-overlay').classList.add('open');
+  document.getElementById('article-date').textContent = entry.date || '';
+
+  const langKeys = Object.keys(entry.langs);
+  const langPill = document.getElementById('article-lang-pill');
+  if (langKeys.length > 1) {
+    langPill.style.display = 'flex';
+    langPill.querySelectorAll('.lang-opt').forEach(b => {
+      b.style.display = langKeys.includes(b.dataset.lang) ? '' : 'none';
+    });
+  } else {
+    langPill.style.display = 'none';
+  }
+
+  const lang = pickLang(entry);
+  renderArticleLang(lang);
+  updateArticleUrl(slug, lang);
+}
+
+// Treść: przez http(s) próbujemy pobrać plik .md NA ŻYWO — edycja istniejącego
+// artykułu jest widoczna od razu, bez przebudowy. Fallback: content wstrzyknięty
+// do INDEX (świeży jeśli INDEX przyszedł z fetch index.json, albo z #wall-data
+// pod file:///gdy fetch się nie uda).
+const DATA_ROOT = '../../../data/act1/wall/';
+
+async function renderArticleLang(lang) {
+  const entry = currentArticle.entry;
+  const cat = currentArticle.cat;
+  const body = document.getElementById('article-body');
+  document.getElementById('article-lang-pill').querySelectorAll('.lang-opt')
+    .forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+
+  const cacheKey = cat + '/' + entry.slug;
+  articleCache[cacheKey] = articleCache[cacheKey] || {};
+  if (articleCache[cacheKey][lang]) {
+    body.innerHTML = articleCache[cacheKey][lang];
+    return;
+  }
+  const langData = entry.langs[lang];
+  if (!langData) return;
+
+  let raw = null;
+  if (location.protocol !== 'file:') {
+    try {
+      const path = DATA_ROOT + [cat, entry.folder, langData.file].map(encodeURIComponent).join('/');
+      const res = await fetch(path, { cache: 'no-store' });
+      if (res.ok) raw = await res.text();
+    } catch (e) { /* brak sieci — spadamy do fallbacku poniżej */ }
+  }
+  if (raw == null) raw = langData.content;
+
+  if (raw == null) {
+    body.innerHTML = '<div class="article-err">Brak treści — uruchom tools/build_wall_index.py.</div>';
+    return;
+  }
+  const html = renderMarkdown(raw);
+  articleCache[cacheKey][lang] = html;
+  body.innerHTML = html;
+}
+
+document.getElementById('article-lang-pill').addEventListener('click', e => {
+  const btn = e.target.closest('.lang-opt');
+  if (!btn) return;
+  setLang(btn.dataset.lang, true);
+  renderArticleLang(btn.dataset.lang);
+  if (currentArticle) updateArticleUrl(currentArticle.entry.slug, btn.dataset.lang);
+});
+
+document.getElementById('article-close').addEventListener('click', closeArticle);
+document.getElementById('article-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('article-overlay')) closeArticle();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeArticle();
+});
+function closeArticle() {
+  document.getElementById('article-overlay').classList.remove('open');
+  currentArticle = null;
+  updateArticleUrl(null, null);
+}
+
+// ── TINY MARKDOWN RENDERER (safe subset: h1-3, hr, bold, italic, code, links, paragraphs) ──
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function renderInline(text) {
+  let out = escapeHtml(text);
+  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, label, url) => {
+    const safeUrl = /^https?:\/\//i.test(url) ? url : '#';
+    return `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener">${label}</a>`;
+  });
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  return out;
+}
+
+function renderMarkdown(md) {
+  const lines = md.replace(/\r\n/g, '\n').split('\n');
+  const html = [];
+  let para = [];
+
+  function flushPara() {
+    if (para.length) {
+      html.push('<p>' + renderInline(para.join(' ')) + '</p>');
+      para = [];
+    }
+  }
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { flushPara(); continue; }
+    if (/^---+$/.test(line) || /^\*\*\*+$/.test(line)) { flushPara(); html.push('<hr>'); continue; }
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    if (h) {
+      flushPara();
+      const level = h[1].length;
+      html.push(`<h${level}>${renderInline(h[2])}</h${level}>`);
+      continue;
+    }
+    para.push(line);
+  }
+  flushPara();
+  return html.join('\n');
+}
+
+loadIndex();
+</script>
+
+</body>
+</html>

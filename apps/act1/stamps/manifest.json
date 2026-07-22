@@ -38,7 +38,7 @@
     },
     {
       "type": "feeds",
-      "target": "genesis"
+      "target": "_sessions"
     }
   ],
   "tags": [

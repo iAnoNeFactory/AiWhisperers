@@ -90,12 +90,12 @@ Wszystkie trzy SHA aktualizowane przy każdej zmianie wersji. Weryfikowane przez
 | horizon    | active      | 8004  | weryfikacja prawdy · ważony konsensus     |
 | breath     | incubation  | 8005  | tchnienie · canvas 3D                  |
 | forge      | incubation  | —     | kuźnia paradoksów · pre-consensus arena   |
-| genesis    | incubation  | —     | archiwum sesji · czytnik eksportów        |
 | profile    | incubation  | —     | profil operatora · radar 9 osi            |
 | stamps     | incubation  | —     | rejestr pieczątek modeli                  |
 | compas     | mature      | —     | kompas morficzny · geometria Three.js     |
 | memory     | mature      | —     | sieć pamięci · lemniskata 3D              |
 | labyrinth  | mature      | —     | labirynt pojęć · gra narracyjna 6 warstw  |
+| wall       | mature      | —     | tablica projektu · artykuły i notatki     |
 | następny   | —           | 8006+ | —                                         |
 
 ---

@@ -1,11 +1,11 @@
 {
-  "id": "genesis",
-  "name": "Genesis · Archiwum Sesji",
-  "version": "3.0",
-  "date": "2026-06-26",
-  "description": "Archiwum sesji operatora — import plików sesji v1.3, eksportów AiWPass, profilu operatora. Wizualizacja metryk relacyjnych, aktów i łańcucha proweniencji.",
-  "type": "archive-reader",
-  "status": "incubation",
+  "id": "_sessions",
+  "name": "AiWSessions · Archiwum Sesji 📜",
+  "version": "4.0",
+  "date": "2026-07-22",
+  "description": "Archiwum sesji operatora — import plików sesji v1.3, eksportów AiWPass, profilu operatora. Wizualizacja metryk relacyjnych, aktów i łańcucha proweniencji. Dawniej Genesis (apps/act1/genesis) — od v4 artefakt systemowy.",
+  "type": "standalone",
+  "status": "active",
   "lineage": {
     "seed_session": "",
     "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
@@ -23,25 +23,30 @@
     }
   },
   "files": {
-    "entry": "genesis.html",
+    "entry": "AiWSessions.html",
     "docs": "",
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "f1ed46e08be44eea081c2a67454bb3d6e706df477410c798c2bd05e86ef9f01b",
+    "entry_sha": "bc6b1e429956a89c89bb661364967a6568977e7ae7d0f7523ef681a7ec7ba16c",
     "docs_sha": ""
   },
   "relations": [
     {
       "type": "consumes",
       "target": "_pass"
+    },
+    {
+      "type": "consumes",
+      "target": "stamps"
     }
   ],
   "tags": [
     "archive",
     "sessions",
     "exports",
-    "blockchain"
+    "blockchain",
+    "system"
   ],
   "runtime": {
     "data_path": "",

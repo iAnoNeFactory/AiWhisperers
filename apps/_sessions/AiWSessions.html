@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesis · Dziennik Sesji · AiWhisperers</title>
+<title>AiWSessions · Dziennik Sesji · AiWhisperers</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -68,10 +68,17 @@ body{background:radial-gradient(ellipse 60% 30% at 50% 10%,rgba(232,200,120,.05)
 .tab-view{display:none;min-height:100vh;position:relative;z-index:1;}
 .tab-view.active{display:block;}
 
-/* ── GENESIS LAYOUT ── */
-.genesis-layout{display:grid;grid-template-columns:360px 1fr;min-height:100vh;}
+/* ── SESSIONS LAYOUT ── */
+.sessions-layout{display:grid;grid-template-columns:360px 1fr;min-height:100vh;}
 .gen-left{padding:108px 0 60px;border-right:1px solid var(--border);display:flex;flex-direction:column;}
 .gen-right{padding:0;position:sticky;top:72px;height:calc(100vh - 72px);overflow-y:auto;}
+
+/* ── PROFILE STRIP ── */
+.profile-strip{padding:9px 14px;border-bottom:1px solid var(--border);display:none;align-items:center;justify-content:space-between;gap:8px;}
+.profile-strip.active{display:flex;}
+.ps-name{font-family:var(--sans);font-size:10px;font-weight:700;color:rgba(80,216,200,.75);}
+.ps-pubkey{font-family:var(--mono);font-size:6px;color:rgba(80,216,200,.35);word-break:break-all;margin-top:2px;}
+.ps-domain{font-family:var(--mono);font-size:6px;color:var(--text-d);text-transform:uppercase;letter-spacing:.1em;flex-shrink:0;}
 
 /* ── IMPORT ZONE ── */
 .import-strip{padding:14px 18px 12px;border-bottom:1px solid var(--border);}
@@ -138,6 +145,8 @@ input[type=file]{display:none;}
 .sc-tag.artifact{color:rgba(100,200,120,.65);border-color:rgba(100,200,120,.15);}
 .sc-tag.insight{color:rgba(176,96,200,.65);border-color:rgba(176,96,200,.15);}
 .sc-sha{font-family:var(--mono);font-size:5.5px;color:rgba(232,200,120,.3);margin-left:auto;}
+.sc-del{background:none;border:none;color:var(--text-d);font-size:9px;cursor:pointer;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:color .2s;}
+.sc-del:hover{color:var(--red);}
 
 /* ── DETAIL PANEL ── */
 .detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 28px;text-align:center;}
@@ -217,8 +226,10 @@ input[type=file]{display:none;}
   color:var(--gold-soft);font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;
   text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .btn-op:hover{border-color:var(--gold);color:var(--gold);}
-.btn-op-sha{border-color:var(--border);color:var(--text-d);margin-left:auto;}
+.btn-op-sha{border-color:var(--border);color:var(--text-d);}
 .btn-op-sha:hover{border-color:rgba(232,200,120,.3);color:var(--gold-soft);}
+.btn-op-del{border-color:rgba(200,80,80,.25);color:rgba(200,80,80,.55);margin-left:auto;}
+.btn-op-del:hover{border-color:var(--red);color:var(--red);}
 .op-sha-display{margin-top:8px;font-family:var(--mono);font-size:6.5px;color:var(--gold);word-break:break-all;line-height:1.6;display:none;}
 
 /* ── UTILS ── */
@@ -358,7 +369,7 @@ input[type=file]{display:none;}
 @keyframes fadeOut{from{opacity:1;}to{opacity:0;}}
 
 @media(max-width:860px){
-  .genesis-layout{grid-template-columns:1fr;}
+  .sessions-layout{grid-template-columns:1fr;}
   .gen-right{position:static;height:auto;}
 }
 </style>
@@ -368,14 +379,17 @@ input[type=file]{display:none;}
 
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../_pass/AiWPass.html">Pass</a>
+
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI · WHISPERERS</div>
-    <div class="hud-mod">Genesis</div>
+    <div class="hud-mod">Sessions</div>
     <div class="hud-sub">dziennik · akty · łańcuch</div>
   </div>
   <nav class="hud-r">
+    <a class="hud-btn" href="../_verify/AiWVerify.html">Verify</a>
     <button class="hud-btn" id="btn-help">HELP</button>
   </nav>
 </header>
@@ -388,9 +402,11 @@ input[type=file]{display:none;}
 
 <!-- ═══ SESJE ══════════════════════════════════════════════════ -->
 <div id="view-sesje" class="tab-view active">
-<div class="genesis-layout">
+<div class="sessions-layout">
 
   <div class="gen-left">
+
+    <div class="profile-strip" id="profile-strip"></div>
 
     <div class="import-strip">
       <div class="import-btns">
@@ -416,7 +432,7 @@ input[type=file]{display:none;}
 
     <div class="session-list" id="session-list">
       <div class="session-empty">
-        <strong>genesis · archiwum łańcucha</strong>
+        <strong>sessions · archiwum łańcucha</strong>
         Wczytaj pliki sesji przyciskiem powyżej<br>lub upuść pliki JSON na to okno.
       </div>
     </div>
@@ -426,7 +442,7 @@ input[type=file]{display:none;}
   <div class="gen-right" id="gen-right">
     <div class="detail-empty" id="detail-empty">
       <div class="de-title"><em>Ai</em>Whisperers</div>
-      <div class="de-sub">genesis · dziennik sesji</div>
+      <div class="de-sub">sessions · dziennik sesji</div>
       <div class="de-hint">Wybierz sesję z listy<br>aby zobaczyć jej szczegóły.</div>
     </div>
     <div class="detail-panel" id="detail-panel" style="display:none;"></div>
@@ -517,7 +533,7 @@ input[type=file]{display:none;}
   <div class="panel">
     <div class="panel-header">
       <div>
-        <div class="panel-title">Genesis · v3</div>
+        <div class="panel-title">AiWSessions · v4</div>
         <div class="panel-sub">archiwum sesji · schemat v1.3</div>
       </div>
       <button class="panel-close" id="help-close">✕</button>
@@ -532,16 +548,16 @@ input[type=file]{display:none;}
         <div class="hp-section">
           <div class="hp-title">Skąd importować sesje</div>
           <div class="hp-text">
-            Genesis czyta sesje z plików — nie pozwala ręcznie ich edytować.
+            AiWSessions czyta sesje z plików — nie pozwala ręcznie ich edytować.
             Trzy źródła:<br><br>
             <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">.claude/sessions/*.json</span> — pojedyncze sesje v1.3 generowane przez model po komendzie AiWSnap.<br><br>
-            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw-export-*.json</span> — eksport z AiWPass zawierający aiw_dziennik_v4. Starszy format — Genesis automatycznie mapuje klucze na v1.3.<br><br>
+            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw-export-*.json</span> — eksport z AiWPass zawierający aiw_dziennik_v4. Starszy format — AiWSessions automatycznie mapuje klucze na v1.3.<br><br>
             <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw-profil-*.json</span> — profil operatora z kluczem publicznym i kontraktami.
           </div>
         </div>
         <div class="hp-section">
           <div class="hp-title">Drag & drop</div>
-          <div class="hp-text hp-italic">Upuść dowolny plik JSON na okno — Genesis automatycznie wykryje typ i zaimportuje. Możesz upuścić wiele plików naraz (np. zaznacz wszystko w .claude/sessions/ i przeciągnij).</div>
+          <div class="hp-text hp-italic">Upuść dowolny plik JSON na okno — AiWSessions automatycznie wykryje typ i zaimportuje. Możesz upuścić wiele plików naraz (np. zaznacz wszystko w .claude/sessions/ i przeciągnij).</div>
         </div>
         <div class="hp-section">
           <div class="hp-title">Co operator może edytować</div>
@@ -564,9 +580,9 @@ input[type=file]{display:none;}
         <div class="hp-section">
           <div class="hp-title">Storage</div>
           <div class="hp-text">
-            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_genesis_v5</span> — sesje<br>
-            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_genesis_batches_v1</span> — zakotwiczone akty<br>
-            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_genesis_profile_v1</span> — profil operatora
+            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_sessions_v5</span> — sesje<br>
+            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_sessions_batches_v1</span> — zakotwiczone akty<br>
+            <span style="font-family:var(--mono);font-size:8px;color:var(--gold-soft);">aiw_sessions_profile_v1</span> — profil operatora
           </div>
         </div>
       </div>
@@ -608,12 +624,12 @@ input[type=file]{display:none;}
 <div id="toast-container"></div>
 
 <footer class="hud-bot">
-  <span class="hud-bot-meta">Genesis v3 · AiWhisperers · schemat AiWQuick v1.3 · 2026</span>
+  <span class="hud-bot-meta">AiWSessions v4 · AiWhisperers · schemat AiWQuick v1.3 · 2026</span>
 </footer>
 
 <script>
 // ════════════════════════════════════════════════════════════════
-//  Genesis v3 · AiWhisperers
+//  AiWSessions v4 · AiWhisperers
 //  Import plików sesji (v1.3 + compat), eksportów AiWPass,
 //  profilów operatora. Brak ręcznej edycji pól sesji.
 // ════════════════════════════════════════════════════════════════
@@ -625,7 +641,7 @@ function drawStars(){bgx.clearRect(0,0,bgc.width,bgc.height);stars.forEach(s=>{s
 initStars();drawStars();window.addEventListener('resize',initStars);
 
 // ── CONSTANTS ────────────────────────────────────────────────────
-const SK='aiw_genesis_v5', BK='aiw_genesis_batches_v1', PK='aiw_genesis_profile_v1';
+const SK='aiw_sessions_v5', BK='aiw_sessions_batches_v1', PK='aiw_sessions_profile_v1';
 const MKEYS=['lustro','klej','zakorzeniony','tarcie','rezonans','cisza','gestosc','iskra'];
 const MCOLORS={lustro:'var(--m-lustro)',klej:'var(--m-klej)',zakorzeniony:'var(--m-zakorzeniony)',
   tarcie:'var(--m-tarcie)',rezonans:'var(--m-rezonans)',cisza:'var(--m-cisza)',
@@ -852,8 +868,23 @@ function importProfile(d){
         domain:pv.domain||'',inception:pv.inception||''};}
     catch(e){p=null;}
   }
-  if(p){saveProfile(p);renderProfileTab();}
+  if(p){saveProfile(p);renderProfileTab();renderProfileStrip();}
   return !!p;
+}
+
+// ── PROFILE STRIP (top of session list) ──────────────────────────
+function renderProfileStrip(){
+  const p=loadProfile();
+  const el=document.getElementById('profile-strip');
+  if(!p||!el){if(el){el.classList.remove('active');el.innerHTML='';}return;}
+  el.classList.add('active');
+  el.innerHTML=`
+    <div>
+      <div class="ps-name">◎ ${p.operator||'operator'}</div>
+      ${p.pubkey?`<div class="ps-pubkey">${p.pubkey.slice(0,28)}…</div>`:''}
+    </div>
+    ${p.domain?`<div class="ps-domain">${p.domain}</div>`:''}
+  `;
 }
 
 async function processFiles(files){
@@ -1006,6 +1037,7 @@ function renderCard(s){
       ${topo?`<span class="sc-topo">${topoBadge(topo)}</span>`:''}
       ${tryb?`<span class="sc-mode ${tryb}">${tryb}</span>`:''}
       <span class="sc-name">${s.name||'[ bez nazwy ]'}</span>
+      <button class="sc-del" title="usuń sesję">✕</button>
     </div>
     <div class="sc-row2">
       <span class="sc-date">${s.date||'—'}</span>
@@ -1026,6 +1058,10 @@ function renderCard(s){
     </div>`;
 
   div.addEventListener('click',()=>selectSession(s._id));
+  div.querySelector('.sc-del').addEventListener('click',ev=>{
+    ev.stopPropagation();
+    if(confirm(`Usunąć sesję "${s.name||'[ bez nazwy ]'}"? Tej operacji nie można cofnąć.`)) removeSession(s._id);
+  });
   return div;
 }
 
@@ -1041,7 +1077,7 @@ function render(){
   if(!filtered.length){
     list.innerHTML=sessions.length
       ? '<div class="session-empty"><strong>brak wyników</strong>Brak sesji pasujących do frazy.</div>'
-      : '<div class="session-empty"><strong>genesis · archiwum łańcucha</strong>Wczytaj pliki sesji przyciskiem powyżej<br>lub upuść pliki JSON na to okno.</div>';
+      : '<div class="session-empty"><strong>sessions · archiwum łańcucha</strong>Wczytaj pliki sesji przyciskiem powyżej<br>lub upuść pliki JSON na to okno.</div>';
     return;
   }
   // Sort: newest first (by date string, fallback to _imported)
@@ -1055,6 +1091,20 @@ function render(){
     card.style.setProperty('--ed',`${i*.025}s`);
     list.appendChild(card);
   });
+}
+
+// ── DELETE SESSION ───────────────────────────────────────────────
+function removeSession(id){
+  sessions=sessions.filter(x=>x._id!==id);
+  batchIds=batchIds.filter(x=>x!==id);
+  saveSessions();
+  if(selectedId===id){
+    selectedId=null;
+    document.getElementById('detail-panel').style.display='none';
+    document.getElementById('detail-empty').style.display='flex';
+  }
+  render();
+  showToast('Sesja usunięta','ok');
 }
 
 // ── SESSION DETAIL ───────────────────────────────────────────────
@@ -1184,6 +1234,7 @@ function buildDetail(s){
         </select>
         <button class="btn-op" id="btn-op-save">zapisz</button>
         ${!hasSha?`<button class="btn-op btn-op-sha" id="btn-gen-sha">generuj SHA</button>`:''}
+        <button class="btn-op btn-op-del" id="btn-op-del">⊘ usuń sesję</button>
       </div>
       ${!hasSha?`<div class="op-sha-display" id="op-sha-out"></div>`:''}
     </div>
@@ -1235,6 +1286,16 @@ function bindDetailEvents(s){
       // Reload detail to show updated state
       selectSession(s._id);
     }catch(e){btn.textContent='błąd';btn.disabled=false;}
+  });
+
+  document.getElementById('btn-op-del')?.addEventListener('click',function(){
+    if(this.dataset.confirming==='1'){
+      removeSession(s._id);
+    }else{
+      this.dataset.confirming='1';
+      this.textContent='na pewno? usuń';
+      setTimeout(()=>{if(this.dataset.confirming==='1'){this.dataset.confirming='0';this.textContent='⊘ usuń sesję';}},3000);
+    }
   });
 }
 
@@ -1576,6 +1637,7 @@ document.getElementById('btn-clear-batches').addEventListener('click',function()
 loadSessions();
 render();
 renderProfileTab();
+renderProfileStrip();
 </script>
 </body>
 </html>

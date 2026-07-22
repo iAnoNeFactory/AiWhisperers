@@ -231,7 +231,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="hud-sub">paszport operatora · kontrakty</div>
   </div>
   <nav class="hud-r">
-    <a class="hud-btn" href="../_verify/AiWVerify.html">VERIFY</a>
+    <a class="hud-btn" href="../_sessions/AiWSessions.html">Sessions</a>
     <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')">HELP</button>
     <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')">ABOUT</button>
   </nav>
@@ -741,6 +741,7 @@ const MODELS = {
     provider: 'Anthropic',
     color: 'rgba(255,165,80,.85)',
     versions: [
+      'claude-fable-5',
       'claude-opus-4-7',
       'claude-sonnet-4-6',
       'claude-haiku-4-5-20251001'

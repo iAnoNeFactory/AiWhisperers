@@ -1,0 +1,28 @@
+{
+  "_version": "aiw_wall_index_v1",
+  "categories": {
+    "articles": [
+      {
+        "slug": "20260721-the-operator-holds-the-key",
+        "folder": "20260721 The operator holds the key",
+        "date": "2026-07-21",
+        "langs": {
+          "en": {
+            "file": "en.md",
+            "title": "The Operator Holds the Key",
+            "excerpt": "On August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show…"
+          },
+          "pl": {
+            "file": "pl.md",
+            "title": "Operator trzyma klucz",
+            "excerpt": "2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć,…"
+          }
+        }
+      }
+    ],
+    "guidelines": [],
+    "news": [],
+    "plans": [],
+    "info": []
+  }
+}

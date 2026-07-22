@@ -1,7 +1,7 @@
 # _index-boot · AiWhisperers · Mapa Poznania
 
 Esencja wiedzy dla modelu AI. Wczytaj ten plik zamiast przeglądania index.html.
-Źródło: index.html v2.1 · sesja: Wyrównanie Ekosystemu · 2026-05-09
+Źródło: index.html v2.2 · sesja: Genesis → AiWSessions · 2026-07-22
 
 Pełna dokumentacja projektu: `readme.html` — SHA weryfikowany przez `manifest.json` → `docs_sha`.
 
@@ -26,20 +26,21 @@ Kliknięcie otwiera moduł w nowej zakładce.
 
 Aktywne moduły (Akt I):
 - `arena` · `caves` · `morph` · `horizon` (active)
-- `compas` · `memory` · `labyrinth` (mature)
-- `breath` · `forge` · `genesis` · `profile` · `stamps` (incubation)
+- `compas` · `memory` · `labyrinth` · `wall` (mature)
+- `breath` · `forge` · `profile` · `stamps` (incubation)
 
 Akt II: osobna sekcja `.akt-stage` z komunikatem "czeka".
 
 ### Dolny bar · narzędzia operatora
 
-`<footer class="hud hud-bottom"><nav class="narzedzia">` — 8 narzędzi:
+`<footer class="hud hud-bottom"><nav class="narzedzia">` — 9 narzędzi:
 
 | Glyph | Artefakt | Link |
 |-------|----------|------|
 | boot | AiWBoot | `apps/_boot/AiWBoot.html` |
 | quick | AiWQuick | `apps/_quick/AiWQuick.html` |
 | pass | AiWPass | `apps/_pass/AiWPass.html` |
+| sessions | AiWSessions | `apps/_sessions/AiWSessions.html` |
 | verify | AiWVerify | `apps/_verify/AiWVerify.html` |
 | schema | AiWSchema | `apps/_schema/AiWSchema.html` |
 | protocol | AiWProtocol | `apps/_protocol/AiWProtocol.html` |
@@ -114,6 +115,15 @@ Wskaźnik: `#tchnienie-live` (data-state: active/idle) + `#tchnienie-action` (te
 ---
 
 ## Changelog
+
+### v2.2 · 2026-07-22
+- Genesis (dawniej `apps/act1/genesis/genesis.html`, incubation) przeniesiony i przemianowany na artefakt systemowy `apps/_sessions/AiWSessions.html` (status active)
+- Dodano ikonę AiWSessions w dolnym barze między Pass a Verify
+- Glyph `sessions` — zaadaptowany dawny glyph `genesis` (manuskrypt + słoje + pieczęć), S-relatywny więc działa też w 56px
+- Węzeł Genesis w konstelacji Aktu I zastąpiony węzłem `wall` — tablica projektu na artykuły i notatki, `apps/act1/wall/wall.html` (status mature)
+- Dodano glyph `wall` — kartki przypięte do ściany, stonowana paleta
+- Wall czyta `data/act1/wall/<kategoria>/<wpis>/<lang>.md` przez wygenerowany `data/act1/wall/index.json` (`tools/build_wall_index.py`, wpięty w pre-commit hook obok `build_sitemap.py`) — statyczne, działa na GitHub Pages bez backendu. Auto-detekcja języka przeglądarki (PL/EN) z ręcznym przełącznikiem.
+- `window.GenesisAPI` → `window.SessionsAPI`, event `genesis:updated` → `sessions:updated`
 
 ### v2.1 · 2026-05-09
 - Dodano ikonę AiWVerify w dolnym barze między Pass a Schema

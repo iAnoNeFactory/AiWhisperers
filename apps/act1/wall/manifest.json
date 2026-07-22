@@ -1,0 +1,62 @@
+{
+  "id": "wall",
+  "name": "Wall · Tablica Projektu",
+  "version": "1.1",
+  "date": "2026-07-22",
+  "description": "Tablica projektu — silnik czytający data/act1/wall/ (kategorie: articles, guidelines, news, plans, info). Przez http(s) (localhost, GitHub Pages) wall.html pobiera świeży data/act1/wall/index.json i treść artykułów fetch()-em na żywo — edycje widać bez przebudowy. tools/build_wall_index.py wstrzykuje pełną kopię do wall.html jako gwarantowany fallback dla file:// (offline-first, zgodnie z _protocol-boot.md) — tam wymagana jest przebudowa po zmianie treści. Karty na tablicy, auto-detekcja języka przeglądarki z ręcznym przełącznikiem PL/EN, render Markdown w przeglądarce.",
+  "type": "content-board",
+  "status": "mature",
+  "lineage": {
+    "seed_session": "",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "wall.html",
+    "docs": "",
+    "components": [],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "30cd56df37c0299ee507944a6c3dcb00384e7e9403a160878e141a25009de3f2",
+    "docs_sha": ""
+  },
+  "relations": [],
+  "tags": [
+    "articles",
+    "guidelines",
+    "notes",
+    "content",
+    "i18n",
+    "markdown"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [
+      "read"
+    ],
+    "port": 0,
+    "consumers": [
+      "human"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [
+        "pl",
+        "en"
+      ],
+      "lang_file": ""
+    }
+  }
+}

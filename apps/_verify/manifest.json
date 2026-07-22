@@ -33,7 +33,7 @@
     "components": [],
     "bootstrap": "_verify-boot.md",
     "bootstrap_sha": "bf4ad2c7b9e0b086a17e6b7cf58e2307a9a8762f008906661047279c446e4ec3",
-    "entry_sha": "318eeb85fdbab7d559205257be04f47adcf9c79c289c2211db2a387f14cca0f5",
+    "entry_sha": "deea121b2bf1480a5b0a06bc96b6a46bcdfd04678bcf7ea6ee90ddf10107edba",
     "docs_sha": ""
   },
   "runtime": {
@@ -56,6 +56,10 @@
     {
       "type": "complements",
       "target": "_pass"
+    },
+    {
+      "type": "consumes",
+      "target": "_sessions"
     }
   ],
   "tags": [

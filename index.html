@@ -1194,15 +1194,15 @@
     <div class="node-caption">drzewo wiedzy · demokratyczna prawda</div>
   </a>
 
-  <!-- NIEBO — Genesis (lewa, między Mapą a Kompasem · czytnik eksportów) -->
-  <a class="node" href="apps/act1/genesis/genesis.html"
-     style="top: 36%; left: 20%; animation-delay: 1.2s; --glow: rgba(232, 220, 180, 0.5);">
-    <canvas data-glyph="genesis" width="160" height="160"></canvas>
-    <div class="node-label">Genesis</div>
-    <div class="node-caption">archiwum sesji · czytnik eksportów</div>
+  <!-- NIEBO — Wall (lewa, między Mapą a Kompasem · tablica projektu, czyta data/act1/wall/) -->
+  <a class="node" href="apps/act1/wall/wall.html"
+     style="top: 36%; left: 20%; animation-delay: 1.2s; --glow: rgba(180, 170, 150, 0.4);">
+    <canvas data-glyph="wall" width="160" height="160"></canvas>
+    <div class="node-label">Wall</div>
+    <div class="node-caption">tablica projektu · artykuły i notatki</div>
   </a>
 
-  <!-- NIEBO niżej — Profil operatora (pod Genesis · operator na części pierwsze) -->
+  <!-- NIEBO niżej — Profil operatora (pod Wall · operator na części pierwsze) -->
   <a class="node" href="apps/act1/profile/profile.html"
      style="top: 58%; left: 14%; animation-delay: 1.4s; --glow: rgba(200, 180, 230, 0.55);">
     <canvas data-glyph="profil" width="160" height="160"></canvas>
@@ -1656,6 +1656,10 @@
     <a class="narz" href="apps/_pass/AiWPass.html" title="Pass — paszport operatora, klucze, paczki (AIWPass)">
       <canvas data-glyph="pass" width="56" height="56"></canvas>
       <span class="narz-label">Pass</span>
+    </a>
+    <a class="narz" href="apps/_sessions/AiWSessions.html" title="Sessions — archiwum sesji operatora, import eksportów, akty i łańcuch proweniencji (AiWSessions)">
+      <canvas data-glyph="sessions" width="56" height="56"></canvas>
+      <span class="narz-label">Sessions</span>
     </a>
     <a class="narz" href="apps/_verify/AiWVerify.html" title="Verify — audytor kryptograficzny: kontrakty, profile, łańcuch, SHA">
       <canvas data-glyph="verify" width="56" height="56"></canvas>
@@ -3085,9 +3089,10 @@ const GLYPHS = {
     ctx.fill();
   },
 
-  // ─── GENESIS — archiwum sesji, eksporty, lineage ───
+  // ─── SESSIONS (AiWSessions) — archiwum sesji, eksporty, lineage ───
   // Manuskrypt: otwarta księga w tle + słoje paczek + sesje rozsiane + pieczęć ROOT w środku
-  genesis(c, t) {
+  // Funkcja jest S-relatywna — używana też w 56px ikonie dolnego baru narzędzi.
+  sessions(c, t) {
     const ctx = c.getContext('2d');
     const S = c.width;
     ctx.clearRect(0, 0, S, S);
@@ -3244,6 +3249,83 @@ const GLYPHS = {
     ctx.fillStyle = `rgba(255, 245, 210, ${sealPulse})`;
     ctx.beginPath();
     ctx.arc(cx, cy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  // ─── WALL — tablica projektu, w budowie (kartki przypięte do ściany) ───
+  wall(c, t) {
+    const ctx = c.getContext('2d');
+    const S = c.width;
+    ctx.clearRect(0, 0, S, S);
+    const cx = S/2, cy = S/2;
+    const R = S * 0.36;
+
+    // glow neutralny, kamienno-beżowy (jeszcze nie zbudowane — stonowane)
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+    halo.addColorStop(0, 'rgba(180, 170, 150, 0.14)');
+    halo.addColorStop(1, 'rgba(180, 170, 150, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, S * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ─── faktura ściany — delikatna siatka spoin ───
+    ctx.strokeStyle = 'rgba(200, 190, 170, 0.08)';
+    ctx.lineWidth = 0.5;
+    for (let i = -2; i <= 2; i++) {
+      const y = cy + i * R * 0.32;
+      ctx.beginPath();
+      ctx.moveTo(cx - R * 0.95, y);
+      ctx.lineTo(cx + R * 0.95, y);
+      ctx.stroke();
+    }
+
+    // ─── kartki przypięte do ściany ───
+    const notes = [
+      { x: -0.42, y: -0.30, w: 0.30, h: 0.24, rot: -0.10, col: [200, 190, 170] },
+      { x:  0.14, y: -0.42, w: 0.26, h: 0.22, rot:  0.07, col: [180, 170, 150] },
+      { x:  0.44, y:  0.06, w: 0.28, h: 0.24, rot: -0.06, col: [200, 190, 170] },
+      { x: -0.10, y:  0.10, w: 0.32, h: 0.26, rot:  0.05, col: [232, 200, 120] },
+      { x: -0.40, y:  0.40, w: 0.26, h: 0.20, rot:  0.09, col: [180, 170, 150] },
+    ];
+
+    const activeIdx = Math.floor((t * 0.0004) % notes.length);
+
+    notes.forEach((n, i) => {
+      const nx = cx + n.x * R, ny = cy + n.y * R;
+      const nw = n.w * R, nh = n.h * R;
+      const isActive = i === activeIdx;
+      const pulse = isActive ? (0.5 + 0.25 * Math.sin(t * 0.003)) : 0.22;
+
+      ctx.save();
+      ctx.translate(nx, ny);
+      ctx.rotate(n.rot);
+
+      // cień delikatny
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+      ctx.fillRect(-nw/2 + 1.5, -nh/2 + 1.5, nw, nh);
+
+      // kartka
+      ctx.fillStyle = `rgba(${n.col[0]}, ${n.col[1]}, ${n.col[2]}, ${0.05 + pulse * 0.10})`;
+      ctx.strokeStyle = `rgba(${n.col[0]}, ${n.col[1]}, ${n.col[2]}, ${0.25 + pulse * 0.4})`;
+      ctx.lineWidth = 0.8;
+      ctx.fillRect(-nw/2, -nh/2, nw, nh);
+      ctx.strokeRect(-nw/2, -nh/2, nw, nh);
+
+      // pinezka
+      ctx.fillStyle = `rgba(232, 160, 96, ${0.4 + pulse * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(0, -nh/2 + 2, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    // jądro — cichy, stonowany puls (moduł jeszcze w budowie)
+    const corePulse = 0.35 + 0.2 * Math.sin(t * 0.0018);
+    ctx.fillStyle = `rgba(220, 210, 190, ${corePulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.4, 0, Math.PI * 2);
     ctx.fill();
   },
 
@@ -4056,7 +4138,7 @@ window.addEventListener('storage', e => {
 const TL_INCEPTION = new Date('2026-03-03T00:00:00');  // genesis operatora ROOT
 const TL_TODAY = () => new Date();
 
-// Dane mockowe — w przyszłości Genesis API zwróci to z aiw_export
+// Dane mockowe — w przyszłości Sessions API zwróci to z aiw_export
 const TIMELINE_EVENTS = [
   // PACZKA 1 - "Złota Helisa"
   { type: 'session', date: '2026-04-04', model: 'sonnet' },
@@ -4333,19 +4415,19 @@ async function shortShaChatId(id) {
 
 shortShaChatId(AKT_CHAT_ID).then(sha => {
   // Hash bieżącej sesji jest dostępny przez injectChatTips()
-  // i przez Genesis API w przyszłości. Pod logo trzymamy "Cockpit · 2026".
+  // i przez Sessions API w przyszłości. Pod logo trzymamy "Cockpit · 2026".
   window.__AKT_CHAT_SHA = sha;
 });
 
 // ═══════════════════════════════════════════════════════════════
 // PROVENANCE — chat_id, data i model dla każdego artefaktu
-// W przyszłości zaciągane z aiw_export przez Genesis API (window.GenesisAPI).
-// Dziś dane są mockiem; gdy Genesis będzie żyć, ten obiekt zostanie zastąpiony.
+// W przyszłości zaciągane z aiw_export przez Sessions API (window.SessionsAPI).
+// Dziś dane są mockiem; gdy AiWSessions (apps/_sessions/) będzie w pełni podłączony, ten obiekt zostanie zastąpiony.
 // ═══════════════════════════════════════════════════════════════
 const PROVENANCE = {
   'map.html':                  { chatId: null, date: '2026-04 archiwum', model: 'Grok · Sonnet 4.6 · Gemini 3' },
   'apps/act1/horizon.html':             { chatId: null, date: '2026-04 archiwum', model: 'Claude · multi-model' },
-  'apps/act1/genesis/genesis.html':   { chatId: null, date: '— do zbudowania', model: '— · placeholder' },
+  'apps/act1/wall/wall.html':   { chatId: null, date: '2026-07-22', model: 'Claude Sonnet 5' },
   'apps/act1/forge/forge.html':                { chatId: null, date: '2026-04-17/18',    model: 'Gemini 1.5 Pro → Opus 4.7' },
   'apps/act1/profile/profile.html':    { chatId: null, date: '— do zbudowania', model: '— · placeholder' },
   'apps/act1/breath/breath.html':            { chatId: null, date: '2026-04-21',       model: 'Claude Opus 4.7' },
@@ -4356,12 +4438,12 @@ const PROVENANCE = {
   'apps/act1/labyrinth/labyrinth.html':             { chatId: null, date: '2026-03-28',       model: 'Claude Sonnet 4.6' },
 };
 
-// ─── API Genesis ─── jedno źródło prawdy o proweniencji
-// Gdy Genesis (apps/genesis/) będzie zbudowany, zastąpi tę implementację:
+// ─── API Sessions ─── jedno źródło prawdy o proweniencji
+// Gdy AiWSessions (apps/_sessions/AiWSessions.html) będzie w pełni podłączony, zastąpi tę implementację:
 // - czyta aiw_export_v1 z localStorage albo z pliku
 // - wystawia getProvenance(href) → { chatId, date, model, sessionName, ... }
-// - emituje 'genesis:updated' gdy operator zaimportuje nowy eksport
-window.GenesisAPI = window.GenesisAPI || {
+// - emituje 'sessions:updated' gdy operator zaimportuje nowy eksport
+window.SessionsAPI = window.SessionsAPI || {
   async getProvenance(href) {
     const p = PROVENANCE[href];
     if (!p) return null;
@@ -4379,7 +4461,7 @@ async function injectChatTips() {
   const nodes = Array.from(document.querySelectorAll('.akt-stage .node'));
   for (const n of nodes) {
     const href = n.getAttribute('href');
-    const prov = await window.GenesisAPI.getProvenance(href);
+    const prov = await window.SessionsAPI.getProvenance(href);
     if (!prov) continue;
 
     const shaLine = prov.chatShortSha
@@ -4396,9 +4478,9 @@ async function injectChatTips() {
     n.appendChild(tip);
   }
 }
-// odpalaj po starcie + nasłuchuj na update z Genesis
+// odpalaj po starcie + nasłuchuj na update z Sessions
 injectChatTips();
-window.addEventListener('genesis:updated', () => {
+window.addEventListener('sessions:updated', () => {
   // usuń stare tooltipy i wstrzyknij nowe
   document.querySelectorAll('.node-chat-tip').forEach(t => t.remove());
   injectChatTips();
