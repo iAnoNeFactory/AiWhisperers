@@ -1,9 +1,9 @@
 {
   "id": "wall",
   "name": "Wall · Tablica Projektu",
-  "version": "1.1",
+  "version": "1.2",
   "date": "2026-07-22",
-  "description": "Tablica projektu — silnik czytający data/act1/wall/ (kategorie: articles, guidelines, news, plans, info). Przez http(s) (localhost, GitHub Pages) wall.html pobiera świeży data/act1/wall/index.json i treść artykułów fetch()-em na żywo — edycje widać bez przebudowy. tools/build_wall_index.py wstrzykuje pełną kopię do wall.html jako gwarantowany fallback dla file:// (offline-first, zgodnie z _protocol-boot.md) — tam wymagana jest przebudowa po zmianie treści. Karty na tablicy, auto-detekcja języka przeglądarki z ręcznym przełącznikiem PL/EN, render Markdown w przeglądarce.",
+  "description": "Tablica projektu — silnik czytający data/act1/wall/ (kategorie: articles, guidelines, news, plans, info). Przez http(s) (localhost, GitHub Pages) wall.html pobiera świeży data/act1/wall/index.json i treść artykułów fetch()-em na żywo — edycje widać bez przebudowy. tools/build_wall_index.py wstrzykuje pełną kopię do wall.html jako gwarantowany fallback dla file:// (offline-first, zgodnie z _protocol-boot.md). Skrypt generuje też statyczne, w pełni wyrenderowane strony per artykuł×język (apps/act1/wall/a/<kategoria>/<slug>/<lang>.html, z article-template.html) z meta description, Open Graph/Twitter Card, hreflang i JSON-LD — dla botów, podglądów linków i narzędzi AI, które nie wykonują JS. Karty na tablicy, auto-detekcja języka przeglądarki z ręcznym przełącznikiem PL/EN, przycisk kopiowania linku do statycznej strony.",
   "type": "content-board",
   "status": "mature",
   "lineage": {
@@ -28,7 +28,7 @@
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "30cd56df37c0299ee507944a6c3dcb00384e7e9403a160878e141a25009de3f2",
+    "entry_sha": "d8b4ad571a1e458349366b119d6f4c7b7c31376b629e03dba440f5ea037b5910",
     "docs_sha": ""
   },
   "relations": [],
@@ -38,7 +38,8 @@
     "notes",
     "content",
     "i18n",
-    "markdown"
+    "markdown",
+    "seo"
   ],
   "runtime": {
     "data_path": "",

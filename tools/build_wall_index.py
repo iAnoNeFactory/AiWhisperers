@@ -27,22 +27,35 @@ samym file:// (podwójne kliknięcie pliku) trzeba więc przebudować po
 każdej zmianie treści — to twarde ograniczenie przeglądarek, nie do
 obejścia bez serwera.
 
+Generuje też statyczne strony per artykuł×język (apps/act1/wall/a/<kategoria>/
+<slug>/<lang>.html) z pełną treścią już wypisaną w HTML, meta description,
+Open Graph/Twitter Card i JSON-LD — żeby boty, podglądy linków i narzędzia AI
+widziały prawdziwą treść bez odpalania JS (interaktywna tablica w wall.html
+nie daje botom nic poza "Wczytywanie tablicy…", zanim JS się wykona).
+
 Uruchamiany automatycznie przez pre-commit hook (jak build_sitemap.py).
 """
 
+import html as html_lib
 import json
 import re
 from pathlib import Path
 
-ROOT      = Path(__file__).parent.parent
-WALL_DATA = ROOT / "data" / "act1" / "wall"
-OUT       = WALL_DATA / "index.json"
-WALL_HTML = ROOT / "apps" / "act1" / "wall" / "wall.html"
+ROOT       = Path(__file__).parent.parent
+WALL_DATA  = ROOT / "data" / "act1" / "wall"
+OUT        = WALL_DATA / "index.json"
+WALL_ROOT  = ROOT / "apps" / "act1" / "wall"
+WALL_HTML  = WALL_ROOT / "wall.html"
+TEMPLATE   = WALL_ROOT / "article-template.html"
+STATIC_DIR = WALL_ROOT / "a"
+BASE_URL   = "https://aiwhisperers.pl"
 
 EMBED_START = '<script id="wall-data" type="application/json">'
 EMBED_END   = '</script>'
 
 CATEGORY_ORDER = ["articles", "guidelines", "news", "plans", "info"]
+CAT_LABELS     = {"articles": "Articles", "guidelines": "Guidelines", "news": "News", "plans": "Plans", "info": "Info"}
+LOCALE_MAP     = {"pl": "pl_PL", "en": "en_US"}
 EXCERPT_LEN    = 180
 
 FOLDER_DATE_RE  = re.compile(r"^(\d{8})\s*(.*)$")
@@ -50,6 +63,13 @@ HEADING_RE      = re.compile(r"^#+\s*(.+)$")
 ITALIC_ONLY_RE  = re.compile(r"^\*[^*]+\*$")
 BOLD_ONLY_RE    = re.compile(r"^\*\*[^*]+\*\*$")
 MD_STRIP_RE     = re.compile(r"[*_`]|\[([^\]]*)\]\([^)]*\)")
+
+INLINE_CODE_RE  = re.compile(r"`([^`]+)`")
+INLINE_LINK_RE  = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+INLINE_BOLD_RE  = re.compile(r"\*\*([^*]+)\*\*")
+INLINE_ITALIC_RE = re.compile(r"\*([^*]+)\*")
+HR_RE           = re.compile(r"^(-{3,}|\*{3,})$")
+BLOCK_HEADING_RE = re.compile(r"^(#{1,3})\s+(.*)$")
 
 
 def kebab(text: str) -> str:
@@ -71,6 +91,52 @@ def parse_folder(name: str) -> tuple[str, str]:
 
 def strip_md(text: str) -> str:
     return MD_STRIP_RE.sub(lambda m: m.group(1) or "", text)
+
+
+# ── RENDER MARKDOWN → HTML (port 1:1 z renderMarkdown/renderInline w wall.html) ──
+def render_inline(text: str) -> str:
+    out = html_lib.escape(text, quote=True)
+    out = INLINE_CODE_RE.sub(r"<code>\1</code>", out)
+
+    def _link(m: re.Match) -> str:
+        label, url = m.group(1), m.group(2)
+        safe_url = url if re.match(r"^https?://", url, re.I) else "#"
+        return f'<a href="{html_lib.escape(safe_url, quote=True)}" target="_blank" rel="noopener">{label}</a>'
+
+    out = INLINE_LINK_RE.sub(_link, out)
+    out = INLINE_BOLD_RE.sub(r"<strong>\1</strong>", out)
+    out = INLINE_ITALIC_RE.sub(r"<em>\1</em>", out)
+    return out
+
+
+def render_markdown(md: str) -> str:
+    lines = md.replace("\r\n", "\n").split("\n")
+    out: list[str] = []
+    para: list[str] = []
+
+    def flush_para():
+        if para:
+            out.append("<p>" + render_inline(" ".join(para)) + "</p>")
+            para.clear()
+
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            flush_para()
+            continue
+        if HR_RE.match(line):
+            flush_para()
+            out.append("<hr>")
+            continue
+        h = BLOCK_HEADING_RE.match(line)
+        if h:
+            flush_para()
+            level = len(h.group(1))
+            out.append(f"<h{level}>{render_inline(h.group(2))}</h{level}>")
+            continue
+        para.append(line)
+    flush_para()
+    return "\n".join(out)
 
 
 def extract_title_and_excerpt(text: str) -> tuple[str, str]:
@@ -147,6 +213,81 @@ def strip_content(categories: dict[str, list[dict]]) -> dict[str, list[dict]]:
     return lean
 
 
+def article_url(cat: str, slug: str, lang: str) -> str:
+    return f"{BASE_URL}/apps/act1/wall/a/{cat}/{slug}/{lang}.html"
+
+
+def json_ld(title: str, description: str, url: str, lang: str, date_iso: str) -> str:
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "description": description,
+        "url": url,
+        "inLanguage": lang,
+        "author": {"@type": "Person", "name": "Denis Czuliński"},
+        "publisher": {"@type": "Organization", "name": "AiWhisperers"},
+    }
+    if date_iso:
+        data["datePublished"] = date_iso
+    return json.dumps(data, ensure_ascii=False)
+
+
+def generate_static_pages(categories: dict[str, list[dict]]) -> int:
+    if not TEMPLATE.exists():
+        print(f"⚠  {TEMPLATE} nie istnieje — pomijam generowanie statycznych stron")
+        return 0
+    template = TEMPLATE.read_text(encoding="utf-8")
+
+    # Katalog jest w całości pochodny — czyścimy i budujemy od nowa,
+    # żeby usunięte/przemianowane wpisy nie zostawiały sierocych stron.
+    if STATIC_DIR.exists():
+        for p in sorted(STATIC_DIR.rglob("*"), reverse=True):
+            if p.is_file():
+                p.unlink()
+        for p in sorted(STATIC_DIR.rglob("*"), reverse=True):
+            if p.is_dir():
+                p.rmdir()
+
+    count = 0
+    for cat, entries in categories.items():
+        cat_label = CAT_LABELS.get(cat, cat.capitalize())
+        for e in entries:
+            langs = sorted(e["langs"].keys())
+            for lang in langs:
+                d = e["langs"][lang]
+                url = article_url(cat, e["slug"], lang)
+                alt_links = "\n".join(
+                    f'<link rel="alternate" hreflang="{l}" href="{article_url(cat, e["slug"], l)}">'
+                    for l in langs
+                )
+                lang_links = "".join(
+                    f' <a href="{l}.html">{l.upper()}</a>' if l != lang else f" <strong>{l.upper()}</strong>"
+                    for l in langs
+                )
+                page = (
+                    template
+                    .replace("{{LANG}}", lang)
+                    .replace("{{TITLE}}", html_lib.escape(d["title"], quote=True))
+                    .replace("{{DESCRIPTION}}", html_lib.escape(d.get("excerpt", ""), quote=True))
+                    .replace("{{CANONICAL_URL}}", url)
+                    .replace("{{OG_LOCALE}}", LOCALE_MAP.get(lang, lang.upper()))
+                    .replace("{{ALTERNATE_LINKS}}", alt_links)
+                    .replace("{{JSON_LD}}", json_ld(d["title"], d.get("excerpt", ""), url, lang, e.get("date", "")))
+                    .replace("{{DATE}}", e.get("date", ""))
+                    .replace("{{CATEGORY_LABEL}}", cat_label)
+                    .replace("{{BODY_HTML}}", render_markdown(d["content"]))
+                    .replace("{{BACK_TO_ROOT}}", "../../../../../../index.html")
+                    .replace("{{BACK_TO_WALL}}", f"../../../wall.html?a={e['slug']}&amp;lang={lang}")
+                    .replace("{{LANG_LINKS}}", lang_links)
+                )
+                out_dir = STATIC_DIR / cat / e["slug"]
+                out_dir.mkdir(parents=True, exist_ok=True)
+                (out_dir / f"{lang}.html").write_text(page, encoding="utf-8")
+                count += 1
+    return count
+
+
 def embed_into_wall_html(index: dict) -> bool:
     if not WALL_HTML.exists():
         print(f"⚠  {WALL_HTML} nie istnieje — pomijam wstrzyknięcie danych")
@@ -205,6 +346,9 @@ def main():
         print(f"✓ {WALL_HTML.relative_to(ROOT)} — fallback zaktualizowany (offline-first)")
     else:
         print(f"· {WALL_HTML.relative_to(ROOT)} — bez zmian")
+
+    page_count = generate_static_pages(categories)
+    print(f"✓ {STATIC_DIR.relative_to(ROOT)}/ — {page_count} statycznych stron (SEO/boty, bez JS)")
 
 
 if __name__ == "__main__":

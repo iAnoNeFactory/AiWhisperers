@@ -6,13 +6,13 @@
 set -e
 cd "$(git rev-parse --show-toplevel)"
 
+echo "→ Buduję indeks Wall (wstrzykuje data/act1/wall/ do wall.html, offline-first) + statyczne strony artykułów..."
+python3 tools/build_wall_index.py
+git add data/act1/wall/index.json apps/act1/wall/wall.html apps/act1/wall/a/
+
 echo "→ Buduję sitemap.xml..."
 python3 tools/build_sitemap.py
 git add sitemap.xml
-
-echo "→ Buduję indeks Wall (wstrzykuje data/act1/wall/ do wall.html, offline-first)..."
-python3 tools/build_wall_index.py
-git add data/act1/wall/index.json apps/act1/wall/wall.html
 
 echo "→ Sprawdzam entry_sha + bootstrap_sha..."
 python3 tools/check_integrity.py

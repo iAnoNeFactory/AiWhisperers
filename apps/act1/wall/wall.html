@@ -137,14 +137,17 @@ body {
           </div>
         </div>
       </div>
-      <button class="article-close" id="article-close">✕ zamknij</button>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button class="article-close" id="article-copy-link" style="border-color:rgba(232,200,120,.2);color:var(--gold-soft);">🔗 kopiuj link</button>
+        <button class="article-close" id="article-close">✕ zamknij</button>
+      </div>
     </div>
     <div class="article-body" id="article-body"><div class="article-loading">Wczytywanie…</div></div>
   </div>
 </div>
 
 <footer class="hud-bot">
-  <span class="hud-bot-meta">Wall · v1.1 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">Wall · v1.2 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 <!-- Wstrzykiwane przez tools/build_wall_index.py — nie edytuj ręcznie. -->
@@ -152,7 +155,7 @@ body {
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  Wall v1.1 · AiWhisperers
+//  Wall v1.2 · AiWhisperers
 //  Hybryda: przez http(s) (localhost, GitHub Pages) próbujemy świeżego
 //  fetch() do data/act1/wall/index.json — nowe/edytowane artykuły widać
 //  bez przebudowy tego pliku. fetch() do file:// jest blokowany przez
@@ -162,6 +165,7 @@ body {
 //  wszędzie — tylko pod file:// wymaga przebudowy po zmianie treści.
 // ═══════════════════════════════════════════════════════════════
 
+const SITE_URL   = 'https://aiwhisperers.pl';
 const LANG_KEY   = 'aiw_wall_lang';
 const CAT_LABELS = { articles: 'Articles', guidelines: 'Guidelines', news: 'News', plans: 'Plans', info: 'Info' };
 
@@ -408,6 +412,21 @@ document.getElementById('article-lang-pill').addEventListener('click', e => {
   setLang(btn.dataset.lang, true);
   renderArticleLang(btn.dataset.lang);
   if (currentArticle) updateArticleUrl(currentArticle.entry.slug, btn.dataset.lang);
+});
+
+document.getElementById('article-copy-link').addEventListener('click', function() {
+  if (!currentArticle) return;
+  const { cat, entry } = currentArticle;
+  const activeBtn = document.querySelector('#article-lang-pill .lang-opt.active');
+  const lang = activeBtn ? activeBtn.dataset.lang : pickLang(entry);
+  // Link do statycznej, w pełni wyrenderowanej strony (SEO/boty) — nie do
+  // wall.html?a=..., które dla botów bez JS pokazuje tylko "Wczytywanie tablicy…".
+  const url = `${SITE_URL}/apps/act1/wall/a/${cat}/${entry.slug}/${lang}.html`;
+  const btn = this;
+  navigator.clipboard?.writeText(url).then(() => {
+    btn.textContent = 'skopiowano ✓';
+    setTimeout(() => { btn.textContent = '🔗 kopiuj link'; }, 2000);
+  }).catch(() => {});
 });
 
 document.getElementById('article-close').addEventListener('click', closeArticle);
