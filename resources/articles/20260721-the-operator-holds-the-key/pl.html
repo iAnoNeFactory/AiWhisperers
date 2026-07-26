@@ -65,14 +65,14 @@ body {
 .article-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
 .article-date{font-family:var(--mono);font-size:8px;color:var(--gold-soft);letter-spacing:.1em;text-transform:uppercase;}
 .article-cat{font-family:var(--mono);font-size:8px;color:var(--text-d,rgba(240,232,216,.3));letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--border);padding:2px 7px;}
-.article-body{font-family:var(--serif);font-size:15px;line-height:1.85;color:var(--ink-dim);}
+.article-body{font-family:var(--serif);font-size:15px;line-height:1.85;color:var(--ink-dim);overflow-wrap:anywhere;}
 .article-body h1{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:1px;color:var(--gold);margin:0 0 18px;line-height:1.25;}
 .article-body h2{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);margin:26px 0 10px;}
 .article-body h3{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink-dim);margin:20px 0 8px;}
 .article-body p{margin:0 0 16px;}
 .article-body strong{color:var(--ink);font-weight:600;}
 .article-body em{color:rgba(200,180,140,.75);}
-.article-body code{font-family:var(--mono);font-size:12px;color:var(--gold-soft);background:rgba(232,200,120,.06);padding:1px 5px;}
+.article-body code{font-family:var(--mono);font-size:12px;color:var(--gold-soft);background:rgba(232,200,120,.06);padding:1px 5px;overflow-wrap:anywhere;}
 .article-body a{color:var(--gold-soft);text-decoration:underline;text-decoration-color:rgba(232,200,120,.3);}
 .article-body a:hover{color:var(--gold);}
 .article-body hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);opacity:.2;margin:26px 0;}
@@ -80,13 +80,31 @@ body {
 .lang-alts{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;}
 .lang-alts a{color:var(--gold-soft);margin-left:6px;}
 .lang-alts a:hover{color:var(--gold);}
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
 
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -94,8 +112,8 @@ body {
     <div class="hud-sub">tablica projektu · artykuły i notatki</div>
   </div>
   <div class="hud-r">
-    <button class="hud-btn" type="button" id="share-btn" data-title="Operator trzyma klucz" data-url="https://aiwhisperers.pl/resources/articles/20260721-the-operator-holds-the-key/pl.html">↗ udostępnij</button>
-    <a class="hud-btn" href="../../../apps/act1/wall/wall.html?cat=articles">⊞ tablica</a>
+    <button class="hud-btn" type="button" id="share-btn" data-title="Operator trzyma klucz" data-url="https://aiwhisperers.pl/resources/articles/20260721-the-operator-holds-the-key/pl.html"><span class="hud-glyph">↗</span><span class="hud-label">udostępnij</span></button>
+    <a class="hud-btn" href="../../../apps/act1/wall/wall.html?cat=articles"><span class="hud-glyph">⊞</span><span class="hud-label">tablica</span></a>
   </div>
 </header>
 
@@ -157,7 +175,8 @@ body {
 (function() {
   var btn = document.getElementById('share-btn');
   if (!btn) return;
-  var label = btn.textContent;
+  var labelEl = btn.querySelector('.hud-label');
+  var label = labelEl ? labelEl.textContent : btn.textContent;
   btn.addEventListener('click', async function() {
     var title = btn.dataset.title;
     var url = btn.dataset.url;
@@ -168,8 +187,12 @@ body {
     }
     try {
       await navigator.clipboard.writeText(url);
-      btn.textContent = 'skopiowano ✓';
-      setTimeout(function() { btn.textContent = label; }, 2000);
+      if (labelEl) { labelEl.textContent = 'skopiowano ✓'; }
+      else { btn.textContent = 'skopiowano ✓'; }
+      setTimeout(function() {
+        if (labelEl) { labelEl.textContent = label; }
+        else { btn.textContent = label; }
+      }, 2000);
     } catch (e) { /* clipboard niedostępny (np. file://) — cicho pomijamy */ }
   });
 })();
