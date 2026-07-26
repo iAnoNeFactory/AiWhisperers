@@ -55,7 +55,7 @@ body {
 .hud-brand{font-family:var(--sans);font-size:9px;font-weight:500;color:rgba(232,200,120,.45);letter-spacing:.5em;text-transform:uppercase;line-height:1;}
 .hud-mod{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;line-height:1;}
 .hud-sub{font-family:var(--serif);font-size:11px;font-style:italic;color:rgba(200,180,140,.4);letter-spacing:.04em;margin-top:4px;line-height:1;}
-.hud-btn{background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
+.hud-btn{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid rgba(232,200,120,.15);color:rgba(240,232,216,.5);font-family:var(--mono);font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;padding:8px 12px;cursor:pointer;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;line-height:1;}
 .hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
 .hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(5,4,16,.88) 0%,rgba(5,4,16,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
 .hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.15);text-transform:uppercase;}
@@ -94,6 +94,7 @@ body {
     <div class="hud-sub">tablica projektu · artykuły i notatki</div>
   </div>
   <div class="hud-r">
+    <button class="hud-btn" type="button" id="share-btn" data-title="Operator trzyma klucz" data-url="https://aiwhisperers.pl/resources/articles/20260721-the-operator-holds-the-key/pl.html">↗ udostępnij</button>
     <a class="hud-btn" href="../../../apps/act1/wall/wall.html?cat=articles">⊞ tablica</a>
   </div>
 </header>
@@ -148,6 +149,31 @@ body {
 <footer class="hud-bot">
   <span class="hud-bot-meta">Wall · v1.3 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
+
+<script>
+// Web Share API (telefony, macOS/Windows Safari/Chrome/Edge) z fallbackiem
+// do schowka tam, gdzie navigator.share nie istnieje (Firefox desktop,
+// Chrome/Firefox na Linuksie).
+(function() {
+  var btn = document.getElementById('share-btn');
+  if (!btn) return;
+  var label = btn.textContent;
+  btn.addEventListener('click', async function() {
+    var title = btn.dataset.title;
+    var url = btn.dataset.url;
+    if (navigator.share) {
+      try { await navigator.share({ title: title, url: url }); }
+      catch (e) { /* użytkownik anulował arkusz udostępniania — pomijamy */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      btn.textContent = 'skopiowano ✓';
+      setTimeout(function() { btn.textContent = label; }, 2000);
+    } catch (e) { /* clipboard niedostępny (np. file://) — cicho pomijamy */ }
+  });
+})();
+</script>
 
 </body>
 </html>
