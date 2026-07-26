@@ -53,12 +53,12 @@ for mpath in sorted((ROOT / "apps" / "act1").glob("*/manifest.json")):
     if url:
         urls.append((url, entry_date(m), "0.8"))
 
-# --- Wall: statyczne strony per artykuł/język (apps/act1/wall/a/...), żeby
+# --- Wall: statyczne strony per artykuł/język (resources/<kategoria>/...), żeby
 # boty/podglądy linków trafiały na realny, wyrenderowany HTML — nie na
 # wall.html?a=... (ten sam plik SPA niezależnie od query stringa, boty bez
 # JS widziałyby tylko "Wczytywanie tablicy…"). Generowane przez
-# tools/build_wall_index.py razem z data/act1/wall/index.json.
-WALL_INDEX = ROOT / "data" / "act1" / "wall" / "index.json"
+# tools/build_wall_index.py razem z resources/index.json.
+WALL_INDEX = ROOT / "resources" / "index.json"
 wall_data = load_manifest(WALL_INDEX)
 if wall_data:
     for cat, entries in wall_data.get("categories", {}).items():
@@ -66,7 +66,7 @@ if wall_data:
         for e in entries:
             lastmod = e.get("date") or TODAY
             for lang in e.get("langs", {}):
-                loc = f"{BASE_URL}/apps/act1/wall/a/{cat}/{e['slug']}/{lang}.html"
+                loc = f"{BASE_URL}/resources/{cat}/{e['slug']}/{lang}.html"
                 urls.append((loc, lastmod, priority))
 
 # --- Zapis ---

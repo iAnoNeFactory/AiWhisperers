@@ -1,37 +1,33 @@
 #!/usr/bin/env python3
-"""Buduje index Wall (apps/act1/wall) z zawartości data/act1/wall/.
+"""Buduje index Wall (apps/act1/wall) z zawartości resources/.raw/.
 
-Skanuje data/act1/wall/<kategoria>/<wpis>/<lang>.md, wyciąga tytuł (pierwszy
-nagłówek `# `), krótki zajawkowy fragment i pełną treść dla każdej wersji
-językowej.
+Skanuje resources/.raw/<kategoria>/<wpis>/<lang>.md, wyciąga tytuł (pierwszy
+nagłówek `# `), krótki zajawkowy fragment i renderuje pełną treść (HTML) dla
+każdej wersji językowej.
 
 Zasada offline-first (_protocol-boot.md): artefakt musi działać przez
 file:// bez serwera, gdzie `fetch()` do lokalnych plików jest blokowany
 przez przeglądarki (nie tylko CORS na GitHub Pages).
 
-Dwa poziomy świeżości, oba obsłużone przez wall.html:
-1. Struktura (jakie kategorie/wpisy istnieją, tytuł, zajawka) — lekki
-   data/act1/wall/index.json, bez pełnej treści. Przez http(s) wall.html
-   próbuje go pobrać fetch()-em (świeże po każdym build_wall_index.py,
-   np. po dodaniu nowego wpisu). Wymaga przebudowy, bo statyczny hosting
-   nie pozwala wylistować katalogów — nie da się tego obejść bez serwera.
-2. Treść artykułu — wall.html przy otwieraniu wpisu próbuje pobrać
-   konkretny plik .md NA ŻYWO (fetch), więc edycja istniejącego artykułu
-   jest widoczna natychmiast, BEZ przebudowy, o ile strona jest serwowana
-   przez http(s) (lokalny serwer, GitHub Pages).
+resources/.raw/ to wyłącznie wsad do builda — surowy Markdown, nigdy nie
+czytany w przeglądarce (ani przez wall.html, ani przez boty), więc jest
+lokalny i wpisany do .gitignore. Wynik builda to jeden resources/index.json
+z tytułem, zajawką i już wyrenderowaną treścią (HTML) każdego wpisu×języka —
+wall.html pobiera go fetch()-em przez http(s) albo, pod file://, korzysta
+z kopii wstrzykniętej do <script id="wall-data"> (ten skrypt aktualizuje oba
+miejsca). Każda zmiana treści wymaga przebudowy — nie ma już live-fetchu
+pojedynczego .md przy otwieraniu artykułu.
 
-Fallback dla obu poziomów — gdy fetch się nie uda (protokół file:// albo
-brak sieci) — to pełna treść wstrzyknięta do apps/act1/wall/wall.html
-(blok `<script id="wall-data">`), aktualizowana przez ten skrypt. Pod
-samym file:// (podwójne kliknięcie pliku) trzeba więc przebudować po
-każdej zmianie treści — to twarde ograniczenie przeglądarek, nie do
-obejścia bez serwera.
-
-Generuje też statyczne strony per artykuł×język (apps/act1/wall/a/<kategoria>/
+Generuje też statyczne strony per artykuł×język (resources/<kategoria>/
 <slug>/<lang>.html) z pełną treścią już wypisaną w HTML, meta description,
 Open Graph/Twitter Card i JSON-LD — żeby boty, podglądy linków i narzędzia AI
 widziały prawdziwą treść bez odpalania JS (interaktywna tablica w wall.html
 nie daje botom nic poza "Wczytywanie tablicy…", zanim JS się wykona).
+
+Obrazek OG: jeśli obok <lang>.md w resources/.raw/<kategoria>/<wpis>/ istnieje
+og-<lang>.png, skrypt kopiuje go do wygenerowanej strony i dokłada pełny
+komplet meta tagów (Open Graph + Twitter Card „summary_large_image") — bez
+obrazka strona i tak działa, tylko z węższą kartą podglądu (`summary`).
 
 Uruchamiany automatycznie przez pre-commit hook (jak build_sitemap.py).
 """
@@ -39,15 +35,18 @@ Uruchamiany automatycznie przez pre-commit hook (jak build_sitemap.py).
 import html as html_lib
 import json
 import re
+import shutil
+import struct
 from pathlib import Path
 
 ROOT       = Path(__file__).parent.parent
-WALL_DATA  = ROOT / "data" / "act1" / "wall"
-OUT        = WALL_DATA / "index.json"
+RESOURCES  = ROOT / "resources"
+RAW_DATA   = RESOURCES / ".raw"
+OUT        = RESOURCES / "index.json"
 WALL_ROOT  = ROOT / "apps" / "act1" / "wall"
 WALL_HTML  = WALL_ROOT / "wall.html"
 TEMPLATE   = WALL_ROOT / "article-template.html"
-STATIC_DIR = WALL_ROOT / "a"
+STATIC_DIR = RESOURCES
 BASE_URL   = "https://aiwhisperers.pl"
 
 EMBED_START = '<script id="wall-data" type="application/json">'
@@ -185,10 +184,9 @@ def build_category(cat_dir: Path) -> list[dict]:
             text = md_path.read_text(encoding="utf-8")
             title, excerpt = extract_title_and_excerpt(text)
             langs[lang] = {
-                "file": md_path.name,
                 "title": title or entry_dir.name,
                 "excerpt": excerpt,
-                "content": text,
+                "content": render_markdown(text),
             }
         entries.append({
             "slug": slug,
@@ -200,24 +198,28 @@ def build_category(cat_dir: Path) -> list[dict]:
     return entries
 
 
-def strip_content(categories: dict[str, list[dict]]) -> dict[str, list[dict]]:
-    """Kopia bez pełnej treści — lekki index.json (tytuł/zajawka/nazwa pliku,
-    do fetch()-a na żywo; treść artykułu wall.html pobiera osobno per-plik)."""
-    lean = {}
-    for cat, entries in categories.items():
-        lean_entries = []
-        for e in entries:
-            langs = {l: {k: v for k, v in d.items() if k != "content"} for l, d in e["langs"].items()}
-            lean_entries.append({**e, "langs": langs})
-        lean[cat] = lean_entries
-    return lean
-
-
 def article_url(cat: str, slug: str, lang: str) -> str:
-    return f"{BASE_URL}/apps/act1/wall/a/{cat}/{slug}/{lang}.html"
+    return f"{BASE_URL}/resources/{cat}/{slug}/{lang}.html"
 
 
-def json_ld(title: str, description: str, url: str, lang: str, date_iso: str) -> str:
+def og_image_url(cat: str, slug: str, lang: str) -> str:
+    return f"{BASE_URL}/resources/{cat}/{slug}/og-{lang}.png"
+
+
+def png_dimensions(path: Path) -> tuple[int, int] | None:
+    """Szerokość/wysokość z nagłówka IHDR — bez zależności od Pillow."""
+    try:
+        with path.open("rb") as f:
+            header = f.read(24)
+    except OSError:
+        return None
+    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    width, height = struct.unpack(">II", header[16:24])
+    return width, height
+
+
+def json_ld(title: str, description: str, url: str, lang: str, date_iso: str, image_url: str = "") -> str:
     data = {
         "@context": "https://schema.org",
         "@type": "Article",
@@ -230,6 +232,8 @@ def json_ld(title: str, description: str, url: str, lang: str, date_iso: str) ->
     }
     if date_iso:
         data["datePublished"] = date_iso
+    if image_url:
+        data["image"] = image_url
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -239,15 +243,21 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
         return 0
     template = TEMPLATE.read_text(encoding="utf-8")
 
-    # Katalog jest w całości pochodny — czyścimy i budujemy od nowa,
-    # żeby usunięte/przemianowane wpisy nie zostawiały sierocych stron.
-    if STATIC_DIR.exists():
-        for p in sorted(STATIC_DIR.rglob("*"), reverse=True):
+    # Każdy katalog kategorii pod resources/ jest w całości pochodny — czyścimy
+    # i budujemy od nowa, żeby usunięte/przemianowane wpisy nie zostawiały
+    # sierocych stron. Kasujemy tylko znane nazwy kategorii, nigdy całego
+    # resources/ — tam obok mieszka też index.json i lokalny .raw/.
+    for cat_name in set(CATEGORY_ORDER) | set(categories.keys()):
+        cat_dir = STATIC_DIR / cat_name
+        if not cat_dir.exists():
+            continue
+        for p in sorted(cat_dir.rglob("*"), reverse=True):
             if p.is_file():
                 p.unlink()
-        for p in sorted(STATIC_DIR.rglob("*"), reverse=True):
+        for p in sorted(cat_dir.rglob("*"), reverse=True):
             if p.is_dir():
                 p.rmdir()
+        cat_dir.rmdir()
 
     count = 0
     for cat, entries in categories.items():
@@ -265,6 +275,26 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
                     f' <a href="{l}.html">{l.upper()}</a>' if l != lang else f" <strong>{l.upper()}</strong>"
                     for l in langs
                 )
+
+                og_src = RAW_DATA / cat / e["folder"] / f"og-{lang}.png"
+                has_og = og_src.is_file()
+                og_url = og_image_url(cat, e["slug"], lang) if has_og else ""
+                if has_og:
+                    dims = png_dimensions(og_src) or (1200, 630)
+                    alt = html_lib.escape(d["title"], quote=True)
+                    og_image_meta = (
+                        f'<meta property="og:image" content="{og_url}">\n'
+                        f'<meta property="og:image:type" content="image/png">\n'
+                        f'<meta property="og:image:width" content="{dims[0]}">\n'
+                        f'<meta property="og:image:height" content="{dims[1]}">\n'
+                        f'<meta property="og:image:alt" content="{alt}">\n'
+                        f'<meta name="twitter:image" content="{og_url}">\n'
+                    )
+                    twitter_card = "summary_large_image"
+                else:
+                    og_image_meta = ""
+                    twitter_card = "summary"
+
                 page = (
                     template
                     .replace("{{LANG}}", lang)
@@ -273,17 +303,21 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
                     .replace("{{CANONICAL_URL}}", url)
                     .replace("{{OG_LOCALE}}", LOCALE_MAP.get(lang, lang.upper()))
                     .replace("{{ALTERNATE_LINKS}}", alt_links)
-                    .replace("{{JSON_LD}}", json_ld(d["title"], d.get("excerpt", ""), url, lang, e.get("date", "")))
+                    .replace("{{OG_IMAGE_META}}", og_image_meta)
+                    .replace("{{TWITTER_CARD}}", twitter_card)
+                    .replace("{{JSON_LD}}", json_ld(d["title"], d.get("excerpt", ""), url, lang, e.get("date", ""), og_url))
                     .replace("{{DATE}}", e.get("date", ""))
                     .replace("{{CATEGORY_LABEL}}", cat_label)
-                    .replace("{{BODY_HTML}}", render_markdown(d["content"]))
-                    .replace("{{BACK_TO_ROOT}}", "../../../../../../index.html")
-                    .replace("{{BACK_TO_WALL}}", f"../../../wall.html?a={e['slug']}&amp;lang={lang}")
+                    .replace("{{BODY_HTML}}", d["content"])
+                    .replace("{{BACK_TO_ROOT}}", "../../../index.html")
+                    .replace("{{BACK_TO_WALL}}", f"../../../apps/act1/wall/wall.html?a={e['slug']}&amp;lang={lang}")
                     .replace("{{LANG_LINKS}}", lang_links)
                 )
                 out_dir = STATIC_DIR / cat / e["slug"]
                 out_dir.mkdir(parents=True, exist_ok=True)
                 (out_dir / f"{lang}.html").write_text(page, encoding="utf-8")
+                if has_og:
+                    shutil.copy2(og_src, out_dir / f"og-{lang}.png")
                 count += 1
     return count
 
@@ -315,33 +349,29 @@ def embed_into_wall_html(index: dict) -> bool:
 
 
 def main():
-    if not WALL_DATA.exists():
-        print(f"⚠  {WALL_DATA} nie istnieje — pomijam")
+    if not RAW_DATA.exists():
+        print(f"⚠  {RAW_DATA} nie istnieje — pomijam")
         return
 
     categories: dict[str, list[dict]] = {}
-    found = sorted(p.name for p in WALL_DATA.iterdir() if p.is_dir())
+    found = sorted(p.name for p in RAW_DATA.iterdir() if p.is_dir())
     ordered = [c for c in CATEGORY_ORDER if c in found] + [c for c in found if c not in CATEGORY_ORDER]
 
     total = 0
     for cat in ordered:
-        entries = build_category(WALL_DATA / cat)
+        entries = build_category(RAW_DATA / cat)
         categories[cat] = entries
         total += len(entries)
 
-    full_index = {
+    index = {
         "_version": "aiw_wall_index_v1",
         "categories": categories,
     }
-    lean_index = {
-        "_version": "aiw_wall_index_v1",
-        "categories": strip_content(categories),
-    }
 
-    OUT.write_text(json.dumps(lean_index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    OUT.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"✓ {OUT.relative_to(ROOT)} — {total} wpisów w {len(ordered)} kategoriach")
 
-    changed = embed_into_wall_html(full_index)
+    changed = embed_into_wall_html(index)
     if changed:
         print(f"✓ {WALL_HTML.relative_to(ROOT)} — fallback zaktualizowany (offline-first)")
     else:

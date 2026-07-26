@@ -6,9 +6,9 @@
 set -e
 cd "$(git rev-parse --show-toplevel)"
 
-echo "→ Buduję indeks Wall (wstrzykuje data/act1/wall/ do wall.html, offline-first) + statyczne strony artykułów..."
+echo "→ Buduję indeks Wall (wstrzykuje resources/ do wall.html, offline-first) + statyczne strony artykułów..."
 python3 tools/build_wall_index.py
-git add data/act1/wall/index.json apps/act1/wall/wall.html apps/act1/wall/a/
+git add resources/ apps/act1/wall/wall.html
 
 echo "→ Buduję sitemap.xml..."
 python3 tools/build_sitemap.py

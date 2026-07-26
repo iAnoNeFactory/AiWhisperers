@@ -5,6 +5,8 @@
 .docs/
 .test/
 .secrets/
+.pocket/
+resources/.raw/
 __pycache__/
 aiw-export*
 *.pyc
