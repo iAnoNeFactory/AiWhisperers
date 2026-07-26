@@ -1071,20 +1071,24 @@
     .narz { padding: 4px 8px; gap: 3px; }
     .narz canvas { width: 24px; height: 24px; }
     .narz-label { font-size: 6.5px; letter-spacing: 0.18em; }
+    /* 9 narzędzi nie mieszczą się w jednym wierszu na wąskich ekranach —
+       zawijamy zamiast pozwalać im uciec poza widoczny obszar. */
+    .narzedzia { flex-wrap: wrap; row-gap: 2px; }
 
-    /* mobile: timeline(44) + narzędzia(56) + hud-bot(28) = 128px */
-    .akt-stage { top: 64px; bottom: 128px; }
+    /* mobile: timeline(44) + narzędzia(~104, 2 wiersze) + hud-bot(28) = 176px */
+    .akt-stage { top: 64px; bottom: 176px; }
     .timeline-bar {
       height: 44px;
-      bottom: 84px;
+      bottom: 132px;
       gap: 10px;
       padding: 0 12px;
       grid-template-columns: minmax(120px, auto) 1fr minmax(100px, auto);
     }
     .hud-bottom {
-      height: 56px;
+      height: auto;
+      min-height: 56px;
       bottom: 28px;
-      padding: 0 8px;
+      padding: 6px 8px;
     }
     .layer-tag { left: 8px; font-size: 6px; letter-spacing: 0.35em; }
   }
