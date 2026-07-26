@@ -12,17 +12,18 @@ przez przeglądarki (nie tylko CORS na GitHub Pages).
 resources/.raw/ to wyłącznie wsad do builda — surowy Markdown, nigdy nie
 czytany w przeglądarce (ani przez wall.html, ani przez boty), więc jest
 lokalny i wpisany do .gitignore. Wynik builda to jeden resources/index.json
-z tytułem, zajawką i już wyrenderowaną treścią (HTML) każdego wpisu×języka —
-wall.html pobiera go fetch()-em przez http(s) albo, pod file://, korzysta
-z kopii wstrzykniętej do <script id="wall-data"> (ten skrypt aktualizuje oba
-miejsca). Każda zmiana treści wymaga przebudowy — nie ma już live-fetchu
-pojedynczego .md przy otwieraniu artykułu.
+z samym tytułem/zajawką/datą każdego wpisu×języka — tyle, ile potrzeba do
+narysowania kafelków w wall.html. wall.html nie ma już overlayu artykułu:
+kafelek to zwykły <a href> wprost do wygenerowanej statycznej strony, więc
+pełna treść (HTML) w index.json byłaby martwym balastem. wall.html pobiera
+index.json fetch()-em przez http(s) albo, pod file://, korzysta z kopii
+wstrzykniętej do <script id="wall-data"> (ten skrypt aktualizuje oba miejsca).
 
 Generuje też statyczne strony per artykuł×język (resources/<kategoria>/
 <slug>/<lang>.html) z pełną treścią już wypisaną w HTML, meta description,
-Open Graph/Twitter Card i JSON-LD — żeby boty, podglądy linków i narzędzia AI
-widziały prawdziwą treść bez odpalania JS (interaktywna tablica w wall.html
-nie daje botom nic poza "Wczytywanie tablicy…", zanim JS się wykona).
+Open Graph/Twitter Card i JSON-LD — to one, nie wall.html, są kanonicznym
+adresem artykułu: boty, podglądy linków i narzędzia AI widzą tam prawdziwą
+treść bez odpalania JS.
 
 Obrazek OG: jeśli obok <lang>.md w resources/.raw/<kategoria>/<wpis>/ istnieje
 og-<lang>.png, skrypt kopiuje go do wygenerowanej strony i dokłada pełny
@@ -198,6 +199,21 @@ def build_category(cat_dir: Path) -> list[dict]:
     return entries
 
 
+def strip_for_wall(categories: dict[str, list[dict]]) -> dict[str, list[dict]]:
+    """Kopia bez pełnej treści/folderu — to, czego wall.html naprawdę
+    potrzebuje do kafelków (tytuł/zajawka/data). Karty linkują wprost do
+    resources/<kat>/<slug>/<lang>.html, więc pełny HTML artykułu (content)
+    i wewnętrzna nazwa folderu (folder) nie muszą jechać do przeglądarki."""
+    lean = {}
+    for cat, entries in categories.items():
+        lean_entries = []
+        for e in entries:
+            langs = {l: {"title": d["title"], "excerpt": d["excerpt"]} for l, d in e["langs"].items()}
+            lean_entries.append({"slug": e["slug"], "date": e["date"], "langs": langs})
+        lean[cat] = lean_entries
+    return lean
+
+
 def article_url(cat: str, slug: str, lang: str) -> str:
     return f"{BASE_URL}/resources/{cat}/{slug}/{lang}.html"
 
@@ -310,7 +326,7 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
                     .replace("{{CATEGORY_LABEL}}", cat_label)
                     .replace("{{BODY_HTML}}", d["content"])
                     .replace("{{BACK_TO_ROOT}}", "../../../index.html")
-                    .replace("{{BACK_TO_WALL}}", f"../../../apps/act1/wall/wall.html?a={e['slug']}&amp;lang={lang}")
+                    .replace("{{BACK_TO_WALL}}", f"../../../apps/act1/wall/wall.html?cat={cat}")
                     .replace("{{LANG_LINKS}}", lang_links)
                 )
                 out_dir = STATIC_DIR / cat / e["slug"]
@@ -365,7 +381,7 @@ def main():
 
     index = {
         "_version": "aiw_wall_index_v1",
-        "categories": categories,
+        "categories": strip_for_wall(categories),
     }
 
     OUT.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

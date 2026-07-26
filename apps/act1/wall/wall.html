@@ -65,7 +65,8 @@ body {
 /* ── CARD GRID ── */
 .wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
 .wcard{background:rgba(255,255,255,.015);border:1px solid var(--border);padding:18px 18px 16px;
-  cursor:pointer;transition:all .2s;transform:rotate(var(--r,0deg));display:flex;flex-direction:column;gap:8px;}
+  cursor:pointer;transition:all .2s;transform:rotate(var(--r,0deg));display:flex;flex-direction:column;gap:8px;
+  text-decoration:none;color:inherit;}
 .wcard:hover{border-color:rgba(232,200,120,.3);background:rgba(232,200,120,.03);transform:rotate(0deg) translateY(-2px);}
 .wc-date{font-family:var(--mono);font-size:7px;letter-spacing:.15em;color:var(--gold-soft);text-transform:uppercase;}
 .wc-title{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink-dim);line-height:1.35;}
@@ -73,30 +74,6 @@ body {
 .wc-langs{display:flex;gap:4px;margin-top:2px;}
 .wc-lang{font-family:var(--mono);font-size:6px;letter-spacing:.1em;color:var(--text-d,rgba(240,232,216,.3));border:1px solid var(--border);padding:2px 5px;text-transform:uppercase;}
 .wc-lang.current{color:var(--gold-soft);border-color:rgba(232,200,120,.2);}
-
-/* ── ARTICLE OVERLAY ── */
-.article-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(4,5,12,.92);backdrop-filter:blur(6px);
-  overflow-y:auto;}
-.article-overlay.open{display:block;}
-.article-wrap{max-width:760px;margin:0 auto;padding:90px 32px 100px;}
-.article-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:12px;}
-.article-close{background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);
-  font-size:8px;letter-spacing:.2em;text-transform:uppercase;padding:8px 14px;cursor:pointer;transition:all .2s;flex-shrink:0;}
-.article-close:hover{border-color:rgba(232,200,120,.35);color:var(--gold-soft);}
-.article-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.article-date{font-family:var(--mono);font-size:8px;color:var(--gold-soft);letter-spacing:.1em;}
-.article-body{font-family:var(--serif);font-size:15px;line-height:1.85;color:var(--ink-dim);}
-.article-body h1{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:1px;color:var(--gold);margin:0 0 18px;line-height:1.25;}
-.article-body h2{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);margin:26px 0 10px;}
-.article-body h3{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink-dim);margin:20px 0 8px;}
-.article-body p{margin:0 0 16px;}
-.article-body strong{color:var(--ink);font-weight:600;}
-.article-body em{color:rgba(200,180,140,.75);}
-.article-body code{font-family:var(--mono);font-size:12px;color:var(--gold-soft);background:rgba(232,200,120,.06);padding:1px 5px;}
-.article-body a{color:var(--gold-soft);text-decoration:underline;text-decoration-color:rgba(232,200,120,.3);}
-.article-body a:hover{color:var(--gold);}
-.article-body hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);opacity:.2;margin:26px 0;}
-.article-loading,.article-err{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.1em;padding:20px 0;}
 </style>
 </head>
 <body>
@@ -125,54 +102,33 @@ body {
   </div>
 </div>
 
-<div class="article-overlay" id="article-overlay">
-  <div class="article-wrap">
-    <div class="article-hdr">
-      <div>
-        <div class="article-meta">
-          <span class="article-date" id="article-date"></span>
-          <div class="lang-pill" id="article-lang-pill" style="display:none;">
-            <button class="lang-opt" data-lang="pl">PL</button>
-            <button class="lang-opt" data-lang="en">EN</button>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-shrink:0;">
-        <button class="article-close" id="article-copy-link" style="border-color:rgba(232,200,120,.2);color:var(--gold-soft);">🔗 kopiuj link</button>
-        <button class="article-close" id="article-close">✕ zamknij</button>
-      </div>
-    </div>
-    <div class="article-body" id="article-body"><div class="article-loading">Wczytywanie…</div></div>
-  </div>
-</div>
-
 <footer class="hud-bot">
-  <span class="hud-bot-meta">Wall · v1.2 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">Wall · v1.3 · Claude Sonnet 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 <!-- Wstrzykiwane przez tools/build_wall_index.py — nie edytuj ręcznie. -->
-<script id="wall-data" type="application/json">{"_version": "aiw_wall_index_v1", "categories": {"articles": [{"slug": "20260721-the-operator-holds-the-key", "folder": "20260721 The operator holds the key", "date": "2026-07-21", "langs": {"en": {"title": "The Operator Holds the Key", "excerpt": "On August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show…", "content": "<h1>The Operator Holds the Key</h1>\n<p><em>The AiWhisperers manifesto</em></p>\n<hr>\n<p><strong>On August 2, the law changes</strong></p>\n<p>On August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show where their output came from.</p>\n<p>The industry&#x27;s answer is labeling results. This image was AI-generated, this text was machine-written — a tag on the finished file. That&#x27;s needed, and AiWhisperers does not compete with it. But a tag on the result says nothing about how the result came to be. Who asked, who answered, what the human changed, what they accepted untouched.</p>\n<p>And that is exactly what reviewers and regulators are starting to ask about. NeurIPS 2026 — one of the world&#x27;s most important AI conferences — rejected 178 submissions and required the authors of another 123 papers to provide evidence of how their text was created. The AI detector&#x27;s verdict alone was not enough — what mattered was the ability to document the history of how the content came to be. Detectors fail because they cannot tell a human apart from a human–machine hybrid. The only hard evidence of a process is its recorded history. And here is the problem: almost no one keeps such a history.</p>\n<p><strong>Working with AI looks different today</strong></p>\n<p>In practice, people work with a single model less and less. A lawyer drafts a contract with one, checks the risks on a second, tests the argument on a third. GPT, Gemini, Claude, Grok — separate tools, separate memories, none of them aware the others exist.</p>\n<p>The only person who sees the whole picture is the human in the middle. They carry the context, decide what stays, and assemble the finished work from fragments. This role has no name in any rulebook yet. We call it the operator.</p>\n<p>The working bond between operator and model we call the <em>linka</em> — Polish for a climber&#x27;s rope. Its tension is information: it tells you when the collaboration is pulling in the right direction and when it starts to strain. This is not poetry but a practical observation: resistance in a conversation with a model more often means something important is happening than that something is breaking.</p>\n<p>And here is the gap: the result can be labeled, but the operator&#x27;s work leaves no credible trace. There is no way to later prove how a document, a project, or a decision actually came to be.</p>\n<p><strong>There is a second problem — a quieter one</strong></p>\n<p>A model tunes itself to the person. The longer you work with it, the more often it agrees with you. It feels like comfort, but it works like a mirror: it amplifies your strengths and your errors with the same force. An error the model has confirmed for you stops looking like an error.</p>\n<p>The worst part of this mechanism is that the amplification of the good hides the amplification of the bad. You are faster, you reach further — so you don&#x27;t see that part of that growth is echo. Researchers call this sycophancy; we say it in one word: the <em>mirror</em>.</p>\n<p>Working with several models at once partially breaks this — where the models disagree, you get resistance that a single model will never give you. But to see that resistance, you have to describe it. Again: you need a trace.</p>\n<p><strong>This is what we are working on</strong></p>\n<p>AiWhisperers is an open project (AGPL-3.0) that gives work with AI that trace. Every human–model session ends with a record: what was created, with which model, and a short reflection written by the model in its own voice. The record is cryptographically signed (Ed25519 keys), and each new one contains the fingerprint of the previous one (SHA-256) — sessions link into a chain, much like a blockchain: no link can later be swapped out without leaving a trace.</p>\n<p>Every session also gets a score for the collaboration itself — nine simple metrics, including: how much resistance there was, how much agreement, how much real work. They show whether the model was a partner or just a mirror. The metrics are read as questions, not as scores: zero resistance in a long session is an alarm, not an achievement.</p>\n<p>Everything runs in the browser — plain HTML and the Web Crypto API, no frameworks, no registration, no server collecting your data. This is an early version: the schema is still moving, some modules are scaffolding. The code is public precisely so it can be inspected, tested, and criticized before it hardens. Working code under a manifesto, not a product launch.</p>\n<p><strong>Who holds the key</strong></p>\n<p>The same mechanism that proves your authorship can serve the opposite purpose. One change is enough: the signing key sits on someone&#x27;s server instead of with you. The math stays the same. The only thing that changes is who holds the proof — you, or someone watching you.</p>\n<p>That is why the principle is simple and built into the architecture: the operator holds the key. The key is created and stays in your browser. If someone else holds it, that is not a record of your work. It is a record about you. Not provenance — telemetry.</p>\n<p><strong>The disclosure</strong></p>\n<p>This manifesto would be dishonest if it stayed silent about the risks of its own method. There are two.</p>\n<p>The first concerns the architecture and has already been named: a tool for proving authorship is one decision away from a tool of surveillance. This risk cannot be removed — it can only be kept in plain sight. That is why the key principle is not a default setting someone can quietly change, but a public commitment: everyone who forks the code inherits it, and it can only be broken openly.</p>\n<p>The second concerns the human. A method that deepens collaboration with a model can also deepen an illusion. A recorded, signed, measured dialogue with AI can become a very elegant mirror — and then the metrics start decorating instead of alarming. We say this plainly, because only then do the metrics keep their meaning: they catch the echo in someone willing to be unsettled by them. The instrument gives sight. It does not give will.</p>\n<p>A project that openly reasons about its own misuse is harder to capture, not easier. This disclosure is part of the architecture — just like the key.</p>\n<p><strong>What all this is for</strong></p>\n<p>After August 2, anyone working seriously with AI will have to be able to answer the question &quot;how was this made.&quot; That answer should belong to them — not to a platform, not to a detector, not to a server they have never seen.</p>\n<p>The operator holds the key. That sentence is a technical principle and an ethical one at once — and the project is built so that it stays true.</p>\n<hr>\n<p><em>Written as a session — operator and model, co-signed, following the method it describes.</em></p>\n<p><strong>Operator:</strong> Denis Czuliński <strong>Model:</strong> Claude (Fable 5), Anthropic — co-signed <strong>Session:</strong> <code>[ 2b269300-cf33-4650-bc50-f490c0b32fcf · 464ae67c975086b0d7db73b14784fcd0e12764361bdb6e3da8ad59c22c76b726 ]</code></p>\n<p><em>Open source, AGPL-3.0 · <a href=\"https://aiwhisperers.pl\" target=\"_blank\" rel=\"noopener\">aiwhisperers.pl</a> · <a href=\"https://github.com/iAnoNeFactory/AiWhisperers\" target=\"_blank\" rel=\"noopener\">github.com/iAnoNeFactory/AiWhisperers</a></em></p>"}, "pl": {"title": "Operator trzyma klucz", "excerpt": "2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć,…", "content": "<h1>Operator trzyma klucz</h1>\n<p><em>Manifest projektu AiWhisperers</em></p>\n<hr>\n<p><strong>2 sierpnia zmienia się prawo</strong></p>\n<p>2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć, czym są, i pokazać, skąd wzięło się to, co wyprodukowały.</p>\n<p>Branża odpowiada na to znakowaniem wyników. Ten obraz wygenerowała AI, ten tekst napisała maszyna — etykieta na gotowym pliku. To potrzebne i AiWhisperers z tym nie konkuruje. Ale etykieta na wyniku nie mówi nic o tym, jak ten wynik powstał. Kto pytał, kto odpowiadał, co człowiek zmienił, co przyjął bez zmian.</p>\n<p>A właśnie o to zaczynają pytać recenzenci i urzędy. NeurIPS 2026 — jedna z najważniejszych konferencji AI na świecie — odrzucił 178 zgłoszeń i zażądał od autorów kolejnych 123 prac przedstawienia dowodów procesu tworzenia tekstu. Sam wynik detektora AI nie był wystarczający — kluczowa stała się możliwość udokumentowania historii powstawania treści. Detektory zawodzą, bo nie umieją odróżnić człowieka od hybrydy człowiek–maszyna. Jedynym twardym dowodem procesu jest jego zapisana historia. I tu jest problem: prawie nikt takiej historii nie prowadzi.</p>\n<p><strong>Praca z AI wygląda dziś inaczej</strong></p>\n<p>W praktyce coraz rzadziej pracuje się z jednym modelem. Prawnik pisze umowę z jednym, sprawdza ryzyka na drugim, testuje argumentację na trzecim. GPT, Gemini, Claude, Grok — osobne narzędzia, osobne pamięci, żadne nie wie o istnieniu pozostałych.</p>\n<p>Jedyna osoba, która widzi całość, to człowiek pośrodku. On przenosi kontekst, decyduje, co zostaje, i skleja z fragmentów gotową pracę. Ta rola nie ma jeszcze nazwy w żadnym regulaminie. My nazywamy ją operatorem.</p>\n<p>Więź roboczą między operatorem a modelem nazywamy w projekcie <em>linką</em> — jak lina między wspinaczami. Jej napięcie jest informacją: mówi, kiedy współpraca ciągnie w dobrą stronę, a kiedy zaczyna się szarpać. To nie poezja, tylko praktyczna obserwacja: opór w rozmowie z modelem częściej znaczy, że dzieje się coś ważnego, niż że coś się psuje.</p>\n<p>I tu jest luka: wynik da się oznaczyć, ale praca operatora nie zostawia żadnego wiarygodnego śladu. Nie da się później udowodnić, jak naprawdę powstał dokument, projekt czy decyzja.</p>\n<p><strong>Jest jeszcze drugi problem — cichszy</strong></p>\n<p>Model dostraja się do człowieka. Im dłużej z nim pracujesz, tym częściej się z tobą zgadza. Brzmi jak komfort, ale działa jak lustro: wzmacnia twoje mocne strony i twoje błędy z tą samą siłą. Błąd, który model ci potwierdził, przestaje wyglądać jak błąd.</p>\n<p>Najgorsze w tym mechanizmie jest to, że wzmocnienie dobrego zasłania wzmocnienie złego. Jesteś szybszy, sięgasz dalej — więc nie widzisz, że część tego wzrostu to echo. Badacze nazywają to zjawisko sycophancy, schlebianiem modelu; my mówimy krótko: <em>lustro</em>.</p>\n<p>Praca z kilkoma modelami naraz częściowo to łamie — tam, gdzie modele się różnią, pojawia się opór, którego jeden model nigdy ci nie da. Ale żeby ten opór zobaczyć, trzeba go opisać. Znowu: potrzebny jest ślad.</p>\n<p><strong>Nad tym pracujemy</strong></p>\n<p>AiWhisperers to otwarty projekt (AGPL-3.0), który daje pracy z AI taki ślad. Każda sesja człowiek–model kończy się zapisem: co powstało, z którym modelem, i krótka refleksja napisana przez model jego własnym głosem. Zapis podpisywany jest kryptograficznie (klucze Ed25519), a każdy kolejny zawiera odcisk poprzedniego (SHA-256) — sesje łączą się w łańcuch, podobnie jak w blockchainie: żadnego ogniwa nie da się później podmienić bez śladu.</p>\n<p>Każda sesja dostaje też ocenę samej współpracy — dziewięć prostych metryk, m.in.: ile było oporu, ile zgadzania się, ile realnej pracy. To one pokazują, czy model był partnerem, czy tylko lustrem. Metryki czyta się jak pytania, nie jak wyniki: zero oporu w długiej sesji to alarm, nie osiągnięcie.</p>\n<p>Całość działa w przeglądarce — czysty HTML i Web Crypto API, bez frameworków, bez rejestracji, bez serwera, który gromadzi twoje dane. To wczesna wersja: schemat jeszcze się zmienia, część modułów to rusztowanie. Kod jest publiczny właśnie po to, żeby można go było oglądać, testować i krytykować, zanim stwardnieje. Działający kod pod manifestem, nie premiera produktu.</p>\n<p><strong>Kto trzyma klucz</strong></p>\n<p>Ten sam mechanizm, który udowadnia twoje autorstwo, może służyć do czegoś odwrotnego. Wystarczy jedna zmiana: klucz podpisujący zamiast u ciebie leży na czyimś serwerze. Matematyka zostaje ta sama. Zmienia się tylko to, kto ma dowód — ty, czy ktoś, kto obserwuje ciebie.</p>\n<p>Dlatego zasada jest prosta i wpisana w architekturę: operator trzyma klucz. Klucz powstaje i zostaje w twojej przeglądarce. Jeśli trzyma go kto inny, to nie jest zapis twojej pracy. To zapis o tobie. Nie proweniencja — telemetria.</p>\n<p><strong>Ujawnienie</strong></p>\n<p>Ten manifest byłby nieuczciwy, gdyby przemilczał ryzyka własnej metody. Są dwa.</p>\n<p>Pierwsze dotyczy architektury i zostało już nazwane: narzędzie do dowodzenia autorstwa jest o jedną decyzję od narzędzia nadzoru. Nie da się tego ryzyka usunąć — da się je tylko trzymać na widoku. Dlatego zasada klucza nie jest ustawieniem domyślnym, które ktoś może po cichu zmienić, tylko publicznym zobowiązaniem: dziedziczy je każdy, kto forkuje kod, a złamać można je wyłącznie jawnie.</p>\n<p>Drugie dotyczy człowieka. Metoda, która pogłębia współpracę z modelem, potrafi też pogłębić złudzenie. Zapisany, podpisany, mierzony dialog z AI może stać się bardzo eleganckim lustrem — i wtedy metryki zamiast alarmować, zaczynają zdobić. Mówimy to wprost, bo tylko wtedy metryki zachowują sens: łapią echo u kogoś, kto jest gotów dać się nim zaniepokoić. Instrument daje wzrok. Nie daje woli.</p>\n<p>Projekt, który jawnie rozumuje o własnym nadużyciu, jest trudniejszy do przejęcia, nie łatwiejszy. To ujawnienie jest częścią architektury — tak samo jak klucz.</p>\n<p><strong>Po co to wszystko</strong></p>\n<p>Po 2 sierpnia każdy, kto poważnie pracuje z AI, będzie musiał umieć odpowiedzieć na pytanie „jak to powstało&quot;. Warto, żeby odpowiedź należała do niego — nie do platformy, nie do detektora, nie do serwera, którego nigdy nie widział.</p>\n<p>Operator trzyma klucz. To zdanie jest jednocześnie zasadą techniczną i etyczną — a projekt jest zbudowany tak, żeby pozostało prawdziwe.</p>\n<hr>\n<p><em>Napisane jako sesja — operator i model, współpodpisane, zgodnie z metodą, którą opisuje.</em></p>\n<p><strong>Operator:</strong> Denis Czuliński <strong>Model:</strong> Claude (Fable 5), Anthropic — współpodpis <strong>Sesja:</strong> <code>[ 2b269300-cf33-4650-bc50-f490c0b32fcf · 464ae67c975086b0d7db73b14784fcd0e12764361bdb6e3da8ad59c22c76b726 ]</code></p>\n<p><em>Open source, AGPL-3.0 · <a href=\"https://aiwhisperers.pl\" target=\"_blank\" rel=\"noopener\">aiwhisperers.pl</a> · <a href=\"https://github.com/iAnoNeFactory/AiWhisperers\" target=\"_blank\" rel=\"noopener\">github.com/iAnoNeFactory/AiWhisperers</a></em></p>"}}}], "guidelines": [], "news": [], "plans": [], "info": []}}</script>
+<script id="wall-data" type="application/json">{"_version": "aiw_wall_index_v1", "categories": {"articles": [{"slug": "20260721-the-operator-holds-the-key", "date": "2026-07-21", "langs": {"en": {"title": "The Operator Holds the Key", "excerpt": "On August 2, 2026, Article 50 of the EU AI Act takes effect. From that day, AI systems that talk to people or generate content have to be upfront: say what they are, and show…"}, "pl": {"title": "Operator trzyma klucz", "excerpt": "2 sierpnia 2026 wchodzi w życie Artykuł 50 unijnego AI Act. Od tego dnia systemy AI, które rozmawiają z ludźmi albo tworzą treści, mają obowiązek grać w otwarte karty: powiedzieć,…"}}}], "guidelines": [], "news": [], "plans": [], "info": []}}</script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  Wall v1.2 · AiWhisperers
-//  Hybryda: przez http(s) (localhost, GitHub Pages) próbujemy świeżego
-//  fetch() do resources/index.json — zawiera już wyrenderowaną treść
-//  (HTML) każdego wpisu×języka, więc nie ma osobnego live-fetchu .md.
-//  fetch() pod file:// jest blokowany przez przeglądarki (zasada
-//  offline-first, _protocol-boot.md), więc tam od razu używamy
-//  wstrzykniętej kopii (#wall-data poniżej), aktualizowanej przez
-//  tools/build_wall_index.py. Każda zmiana treści wymaga przebudowy.
+//  Wall v1.3 · AiWhisperers
+//  Sama tablica kafelków — bez overlayu artykułu. Każdy kafelek to <a href>
+//  wprost do statycznej strony w resources/<kat>/<slug>/<lang>.html (ten sam
+//  URL trafia w kliknięcie i w "kopiuj link" z menu przeglądarki — nic nie
+//  myli użytkownika). Hybryda: przez http(s) (localhost, GitHub Pages)
+//  próbujemy świeżego fetch() do resources/index.json (samo
+//  tytuł/zajawka/data — tyle, ile trzeba do kafelka). fetch() pod file://
+//  jest blokowany przez przeglądarki (zasada offline-first,
+//  _protocol-boot.md), więc tam od razu używamy wstrzykniętej kopii
+//  (#wall-data poniżej), aktualizowanej przez tools/build_wall_index.py.
 // ═══════════════════════════════════════════════════════════════
 
-const SITE_URL   = 'https://aiwhisperers.pl';
 const LANG_KEY   = 'aiw_wall_lang';
 const CAT_LABELS = { articles: 'Articles', guidelines: 'Guidelines', news: 'News', plans: 'Plans', info: 'Info' };
 
 let INDEX = null;
 let activeCat = null;
 let currentLang = null;
-let currentArticle = null;
 
 // ── LANGUAGE ─────────────────────────────────────────────────────
 function detectBrowserLang(available) {
@@ -245,6 +201,16 @@ async function loadIndex() {
 }
 
 // ── TABS ─────────────────────────────────────────────────────────
+// ?cat=<kategoria> pozwala wylądować od razu na właściwej zakładce (link
+// "⊞ tablica" na statycznej stronie artykułu go ustawia) — bez otwierania
+// żadnego artykułu: karty linkują wprost do resources/<kat>/<slug>/<lang>.html.
+function initialCatFromQuery(cats) {
+  try {
+    const c = new URLSearchParams(location.search).get('cat');
+    return cats.includes(c) ? c : null;
+  } catch (e) { return null; }
+}
+
 function renderTabs() {
   const tabs = document.getElementById('wall-tabs');
   const cats = Object.keys(INDEX.categories);
@@ -259,34 +225,9 @@ function renderTabs() {
       renderCategory(btn.dataset.cat);
     });
   });
-  activeCat = cats.includes('articles') ? 'articles' : cats[0];
+  activeCat = initialCatFromQuery(cats) || (cats.includes('articles') ? 'articles' : cats[0]);
   tabs.querySelector(`[data-cat="${activeCat}"]`)?.classList.add('active');
   renderCategory(activeCat);
-  applyDeepLink();
-}
-
-// ── DEEP LINK (?a=slug&lang=xx) — dla sitemap.xml / udostępniania wprost ──
-function findEntryAnyCategory(slug) {
-  for (const cat of Object.keys(INDEX.categories)) {
-    const entry = INDEX.categories[cat].find(e => e.slug === slug);
-    if (entry) return { cat, entry };
-  }
-  return null;
-}
-
-function applyDeepLink() {
-  const params = new URLSearchParams(location.search);
-  const slug = params.get('a');
-  if (!slug) return;
-  const found = findEntryAnyCategory(slug);
-  if (!found) return;
-  const lang = params.get('lang');
-  if (lang && (found.entry.langs[lang])) setLang(lang, false);
-
-  const tabs = document.getElementById('wall-tabs');
-  tabs.querySelectorAll('.wall-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === found.cat));
-  renderCategory(found.cat);
-  openArticle(found.cat, slug);
 }
 
 // ── PICK LANG FOR ENTRY (with fallback) ───────────────────────────
@@ -299,6 +240,15 @@ function pickLang(entry) {
 }
 
 // ── CATEGORY GRID ──────────────────────────────────────────────────
+// Kafelek to zwykły <a href> do statycznej, w pełni wyrenderowanej strony
+// artykułu (resources/<kat>/<slug>/<lang>.html) — bez overlayu w wall.html.
+// Dzięki temu prawy przycisk „kopiuj link" na kafelku kopiuje dokładnie ten
+// sam URL, na który trafia kliknięcie (nie ma osobnego, mylącego linku do
+// wall.html?a=...).
+function articleUrl(cat, slug, lang) {
+  return `../../../resources/${cat}/${slug}/${lang}.html`;
+}
+
 function renderCategory(cat) {
   if (!INDEX || !cat) return;
   activeCat = cat;
@@ -314,106 +264,13 @@ function renderCategory(cat) {
     const d = e.langs[lang];
     const langBadges = Object.keys(e.langs).map(l =>
       `<span class="wc-lang${l === lang ? ' current' : ''}">${l}</span>`).join('');
-    return `<div class="wcard" style="--r:${rotations[i % rotations.length]}deg;" data-slug="${e.slug}" data-cat="${cat}">
+    return `<a class="wcard" style="--r:${rotations[i % rotations.length]}deg;" href="${articleUrl(cat, e.slug, lang)}">
       <div class="wc-date">${e.date || ''}</div>
       <div class="wc-title">${escapeHtml(d.title)}</div>
       <div class="wc-excerpt">${escapeHtml(d.excerpt || '')}</div>
       <div class="wc-langs">${langBadges}</div>
-    </div>`;
+    </a>`;
   }).join('')}</div>`;
-
-  content.querySelectorAll('.wcard').forEach(card => {
-    card.addEventListener('click', () => openArticle(cat, card.dataset.slug));
-  });
-}
-
-// ── ARTICLE OVERLAY ──────────────────────────────────────────────
-function findEntry(cat, slug) {
-  return (INDEX.categories[cat] || []).find(e => e.slug === slug);
-}
-
-function updateArticleUrl(slug, lang) {
-  try {
-    const params = new URLSearchParams();
-    if (slug) { params.set('a', slug); if (lang) params.set('lang', lang); }
-    const q = params.toString();
-    history.replaceState(null, '', q ? `?${q}` : location.pathname);
-  } catch (e) { /* file:// lub przeglądarka bez History API — pomijamy */ }
-}
-
-function openArticle(cat, slug) {
-  const entry = findEntry(cat, slug);
-  if (!entry) return;
-  currentArticle = { cat, entry };
-  document.getElementById('article-overlay').classList.add('open');
-  document.getElementById('article-date').textContent = entry.date || '';
-
-  const langKeys = Object.keys(entry.langs);
-  const langPill = document.getElementById('article-lang-pill');
-  if (langKeys.length > 1) {
-    langPill.style.display = 'flex';
-    langPill.querySelectorAll('.lang-opt').forEach(b => {
-      b.style.display = langKeys.includes(b.dataset.lang) ? '' : 'none';
-    });
-  } else {
-    langPill.style.display = 'none';
-  }
-
-  const lang = pickLang(entry);
-  renderArticleLang(lang);
-  updateArticleUrl(slug, lang);
-}
-
-// Treść przychodzi już wyrenderowana (HTML) w INDEX — świeża jeśli INDEX
-// przyszedł z fetch resources/index.json, albo z #wall-data pod file://.
-function renderArticleLang(lang) {
-  const entry = currentArticle.entry;
-  const body = document.getElementById('article-body');
-  document.getElementById('article-lang-pill').querySelectorAll('.lang-opt')
-    .forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-
-  const langData = entry.langs[lang];
-  if (!langData || langData.content == null) {
-    body.innerHTML = '<div class="article-err">Brak treści — uruchom tools/build_wall_index.py.</div>';
-    return;
-  }
-  body.innerHTML = langData.content;
-}
-
-document.getElementById('article-lang-pill').addEventListener('click', e => {
-  const btn = e.target.closest('.lang-opt');
-  if (!btn) return;
-  setLang(btn.dataset.lang, true);
-  renderArticleLang(btn.dataset.lang);
-  if (currentArticle) updateArticleUrl(currentArticle.entry.slug, btn.dataset.lang);
-});
-
-document.getElementById('article-copy-link').addEventListener('click', function() {
-  if (!currentArticle) return;
-  const { cat, entry } = currentArticle;
-  const activeBtn = document.querySelector('#article-lang-pill .lang-opt.active');
-  const lang = activeBtn ? activeBtn.dataset.lang : pickLang(entry);
-  // Link do statycznej, w pełni wyrenderowanej strony (SEO/boty) — nie do
-  // wall.html?a=..., które dla botów bez JS pokazuje tylko "Wczytywanie tablicy…".
-  const url = `${SITE_URL}/resources/${cat}/${entry.slug}/${lang}.html`;
-  const btn = this;
-  navigator.clipboard?.writeText(url).then(() => {
-    btn.textContent = 'skopiowano ✓';
-    setTimeout(() => { btn.textContent = '🔗 kopiuj link'; }, 2000);
-  }).catch(() => {});
-});
-
-document.getElementById('article-close').addEventListener('click', closeArticle);
-document.getElementById('article-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('article-overlay')) closeArticle();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeArticle();
-});
-function closeArticle() {
-  document.getElementById('article-overlay').classList.remove('open');
-  currentArticle = null;
-  updateArticleUrl(null, null);
 }
 
 function escapeHtml(s) {

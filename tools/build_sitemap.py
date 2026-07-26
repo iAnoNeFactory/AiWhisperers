@@ -33,7 +33,7 @@ urls: list[tuple[str, str, str]] = []  # (loc, lastmod, priority)
 
 # --- Root ---
 urls.append((f"{BASE_URL}/",            TODAY, "1.0"))
-urls.append((f"{BASE_URL}/readme.html", TODAY, "0.8"))
+urls.append((f"{BASE_URL}/readme.html", TODAY, "1.0"))
 
 # --- Narzędzia operatora: apps/_*/ ---
 for mpath in sorted((ROOT / "apps").glob("_*/manifest.json")):

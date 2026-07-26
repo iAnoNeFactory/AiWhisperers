@@ -1,9 +1,9 @@
 {
   "id": "wall",
   "name": "Wall · Tablica Projektu",
-  "version": "1.2",
-  "date": "2026-07-22",
-  "description": "Tablica projektu — silnik czytający resources/ (kategorie: articles, guidelines, news, plans, info). Przez http(s) (localhost, GitHub Pages) wall.html pobiera świeży resources/index.json, który niesie już wyrenderowaną (HTML) treść każdego wpisu×języka — bez osobnego live-fetchu .md, każda zmiana treści wymaga przebudowy. tools/build_wall_index.py wstrzykuje pełną kopię do wall.html jako gwarantowany fallback dla file:// (offline-first, zgodnie z _protocol-boot.md), czytając surowy Markdown z lokalnego, gitignorowanego resources/.raw/. Skrypt generuje też statyczne, w pełni wyrenderowane strony per artykuł×język (resources/<kategoria>/<slug>/<lang>.html, z article-template.html) z meta description, Open Graph/Twitter Card, hreflang i JSON-LD — dla botów, podglądów linków i narzędzi AI, które nie wykonują JS. Karty na tablicy, auto-detekcja języka przeglądarki z ręcznym przełącznikiem PL/EN, przycisk kopiowania linku do statycznej strony.",
+  "version": "1.3",
+  "date": "2026-07-26",
+  "description": "Tablica projektu — silnik czytający resources/ (kategorie: articles, guidelines, news, plans, info). wall.html rysuje same kafelki (tytuł/zajawka/data z resources/index.json) bez overlayu artykułu — kliknięcie kafelka to zwykły <a href> wprost do kanonicznej, w pełni wyrenderowanej strony resources/<kategoria>/<slug>/<lang>.html, więc to, co widać w pasku adresu i to, co skopiuje prawy przycisk myszy, to zawsze ten sam link. tools/build_wall_index.py wstrzykuje lekką kopię indeksu (bez treści) do wall.html jako fallback dla file:// (offline-first, zgodnie z _protocol-boot.md), czytając surowy Markdown z lokalnego, gitignorowanego resources/.raw/. Skrypt generuje też same statyczne strony (z article-template.html) z meta description, Open Graph/Twitter Card (w tym og-<lang>.png jeśli dodany obok źródła), hreflang i JSON-LD — dla botów, podglądów linków i narzędzi AI, które nie wykonują JS. Auto-detekcja języka przeglądarki z ręcznym przełącznikiem PL/EN na tablicy.",
   "type": "content-board",
   "status": "mature",
   "lineage": {
@@ -28,7 +28,7 @@
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "642cd4bf6a701c3947f2f761221cf3816401a6ade3fed0f6edcac95497f75360",
+    "entry_sha": "6d2924412d5ed3ddc9491e3d77766fc93a3ef17bd4c980b905ee7a6edcad6596",
     "docs_sha": ""
   },
   "relations": [],
