@@ -243,14 +243,32 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
   .field-example,.full-example{font-size:8.5px;}
   .philo{padding:22px 20px;}
 }
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
 
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
-    <a class="hud-btn" href="../_schema/AiWSchema.html">Schema</a>
+    <a class="hud-btn" href="../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
+    <a class="hud-btn" href="../_schema/AiWSchema.html"><span class="hud-glyph">→</span><span class="hud-label">Schema</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -258,8 +276,8 @@ canvas#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <div class="hud-sub">manifest · frontend · backend · v1.0</div>
   </div>
   <nav class="hud-r">
-    <a class="hud-btn" href="../_workspace/AiWSpace.html">SPACE</a>
-    <button class="hud-btn" data-modal="about-protocol">ABOUT</button>
+    <a class="hud-btn" href="../_workspace/AiWSpace.html"><span class="hud-glyph">→</span><span class="hud-label">SPACE</span></a>
+    <button class="hud-btn" data-modal="about-protocol"><span class="hud-glyph">◉</span><span class="hud-label">ABOUT</span></button>
   </nav>
 </header>
 <canvas id="bg"></canvas>

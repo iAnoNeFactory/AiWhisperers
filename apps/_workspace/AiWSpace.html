@@ -213,6 +213,24 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .btn-ghost:hover { border-color: var(--border-h); color: var(--ink-dim); }
 .btn-danger    { background: transparent; border-color: rgba(160,60,60,.3); color: rgba(200,80,80,.5); }
 .btn-danger:hover { border-color: rgba(200,80,80,.6); color: rgba(220,100,100,.8); background: rgba(160,60,60,.06); }
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -221,8 +239,8 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
-    <a class="hud-btn" href="../_protocol/AiWProtocol.html">PROTOCOL</a>
+    <a class="hud-btn" href="../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
+    <a class="hud-btn" href="../_protocol/AiWProtocol.html"><span class="hud-glyph">→</span><span class="hud-label">PROTOCOL</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -231,11 +249,11 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
   </div>
   <div class="hud-r">
     <input type="file" id="import-input" accept=".json" style="display:none">
-    <button class="hud-btn" id="btn-import">↑ import</button>
-    <button class="hud-btn" id="btn-export">↓ export</button>
-    <a class="hud-btn" href="../_plans/AiWPlans.html">PLANS</a>
-    <button class="hud-btn" data-modal="help">help</button>
-    <button class="hud-btn" data-modal="about">about</button>
+    <button class="hud-btn" id="btn-import"><span class="hud-glyph">↑</span><span class="hud-label">import</span></button>
+    <button class="hud-btn" id="btn-export"><span class="hud-glyph">↓</span><span class="hud-label">export</span></button>
+    <a class="hud-btn" href="../_plans/AiWPlans.html"><span class="hud-glyph">→</span><span class="hud-label">PLANS</span></a>
+    <button class="hud-btn" data-modal="help"><span class="hud-glyph">?</span><span class="hud-label">help</span></button>
+    <button class="hud-btn" data-modal="about"><span class="hud-glyph">◉</span><span class="hud-label">about</span></button>
   </div>
 </header>
 

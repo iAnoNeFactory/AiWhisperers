@@ -217,13 +217,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .hud-btn:hover{border-color:rgba(232,200,120,.5);color:var(--gold);background:rgba(232,200,120,.04);}
 .hud-bot{position:fixed;bottom:0;left:0;right:0;z-index:500;height:var(--hud-bot-h);display:flex;align-items:center;justify-content:center;background:linear-gradient(0deg,rgba(4,5,12,.88) 0%,rgba(4,5,12,0) 100%);backdrop-filter:blur(2px);border-top:1px solid rgba(232,200,120,.03);}
 .hud-bot-meta{font-family:var(--mono);font-size:7px;letter-spacing:.2em;color:rgba(240,232,216,.22);text-transform:uppercase;}
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
-    <a class="hud-btn" href="../_quick/AiWQuick.html">QUICK</a>
+    <a class="hud-btn" href="../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
+    <a class="hud-btn" href="../_quick/AiWQuick.html"><span class="hud-glyph">→</span><span class="hud-label">QUICK</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI · WHISPERERS</div>
@@ -231,9 +249,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="hud-sub">paszport operatora · kontrakty</div>
   </div>
   <nav class="hud-r">
-    <a class="hud-btn" href="../_sessions/AiWSessions.html">Sessions</a>
-    <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')">HELP</button>
-    <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')">ABOUT</button>
+    <a class="hud-btn" href="../_sessions/AiWSessions.html"><span class="hud-glyph">→</span><span class="hud-label">Sessions</span></a>
+    <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')"><span class="hud-glyph">?</span><span class="hud-label">HELP</span></button>
+    <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')"><span class="hud-glyph">◉</span><span class="hud-label">ABOUT</span></button>
   </nav>
 </header>
 <canvas id="bg-canvas"></canvas>

@@ -33,7 +33,7 @@
     "components": [],
     "bootstrap": "_verify-boot.md",
     "bootstrap_sha": "bf4ad2c7b9e0b086a17e6b7cf58e2307a9a8762f008906661047279c446e4ec3",
-    "entry_sha": "deea121b2bf1480a5b0a06bc96b6a46bcdfd04678bcf7ea6ee90ddf10107edba",
+    "entry_sha": "870c56479c61e1ca3bd2cd8c3402aed995bd3538a98d0442d075e8ff9aae9031",
     "docs_sha": ""
   },
   "runtime": {

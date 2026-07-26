@@ -343,6 +343,24 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
   z-index:8000; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
 }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -352,9 +370,9 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 <!-- ── HUD TOP ── -->
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../index.html" id="btn-home">⟵ mapa</a>
-    <button class="hud-btn" id="btn-back" style="display:none" onclick="showList()">⟵ plany</button>
-    <a class="hud-btn" href="../_workspace/AiWSpace.html">SPACE</a>
+    <a class="hud-btn" href="../../index.html" id="btn-home"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
+    <button class="hud-btn" id="btn-back" style="display:none" onclick="showList()"><span class="hud-glyph">⟵</span><span class="hud-label">plany</span></button>
+    <a class="hud-btn" href="../_workspace/AiWSpace.html"><span class="hud-glyph">→</span><span class="hud-label">SPACE</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -362,12 +380,12 @@ canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
     <div class="hud-sub">biblioteka pomysłów · żywy dziennik</div>
   </div>
   <div class="hud-r">
-    <button class="hud-btn" onclick="exportPlans()">eksport</button>
-    <label  class="hud-btn" style="cursor:pointer">import
+    <button class="hud-btn" onclick="exportPlans()"><span class="hud-glyph">↓</span><span class="hud-label">eksport</span></button>
+    <label  class="hud-btn" style="cursor:pointer"><span class="hud-glyph">↑</span><span class="hud-label">import</span>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importPlans(this)">
     </label>
-    <button class="hud-btn" data-modal="help">help</button>
-    <button class="hud-btn" data-modal="about">about</button>
+    <button class="hud-btn" data-modal="help"><span class="hud-glyph">?</span><span class="hud-label">help</span></button>
+    <button class="hud-btn" data-modal="about"><span class="hud-glyph">◉</span><span class="hud-label">about</span></button>
   </div>
 </header>
 

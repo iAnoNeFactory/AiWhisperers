@@ -33,7 +33,7 @@
     "components": [],
     "bootstrap": "_protocol-boot.md",
     "bootstrap_sha": "cd2cd84556bb8a3c9ef9f4eb233ca47b3f472059faa0e4b339dd51c0683a1e5f",
-    "entry_sha": "96c9ea7119a479ef7de87a338dbd4c46186e9e1e6d2501c187ee6a77f1039d7a",
+    "entry_sha": "ce43af6fb8ee0d56db9f91e6666884d35de2177c01565a7aa722ac77b91f20b4",
     "docs_sha": ""
   },
   "runtime": {

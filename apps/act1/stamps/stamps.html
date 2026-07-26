@@ -110,6 +110,24 @@ body {
 .se-desc{font-family:var(--serif);font-size:13px;font-style:italic;font-weight:300;color:rgba(200,190,180,.55);line-height:1.75;margin-bottom:6px;}
 .se-color{font-family:var(--mono);font-size:7px;letter-spacing:.5px;}
 @keyframes stampIn{0%{opacity:0;transform:scale(1.08) rotate(-2deg);}70%{opacity:.5;}100%{opacity:.55;transform:scale(1) rotate(0deg);}}
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -117,7 +135,7 @@ body {
 <!-- HUD-TOP -->
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>

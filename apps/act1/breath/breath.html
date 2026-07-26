@@ -129,6 +129,24 @@ body{position:relative;}
   #act-name{font-size:12px;}
   #clock{display:none;}
 }
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -138,7 +156,7 @@ body{position:relative;}
 <!-- HUD-TOP -->
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -147,9 +165,9 @@ body{position:relative;}
   </div>
   <nav class="hud-r">
     <div id="clock">—</div>
-    <button class="hud-btn" id="btn-journal">dziennik</button>
-    <button class="hud-btn" id="btn-help">help</button>
-    <button class="hud-btn" id="btn-about">about</button>
+    <button class="hud-btn" id="btn-journal"><span class="hud-glyph">▤</span><span class="hud-label">dziennik</span></button>
+    <button class="hud-btn" id="btn-help"><span class="hud-glyph">?</span><span class="hud-label">help</span></button>
+    <button class="hud-btn" id="btn-about"><span class="hud-glyph">◉</span><span class="hud-label">about</span></button>
   </nav>
 </header>
 

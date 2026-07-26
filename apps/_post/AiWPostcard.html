@@ -279,6 +279,24 @@ canvas#bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
   border-top:1px solid rgba(232,200,120,.06);
   background:rgba(4,5,12,.6);backdrop-filter:blur(2px);
 }
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -287,7 +305,7 @@ canvas#bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
 <!-- HUD-TOP -->
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>

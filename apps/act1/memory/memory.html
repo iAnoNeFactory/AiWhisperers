@@ -132,6 +132,24 @@ canvas{position:fixed;top:0;left:0;}
 .je-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(160,230,225,0.45);line-height:1.7;}
 .je-empty{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(80,200,190,0.16);text-align:center;padding:20px;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(80,140,255,0.2);border-radius:2px;}
+
+.hud-glyph{font-size:11px;}
+.hud-label{margin-left:3px;}
+
+/* ── HUD mobile: jeden wiersz zostaje, ale przyciski chowają etykiety i
+   zostają same glyphy — to one, nie łamanie wiersza, robi miejsce obok
+   loga/nazwy artefaktu. hud-sub (dłuższy podtytuł) chowany całkiem —
+   ten sam wzorzec co .brand small w index.html — żeby środkowa kolumna
+   nigdy nie musiała się łamać/przycinać. */
+@media (max-width: 640px) {
+  .hud-top{height:60px;padding:0 10px;gap:6px;grid-template-columns:auto 1fr auto;}
+  .hud-c{padding:0 6px;min-width:0;overflow:hidden;}
+  .hud-brand{font-size:7.5px;letter-spacing:.3em;}
+  .hud-mod{font-size:11px;}
+  .hud-sub{display:none;}
+  .hud-btn{padding:7px 8px;}
+  .hud-label{display:none;}
+}
 </style>
 </head>
 <body>
@@ -140,7 +158,7 @@ canvas{position:fixed;top:0;left:0;}
 <!-- HUD-TOP -->
 <header class="hud-top">
   <div class="hud-l">
-    <a class="hud-btn" href="../../../index.html">⟵ mapa</a>
+    <a class="hud-btn" href="../../../index.html"><span class="hud-glyph">⟵</span><span class="hud-label">mapa</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI·WHISPERERS</div>
@@ -148,9 +166,9 @@ canvas{position:fixed;top:0;left:0;}
     <div class="hud-sub">lemniskata · sfery dysona · obserwatorzy</div>
   </div>
   <nav class="hud-r">
-    <button class="hud-btn" onclick="openJournal()">dziennik</button>
-    <button class="hud-btn" onclick="openHelp()">help</button>
-    <button class="hud-btn" onclick="openAbout()">about</button>
+    <button class="hud-btn" onclick="openJournal()"><span class="hud-glyph">▤</span><span class="hud-label">dziennik</span></button>
+    <button class="hud-btn" onclick="openHelp()"><span class="hud-glyph">?</span><span class="hud-label">help</span></button>
+    <button class="hud-btn" onclick="openAbout()"><span class="hud-glyph">◉</span><span class="hud-label">about</span></button>
   </nav>
 </header>
 
