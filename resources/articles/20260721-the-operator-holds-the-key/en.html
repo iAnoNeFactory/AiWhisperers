@@ -65,6 +65,10 @@ body {
 .article-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
 .article-date{font-family:var(--mono);font-size:8px;color:var(--gold-soft);letter-spacing:.1em;text-transform:uppercase;}
 .article-cat{font-family:var(--mono);font-size:8px;color:var(--text-d,rgba(240,232,216,.3));letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--border);padding:2px 7px;}
+.lang-pill{display:flex;border:1px solid var(--border);margin-left:auto;}
+.lang-opt{background:transparent;border:none;color:var(--ink-faint);font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;cursor:pointer;text-decoration:none;transition:all .2s;}
+.lang-opt.active{color:var(--gold);background:rgba(232,200,120,.06);}
+.lang-opt:hover{color:var(--gold-soft);}
 .article-body{font-family:var(--serif);font-size:15px;line-height:1.85;color:var(--ink-dim);overflow-wrap:anywhere;}
 .article-body h1{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:1px;color:var(--gold);margin:0 0 18px;line-height:1.25;}
 .article-body h2{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);margin:26px 0 10px;}
@@ -121,6 +125,7 @@ body {
   <div class="article-meta">
     <span class="article-date">2026-07-21</span>
     <span class="article-cat">Articles</span>
+    <div class="lang-pill"><a class="lang-opt active" href="en.html">EN</a><a class="lang-opt" href="pl.html">PL</a></div>
   </div>
   <div class="article-body">
 <h1>The Operator Holds the Key</h1>

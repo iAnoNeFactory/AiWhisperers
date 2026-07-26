@@ -291,6 +291,15 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
                     f' <a href="{l}.html">{l.upper()}</a>' if l != lang else f" <strong>{l.upper()}</strong>"
                     for l in langs
                 )
+                # Przełącznik w HUD — szybka zmiana tłumaczenia bez szukania linku
+                # na dole artykułu. Tylko gdy jest więcej niż jedna wersja — dla
+                # jedynej istniejącej "przełącznik" na nic by się nie przełączał.
+                lang_pill = (
+                    '<div class="lang-pill">' + "".join(
+                        f'<a class="lang-opt{" active" if l == lang else ""}" href="{l}.html">{l.upper()}</a>'
+                        for l in langs
+                    ) + "</div>"
+                ) if len(langs) > 1 else ""
 
                 og_src = RAW_DATA / cat / e["folder"] / f"og-{lang}.png"
                 has_og = og_src.is_file()
@@ -328,6 +337,7 @@ def generate_static_pages(categories: dict[str, list[dict]]) -> int:
                     .replace("{{BACK_TO_ROOT}}", "../../../index.html")
                     .replace("{{BACK_TO_WALL}}", f"../../../apps/act1/wall/wall.html?cat={cat}")
                     .replace("{{LANG_LINKS}}", lang_links)
+                    .replace("{{LANG_PILL}}", lang_pill)
                 )
                 out_dir = STATIC_DIR / cat / e["slug"]
                 out_dir.mkdir(parents=True, exist_ok=True)
