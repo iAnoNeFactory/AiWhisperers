@@ -19,7 +19,7 @@ maintained as evidence for trademark and copyright purposes.
 
 ---
 
-## Initial public release · YYYY-MM-DD
+## Initial public release · 2026-05-13
 
 See `PUBLICATION.md` for the full statement of first public release
 and the complete list of names, modules, and concepts released on
@@ -42,11 +42,11 @@ this date.
 
 | Anchor | Identifier | Date |
 |--------|------------|------|
-| GitHub first push | [commit SHA] | YYYY-MM-DD |
-| GitHub Release v1.0 | v1.0 | YYYY-MM-DD |
-| Software Heritage Archive | [SWHID] | YYYY-MM-DD |
-| Zenodo deposit | [DOI] | YYYY-MM-DD |
-| OpenTimestamps proof of `PUBLICATION.md` | [hash] | YYYY-MM-DD |
+| GitHub first push | [72d6947a32324e867a08c69ffe32930af0b6c43e] | 2026-05-13 |
+| GitHub Release v1.0 | [tag] | YYYY-MM-DD |
+| Software Heritage Archive | [swh:1:dir:708487bf77cb72e43248352df64838d42290c268] | 2026-05-13 |
+| Zenodo deposit | [10.5072/zenodo.499133] | 2026-05-13 |
+| OpenTimestamps proof of `PUBLICATION.md` | [4e41ddf6e42c3013384ea20c7e25d54ef372d2469a29f5e21bc3f6cd8cef6c07] | 2026-05-13 |
 
 *Fill in each row as the respective service completes archival.
 Software Heritage and Zenodo may take 1–7 days; GitHub and

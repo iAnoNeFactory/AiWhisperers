@@ -1154,6 +1154,9 @@
 
   <!-- PRAWA: akcje (otwierają modale) -->
   <nav class="pisma pisma-right">
+    <button class="pism" id="share-btn" title="Udostępnij AiWhisperers">
+      <span class="glyph">↗</span><span class="pism-name">SHARE</span>
+    </button>
     <button class="pism" data-modal="help" title="Help — czym jest AiWhisperers">
       <span class="glyph">?</span><span class="pism-name">HELP</span>
     </button>
@@ -4398,6 +4401,37 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
+
+// ═══════════════════════════════════════════════════════════════
+// SHARE — Web Share API (telefony, macOS/Windows Safari/Chrome/Edge)
+// z fallbackiem do schowka tam, gdzie navigator.share nie istnieje
+// (Firefox desktop, Chrome/Firefox na Linuksie). og:image z <head>
+// (og-image.png) zaciąga sam odbiorca linku przy podglądzie — Web
+// Share API przekazuje tylko title/url, nie plik.
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  const btn = document.getElementById('share-btn');
+  if (!btn) return;
+  const label = btn.querySelector('.pism-name');
+  const labelText = label ? label.textContent : '';
+  btn.addEventListener('click', async () => {
+    const title = document.querySelector('meta[property="og:title"]')?.content || document.title;
+    const text = document.querySelector('meta[property="og:description"]')?.content || '';
+    const url = document.querySelector('meta[property="og:url"]')?.content || location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url }); }
+      catch (e) { /* użytkownik anulował arkusz udostępniania — pomijamy */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      if (label) {
+        label.textContent = 'SKOPIOWANO ✓';
+        setTimeout(() => { label.textContent = labelText; }, 2000);
+      }
+    } catch (e) { /* clipboard niedostępny (np. file://) — cicho pomijamy */ }
+  });
+})();
 
 // ═══════════════════════════════════════════════════════════════
 // SHA-8 chat_id pod logo — sygnatura tej sesji

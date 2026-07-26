@@ -58,7 +58,7 @@ to be self-sovereign — no central authority, no platform dependency.
 ## Status
 
 **Live at:** [aiwhisperers.pl](https://aiwhisperers.pl)
-**First public release:** [date]
+**First public release:** 2026-05-13
 **Current modules:** Pass, Verify, Quick, Schema, Boot, Postcard,
 Remedy, Protocol *(plus modules in active development)*
 **Active development:** yes
@@ -144,8 +144,8 @@ see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Lineage and prior art
 
-This project was developed in private from [13.05.2026] and made
-publicly available on [13.05.2026]. The full record
+This project was developed in private from 2026-03-26 and made
+publicly available on 2026-05-13. The full record
 of public disclosure, including external timestamp anchors
 (Software Heritage, Zenodo DOI, OpenTimestamps), is in
 **[PUBLICATION.md](./PUBLICATION.md)** and **[PRIOR_ART.md](./PRIOR_ART.md)**.
