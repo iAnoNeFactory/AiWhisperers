@@ -241,7 +241,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <header class="hud-top">
   <div class="hud-l">
     <a class="hud-btn" href="../../index.html"><span class="hud-glyph">⌂</span><span class="hud-label">mapa</span></a>
-    <a class="hud-btn" href="../_quick/AiWQuick.html"><span class="hud-glyph">⟵</span><span class="hud-label">QUICK</span></a>
+    <a class="hud-btn" href="../_remedy/AiWRemedy.html"><span class="hud-glyph">⟵</span><span class="hud-label">REMEDY</span></a>
   </div>
   <div class="hud-c">
     <div class="hud-brand">AI · WHISPERERS</div>
@@ -249,7 +249,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="hud-sub">paszport operatora · kontrakty</div>
   </div>
   <nav class="hud-r">
-    <a class="hud-btn" href="../_sessions/AiWSessions.html"><span class="hud-glyph">→</span><span class="hud-label">Sessions</span></a>
+    <a class="hud-btn" href="../_quick/AiWQuick.html"><span class="hud-glyph">→</span><span class="hud-label">QUICK</span></a>
     <button class="hud-btn" onclick="document.getElementById('help-overlay').classList.add('open')"><span class="hud-glyph">?</span><span class="hud-label">HELP</span></button>
     <button class="hud-btn" onclick="document.getElementById('about-overlay').classList.add('open')"><span class="hud-glyph">◉</span><span class="hud-label">ABOUT</span></button>
   </nav>
@@ -404,6 +404,36 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     </label>
   </div>
   <div id="import-status" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);margin-top:4px;min-height:14px;"></div>
+
+  <!-- ═══ NASTAWY (TUNE) ═══════════════════════════════════ -->
+  <div style="margin-top:28px;">
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>· Nastawy (tune)</span>
+      <div style="display:flex;gap:4px;">
+        <label style="background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;cursor:pointer;transition:all .2s;">↑ wczytaj<input type="file" id="btn-tune-import" accept=".json" style="display:none;"/></label>
+        <button id="btn-tune-export" style="background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:6px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;cursor:pointer;transition:all .2s;">↓ eksportuj</button>
+      </div>
+    </div>
+    <div class="profile-block" id="tune-block" style="display:none;">
+      <div class="pb-row" style="gap:8px;align-items:center;">
+        <span class="pb-label" style="color:var(--gold-d);flex-shrink:0;">Zestaw</span>
+        <span id="tune-set-display" style="font-family:var(--mono);font-size:7.5px;color:var(--gold-d);flex:1;">—</span>
+        <span class="pb-label" style="color:var(--ink-faint);flex-shrink:0;width:auto;">utworzono</span>
+        <span id="tune-created-display" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);flex-shrink:0;">—</span>
+      </div>
+      <div class="pb-row" style="gap:8px;align-items:center;">
+        <span class="pb-label" style="color:var(--green);flex-shrink:0;">Rdzeń</span>
+        <span id="tune-core-display" style="font-family:var(--mono);font-size:7.5px;color:var(--green);flex:1;">—</span>
+        <button id="btn-tune-remove" class="btn-cp" title="usuń nastawy z profilu" style="color:var(--red);border-color:rgba(138,58,58,.3);">✕ usuń</button>
+      </div>
+      <div class="pb-row" style="gap:8px;align-items:center;">
+        <span class="pb-label" style="color:var(--ink-faint);flex-shrink:0;">tune_sha</span>
+        <span id="tune-sha-display" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+      </div>
+    </div>
+    <div id="tune-empty-hint" style="font-family:var(--mono);font-size:7px;color:var(--ink-faint);padding:6px 2px;">— brak nastaw · wczytaj plik aiw-tune-*.json wygenerowany w AiWRemedy</div>
+    <div id="tune-import-status" style="font-family:var(--mono);font-size:6.5px;color:var(--ink-faint);margin-top:4px;min-height:12px;text-align:center;"></div>
+  </div>
 
   <!-- ═══ CERTYFIKAT TOŻSAMOŚCI ════════════════════════════ -->
   <div style="margin-top:28px;">
@@ -744,13 +774,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <footer class="hud-bot">
-  <span class="hud-bot-meta">AiWPass · v4.1 · Claude Sonnet 4.6 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">AiWPass · v4.2 · Claude Sonnet 4.6 · Claude Opus 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 // ════════════════════════════════════════════════════════════
-//  AiWPass · v4.0 · AiWhisperers
+//  AiWPass · v4.2 · AiWhisperers
 // ════════════════════════════════════════════════════════════
 
 // ── MODELS DICT ──────────────────────────────────────────
@@ -813,6 +843,7 @@ const PRV_KEY       = 'aiw_privkey_v1';
 const CHILDREN_KEY  = 'aiw_children_v1';
 const MYCERT_KEY    = 'aiw_my_cert_v1';
 const CONTRACTS_KEY = 'aiw_contracts_v1';
+const TUNE_KEY       = 'aiw_tune_v1';
 const SK            = 'aiw_dziennik_v4';
 const BK            = 'aiw_batches_v2';
 
@@ -1180,6 +1211,39 @@ function saveContracts(arr) {
   localStorage.setItem(CONTRACTS_KEY, JSON.stringify({version:'1', contracts: arr}));
 }
 
+// ── TUNE (nastawy z AiWRemedy · v2.2) ──────────────────────
+function loadTune() {
+  try { return JSON.parse(localStorage.getItem(TUNE_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+
+function saveTuneToStorage(tune) {
+  if (tune) localStorage.setItem(TUNE_KEY, JSON.stringify(tune));
+  else localStorage.removeItem(TUNE_KEY);
+}
+
+function renderTuneBlock() {
+  const tune = loadTune();
+  const block = document.getElementById('tune-block');
+  const hint = document.getElementById('tune-empty-hint');
+  if (!tune) {
+    if (block) block.style.display = 'none';
+    if (hint) hint.style.display = '';
+    return;
+  }
+  if (hint) hint.style.display = 'none';
+  if (block) block.style.display = '';
+  const el = id => document.getElementById(id);
+  if (el('tune-set-display')) el('tune-set-display').textContent = tune.set || '—';
+  if (el('tune-created-display')) el('tune-created-display').textContent = tune.created ? tune.created.slice(0,10) : '—';
+  const coreEl = el('tune-core-display');
+  if (coreEl) {
+    coreEl.textContent = tune.core === true ? 'trzyma' : 'pęknięty';
+    coreEl.style.color = tune.core === true ? 'var(--green)' : 'var(--red)';
+  }
+  if (el('tune-sha-display')) el('tune-sha-display').textContent = tune.tune_sha ? tune.tune_sha.slice(0,32)+'…' : '—';
+}
+
 function pluralKontraktow(n) {
   if (n === 1) return '1 kontrakt';
   if (n < 5) return n + ' kontrakty';
@@ -1540,6 +1604,7 @@ function loadProfile() {
     syncProfileKeyDisplays();
     renderCertMine();
     renderChildrenTable();
+    renderTuneBlock();
   } catch(e) {}
 }
 
@@ -1559,10 +1624,15 @@ async function saveProfile() {
     certificationSig: existing.certificationSig || '',
     certificationTs: existing.certificationTs || ''
   };
-  p.profileSha = await sha256hex(JSON.stringify({
+  // profileSha z osadzonym tune (przez wskaźnik tune_sha, nie cały obiekt) — sekcja "Nastawy operatora" spec v2.2.
+  // Brak tune → hash identyczny jak przed v2.2 (wsteczna kompatybilność podpisów istniejących profili).
+  const shaInput = {
     operator: p.operator, domain: p.domain, node: p.node,
     inception: p.inception, country: p.country, pubkey: p.pubkey
-  }));
+  };
+  const tune = loadTune();
+  if (tune && tune.tune_sha) shaInput.tune_sha = tune.tune_sha;
+  p.profileSha = await sha256hex(JSON.stringify(shaInput));
   localStorage.setItem(PK, JSON.stringify(p));
   syncProfileKeyDisplays();
   syncContractAnchor();
@@ -1895,7 +1965,8 @@ document.getElementById('btn-export-data').addEventListener('click', () => {
       certificationTs: p.certificationTs || ''
     },
     contracts: contracts,
-    children: loadChildren()
+    children: loadChildren(),
+    tune: loadTune() || undefined
   };
   const blob = new Blob([JSON.stringify(exportData,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1943,6 +2014,11 @@ document.getElementById('btn-import-data').addEventListener('change', function()
           const existPubs = new Set(existCh.map(c => c.pubkey));
           saveChildren([...existCh, ...data.children.filter(c => !existPubs.has(c.pubkey))]);
         }
+        // brak pola tune = profil pre-tune, poprawny — nie ruszaj istniejących lokalnych nastaw
+        if (data.tune && data.tune._version === 'aiw_tune_v1' && data.tune.core === true) {
+          saveTuneToStorage(data.tune);
+        }
+        renderTuneBlock();
         status.textContent = `✓ zaimportowano profil · ${data._exported?.slice(0,10)||'—'}`;
         status.style.color = 'var(--green)';
         loadProfile(); updateContractsMeta();
@@ -2215,6 +2291,49 @@ document.getElementById('btn-children-import').addEventListener('change', functi
     }
   };
   reader.readAsText(file); this.value = '';
+});
+
+document.getElementById('btn-tune-export').addEventListener('click', function() {
+  const tune = loadTune();
+  if (!tune) { this.textContent = 'brak danych'; setTimeout(() => this.textContent = '↓ eksportuj', 2000); return; }
+  const blob = new Blob([JSON.stringify(tune,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `aiw-tune-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  this.textContent = '↓ gotowe'; setTimeout(() => this.textContent = '↓ eksportuj', 2000);
+});
+
+document.getElementById('btn-tune-import').addEventListener('change', async function() {
+  const file = this.files[0]; if (!file) return;
+  const statusEl = document.getElementById('tune-import-status');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._version !== 'aiw_tune_v1') throw new Error('Nieznany format — wymagany aiw_tune_v1');
+      if (data.core !== true) throw new Error('Rdzeń pęknięty w tym pliku — materiał diagnostyczny, nie nastawa');
+      saveTuneToStorage(data);
+      renderTuneBlock();
+      await saveProfile();
+      statusEl.textContent = `✓ wczytano nastawy · zestaw ${data.set||'—'} · ${data.created?.slice(0,10)||'—'}`;
+      statusEl.style.color = 'var(--green)';
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    } catch(err) {
+      statusEl.textContent = '✕ ' + err.message; statusEl.style.color = 'var(--red)';
+    }
+  };
+  reader.readAsText(file); this.value = '';
+});
+
+document.getElementById('btn-tune-remove').addEventListener('click', async function() {
+  saveTuneToStorage(null);
+  renderTuneBlock();
+  await saveProfile();
+  const statusEl = document.getElementById('tune-import-status');
+  statusEl.textContent = '✓ nastawy usunięte z profilu'; statusEl.style.color = 'var(--ink-faint)';
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
 });
 
 // ── KEY BACKUP OVERLAY ────────────────────────────────────

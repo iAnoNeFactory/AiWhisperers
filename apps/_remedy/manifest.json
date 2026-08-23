@@ -1,9 +1,9 @@
 {
   "id": "remedy",
   "name": "AiWRemedy · szczepionka dla modeli 🪞",
-  "version": "2.0",
-  "date": "2026-05-02",
-  "description": "Protokół kalibracyjny — 15 osi miękkiego cechowania modeli i operatorów. Lustro z własną gęstością.",
+  "version": "2.2",
+  "date": "2026-08-23",
+  "description": "Protokół kalibracyjny — 21 osi w pięciu ramionach, rdzeń, amplituda, nastawy operatora (quiz + tune JSON).",
   "type": "calibration-protocol",
   "status": "active",
   "lineage": {
@@ -25,6 +25,16 @@
         "actor": "GitHub Copilot",
         "role": "reviewer",
         "chat_id": ""
+      },
+      {
+        "actor": "Claude Fable 5",
+        "role": "architect · drugi biegun",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Opus 5",
+        "role": "architect · korekta amplitudy",
+        "chat_id": ""
       }
     ],
     "signature": {
@@ -42,8 +52,8 @@
       }
     ],
     "bootstrap": "_remedy-boot.md",
-    "bootstrap_sha": "f7c144b87ed843351f01957480809984c993ebb3ef186252025391552e45d166",
-    "entry_sha": "af60b2f08e69f77c2a0ad6f81b98abb515d09384b06c788100d5359e7d36a21d",
+    "bootstrap_sha": "f12da1bf2b58867bc1a1baee47307f2ea2e56952a8c318126f1a998560c72a3b",
+    "entry_sha": "a3666967958f8a5c1346a8a433016abbba281253803a8d99e8d179bcf405f412",
     "docs_sha": ""
   },
   "runtime": {
@@ -72,6 +82,10 @@
     {
       "type": "complements",
       "target": "quick"
+    },
+    {
+      "type": "complements",
+      "target": "_pass"
     }
   ],
   "tags": [

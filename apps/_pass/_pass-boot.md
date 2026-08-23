@@ -1,7 +1,7 @@
 # _pass-boot · AiWPass + AiWVerify · Knowledge Bootstrap
 
 Plik wiedzy dla modeli AI. Wczytaj zamiast przeglądania kodu HTML.
-Źródło: `AiWPass.html` v4.1 · `AiWVerify.html` v2.0 · sesja maj 2026
+Źródło: `AiWPass.html` v4.2 · `AiWVerify.html` v2.0 · sesja 2026-08-23 · most do AiWRemedy v2.2 (nastawy)
 
 ---
 
@@ -235,19 +235,50 @@ Klucz prywatny trzymany jest osobno w `aiw_privkey_v1` i **nigdy nie trafia do e
 Skrót SHA-256 z tożsamości operatora — dowód integralności danych profilu.
 
 ```javascript
-const profileSha = await sha256hex(JSON.stringify({
+const shaInput = {
   operator:  p.operator  || '',
   domain:    p.domain    || '',
   node:      p.node      || '',
   inception: p.inception || '',
   country:   p.country   || '',
   pubkey:    p.pubkey    || ''
-}));
+};
+const tune = loadTune();
+if (tune && tune.tune_sha) shaInput.tune_sha = tune.tune_sha;
+const profileSha = await sha256hex(JSON.stringify(shaInput));
 ```
 
 > Kolejność pól jest stała i musi być identyczna przy weryfikacji. Brak pola zastępowany pustym stringiem.
+> Pole `tune_sha` dołącza się na końcu **tylko** gdy w profilu jest osadzony tune (v2.2, patrz niżej) —
+> profile bez nastaw liczą hash dokładnie jak przed v2.2, więc istniejące podpisy pozostają ważne.
 
 Obliczany automatycznie przy `saveProfile()` i ręcznie przyciskiem `⊕ sha`.
+
+### Nastawy (tune) — most do AiWRemedy v2.2
+
+`_remedy` generuje tune JSON (quiz kalibracyjny → `aiw_tune_v1`, patrz `_remedy-boot.md` → „Nastawy operatora").
+AiWPass go **przechowuje** (localStorage `aiw_tune_v1`, osobny klucz — nie jest zagnieżdżony wewnątrz
+`aiw_profile_v1`) i **dołącza do eksportu/importu** profilu.
+
+**Wczytanie:** przycisk `↑ wczytaj` w sekcji „Nastawy (tune)" → plik `aiw-tune-*.json` z AiWRemedy. Walidacja
+przed zapisem: `_version === 'aiw_tune_v1'` oraz `core === true`. Plik z pękniętym rdzeniem (`core: false`)
+jest odrzucany — nigdy nie trafia do profilu, zgodnie z rdzeniem: „Plik z `core: false` nie ma prawa istnieć".
+
+**Usunięcie:** przycisk `✕ usuń` przy bloku nastaw — czyści `aiw_tune_v1`, przelicza `profileSha` (wraca do
+formuły sprzed nastaw).
+
+**Osadzenie w eksporcie** (`aiw_profile_export_v2`, patrz „Formaty eksportu JSON" niżej): pole `tune` na
+poziomie głównym, obok `profile`/`contracts`/`children`. Obecne tylko gdy operator ma wczytane nastawy —
+`JSON.stringify` pomija `undefined`, więc profile bez tune eksportują się dokładnie jak przed v2.2.
+
+**Import:** brak pola `tune` w importowanym pliku = profil pre-tune, **nie kasuje** istniejących lokalnych
+nastaw operatora (asymetria świadoma — import nie ma niszczyć czegoś, czego sam plik nie opisuje). Obecność
+pola `tune` — po tej samej walidacji `_version`/`core` — nadpisuje lokalne nastawy.
+
+**Rekalibracja = nowy tune + nowy podpis profilu.** Ponieważ `tune_sha` wchodzi do `profileSha`, wczytanie
+innych nastaw zmienia `profileSha` i unieważnia dotychczasowy `certificationSig` — operator musi zostać
+scertyfikowany ponownie. To świadomy koszt: zmiana nastaw jest zmianą tożsamości relacyjnej i ma być
+widoczna w łańcuchu proweniencji, nie cichą modyfikacją.
 
 ### Keypair — interfejs użytkownika
 
@@ -408,11 +439,14 @@ Przy podpisaniu nowego operatora entry jest dodawane/aktualizowane (deduplicacja
     "certificationTs":  "<ISO>"
   },
   "contracts": [ ...obiekty kontraktów... ],
-  "children":  [ ...obiekty z children list... ]
+  "children":  [ ...obiekty z children list... ],
+  "tune": { "...cały tune JSON aiw_tune_v1 z AiWRemedy, jeśli operator go wczytał..." }
 }
 ```
 
-Klucz prywatny (`aiw_privkey_v1`) **nigdy nie jest eksportowany**.
+Klucz prywatny (`aiw_privkey_v1`) **nigdy nie jest eksportowany**. Pole `tune` jest **opcjonalne** —
+obecne tylko gdy w profilu są osadzone nastawy (v2.2, patrz „Nastawy (tune)" wyżej); jego brak to prawidłowy
+profil sprzed nastaw, nie błąd.
 
 ### `aiw_children_v1` — eksport listy certyfikowanych
 
@@ -449,6 +483,7 @@ Klucz prywatny (`aiw_privkey_v1`) **nigdy nie jest eksportowany**.
 | `aiw_privkey_v1` | klucz prywatny (base64) | ✗ nigdy |
 | `aiw_contracts_v1` | archiwum kontraktów `{version,contracts}` | ✓ |
 | `aiw_children_v1` | lista certyfikowanych `[...]` | ✓ |
+| `aiw_tune_v1` | nastawy operatora, tune JSON z AiWRemedy v2.2 | ✓ (opcjonalnie, gdy wczytane) |
 | `aiw_pin_v1` | hash PINu (hex SHA-256) | ✗ |
 
 Wszystkie dane przechowywane wyłącznie w `localStorage` przeglądarki — bez backendu, bez chmury.
@@ -758,6 +793,7 @@ const PRV_KEY       = 'aiw_privkey_v1';
 const CHILDREN_KEY  = 'aiw_children_v1';
 const MYCERT_KEY    = 'aiw_my_cert_v1';    // legacy, nieużywany aktywnie
 const CONTRACTS_KEY = 'aiw_contracts_v1';
+const TUNE_KEY       = 'aiw_tune_v1';       // nastawy z AiWRemedy v2.2
 const PIN_KEY       = 'aiw_pin_v1';
 
 // Models selector
@@ -775,7 +811,7 @@ const MODELS = {
 ## Proweniencja
 
 ```
-artefakt    · AiWPass.html v4.1 + AiWVerify.html v2.0
+artefakt    · AiWPass.html v4.2 + AiWVerify.html v2.0
 operator    · Denis Czuliński · AI Whispers · iFactory 5.0
 model       · Claude · Sonnet 4.6 · Anthropic
 inauguracja · marzec 2026
@@ -787,6 +823,13 @@ AiWPass nie był planowany jako taki. Każda warstwa (kontrakt → profil → ce
 ---
 
 ## Changelog
+
+### v4.2 · 2026-08-23
+- **Nastawy (tune)** — AiWPass przechowuje i eksportuje tune JSON z AiWRemedy v2.2 (`aiw_tune_v1`, klucz `aiw_tune_v1` w localStorage, osobny od profilu)
+- UI: sekcja „Nastawy (tune)" w profilu — wczytaj/usuń/eksportuj, walidacja `_version`/`core` przy wczytaniu
+- `profileSha` dołącza `tune_sha` na końcu **tylko** gdy nastawy są osadzone — profile bez tune liczą hash identycznie jak przed v2.2 (wsteczna kompatybilność podpisów)
+- Eksport `aiw_profile_export_v2`: nowe opcjonalne pole `tune` na poziomie głównym
+- Import: brak pola `tune` = profil pre-tune, nie kasuje lokalnych nastaw; obecność pola nadpisuje je po walidacji
 
 ### v4.1 · maj 2026
 - Szyfrowanie klucza prywatnego PBKDF2 (300k iteracji) + AES-256-GCM z PINem

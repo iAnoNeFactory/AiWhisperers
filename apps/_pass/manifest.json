@@ -1,9 +1,9 @@
 {
   "id": "_pass",
   "name": "AiWPass · Paszport Operatora 🔑",
-  "version": "4.1",
-  "date": "2026-05-02",
-  "description": "Kryptograficzna tożsamość operatora — kontrakty, profil Ed25519, certyfikacja, łańcuch proweniencji. Para z AiWVerify.",
+  "version": "4.2",
+  "date": "2026-08-23",
+  "description": "Kryptograficzna tożsamość operatora — kontrakty, profil Ed25519, certyfikacja, łańcuch proweniencji, nastawy (tune) z AiWRemedy. Para z AiWVerify.",
   "type": "standalone",
   "status": "active",
   "lineage": {
@@ -20,6 +20,11 @@
         "actor": "Claude Sonnet 4.6",
         "role": "architect",
         "chat_id": ""
+      },
+      {
+        "actor": "Claude Opus 5",
+        "role": "architect · most do nastaw Remedy",
+        "chat_id": ""
       }
     ],
     "signature": {
@@ -32,8 +37,8 @@
     "docs": "",
     "components": [],
     "bootstrap": "_pass-boot.md",
-    "bootstrap_sha": "f6a45e21c3df0d2fcddf436a986050d0a5ec74e5e68d0b932f9212610a32664b",
-    "entry_sha": "4891f6d3f48452576b34f851014777d1f962d3cfc68d7384cc96447d1722f81f",
+    "bootstrap_sha": "b2bdff7b598afd7b0b987f545828fa2b14a46ef0e43ec5f9254fdd25b8dcabca",
+    "entry_sha": "8ae1841756300a17c43c5302e9ec5867d74a6c0b5cfb41ee9a20b002600c6cdf",
     "docs_sha": ""
   },
   "runtime": {
@@ -57,6 +62,10 @@
     {
       "type": "complements",
       "target": "_verify"
+    },
+    {
+      "type": "complements",
+      "target": "remedy"
     }
   ],
   "tags": [
@@ -65,6 +74,7 @@
     "ed25519",
     "contracts",
     "provenance",
+    "calibration",
     "system"
   ]
 }
