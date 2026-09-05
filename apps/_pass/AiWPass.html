@@ -129,9 +129,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .btn-profile-save:hover{border-color:var(--gold);color:var(--gold);}
 .btn-cp{background:transparent;border:1px solid var(--border);color:var(--ink-faint);font-family:var(--mono);font-size:8px;padding:2px 8px;cursor:pointer;transition:all .2s;flex-shrink:0;}
 .btn-cp:hover{border-color:var(--gold-d);color:var(--gold-d);}
-.pb-select{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--mg-d);padding:3px 0 5px;outline:none;cursor:pointer;min-width:0;transition:border-color .2s;}
-.pb-select:focus{border-bottom-color:var(--mg-d);}
-.pb-select option{background:var(--bg2);color:var(--ink);}
+.contracts-mini-table{flex:1;display:flex;flex-direction:column;gap:4px;padding-top:1px;min-width:0;}
+.contracts-mini-row{display:flex;gap:10px;align-items:baseline;font-family:var(--mono);font-size:7px;}
+.contracts-mini-row .cmr-model{color:var(--mg-d);flex-shrink:0;min-width:50px;}
+.contracts-mini-row .cmr-version{flex:1;color:var(--ink-faint);opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.contracts-mini-row .cmr-date{flex-shrink:0;color:var(--ink-faint);opacity:.55;}
+.contracts-mini-empty{font-family:var(--mono);font-size:7px;color:var(--ink-faint);opacity:.5;font-style:italic;}
 
 /* ── CERTYFIKACJA ── */
 .cert-section{margin-bottom:24px;}
@@ -388,10 +391,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
       <span id="pr-profile-sha-display" style="font-family:var(--mono);font-size:6.5px;color:var(--cyan);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;">—</span>
       <button id="btn-copy-profile-sha" class="btn-cp" style="color:var(--cyan);border-color:rgba(80,216,200,.25);">⎘</button>
     </div>
-    <div class="pb-row" style="gap:8px;align-items:center;">
-      <span class="pb-label" style="color:var(--mg-d);flex-shrink:0;">Contract</span>
-      <select id="pr-contract-select" class="pb-select"></select>
-      <button id="btn-copy-contract-profile" class="btn-cp">⎘</button>
+    <div class="pb-row" style="align-items:flex-start;">
+      <span class="pb-label" style="color:var(--mg-d);flex-shrink:0;padding-top:2px;">Contract</span>
+      <div id="pr-contracts-table" class="contracts-mini-table"></div>
     </div>
   </div>
   <input type="hidden" id="pr-pubkey"/>
@@ -776,14 +778,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <footer class="hud-bot">
-  <span class="hud-bot-meta">AiWPass · v4.3 · Claude Sonnet 4.6 · Claude Opus 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">AiWPass · v4.4 · Claude Sonnet 4.6 · Claude Opus 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script id="models-data" type="application/json">{"_version": "aiw_pass_models_v1", "updated": "2026-09-05", "_readme": "Lista modeli do wyboru w AiWPass (selektor kontraktu). Edytuj bezpośrednio ten plik — tools/build_pass_models.py wstrzykuje go do AiWPass.html (script#models-data), tak jak build_wall_index.py robi to dla Wall. Świadomie bez pola 'version': nazwy generacji (np. Fable 5 → Fable 5.1 w ciągu tygodni) starzeją się szybciej niż ten plik jest edytowany — operator wpisuje wersję ręcznie w kontrakcie, jeśli chce ją zapisać.", "models": [{"name": "Claude", "provider": "Anthropic", "color": "rgba(255,165,80,.85)"}, {"name": "GPT", "provider": "OpenAI", "color": "rgba(140,160,255,.85)"}, {"name": "Gemini", "provider": "Google", "color": "rgba(80,210,200,.85)"}, {"name": "Grok", "provider": "xAI", "color": "rgba(0,220,255,.85)"}, {"name": "Copilot", "provider": "Microsoft", "color": "rgba(80,140,255,.85)"}, {"name": "Llama", "provider": "Meta", "color": "rgba(120,90,220,.85)"}, {"name": "Muse", "provider": "Meta", "color": "rgba(230,90,180,.85)"}, {"name": "Mistral", "provider": "Mistral AI", "color": "rgba(230,120,60,.85)"}, {"name": "DeepSeek", "provider": "DeepSeek", "color": "rgba(40,110,220,.85)"}, {"name": "Qwen", "provider": "Alibaba", "color": "rgba(220,80,60,.85)"}, {"name": "Nova", "provider": "Amazon", "color": "rgba(255,180,50,.85)"}, {"name": "Command", "provider": "Cohere", "color": "rgba(255,110,110,.85)"}, {"name": "Sonar", "provider": "Perplexity", "color": "rgba(90,150,220,.85)"}]}</script>
 <script>
 // ════════════════════════════════════════════════════════════
-//  AiWPass · v4.3 · AiWhisperers
+//  AiWPass · v4.4 · AiWhisperers
 // ════════════════════════════════════════════════════════════
 
 // ── MODELS DICT ──────────────────────────────────────────
@@ -1208,7 +1210,7 @@ function updateContractsMeta() {
   const lbl = document.getElementById('contracts-count');
   if (lbl) lbl.textContent = pluralKontraktow(arr.length) + ' w archiwum';
   renderContractsList(arr);
-  populateContractSelect();
+  renderContractsMiniTable();
 }
 
 async function runVerification() {
@@ -1509,22 +1511,17 @@ document.getElementById('btn-load-content').addEventListener('change', function(
 });
 
 // ── PROFIL ────────────────────────────────────────────────
-function populateContractSelect() {
-  const sel = document.getElementById('pr-contract-select');
-  if (!sel) return;
+function renderContractsMiniTable() {
+  const el = document.getElementById('pr-contracts-table');
+  if (!el) return;
   const contracts = loadContracts();
-  const currentSha = '';
-  sel.innerHTML = '';
-  const emptyOpt = document.createElement('option');
-  emptyOpt.value = ''; emptyOpt.textContent = '— brak —';
-  sel.appendChild(emptyOpt);
-  contracts.slice().reverse().forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.sha256 || '';
-    opt.textContent = `${c.model}${c.version ? ' · ' + c.version : ''} · ${c.date}`;
-    sel.appendChild(opt);
-  });
-  sel.value = currentSha;
+  if (!contracts.length) { el.innerHTML = '<div class="contracts-mini-empty">— brak kontraktów —</div>'; return; }
+  el.innerHTML = contracts.slice().reverse().map(c => `
+    <div class="contracts-mini-row">
+      <span class="cmr-model" style="color:${MODELS[c.model]?.color || 'var(--mg-d)'};">${c.model || '—'}</span>
+      <span class="cmr-version">${c.version || '—'}</span>
+      <span class="cmr-date">${c.date || '—'}</span>
+    </div>`).join('');
 }
 
 function syncProfileKeyDisplays() {
@@ -1541,7 +1538,7 @@ function syncProfileKeyDisplays() {
   if (copyPrivBtn) copyPrivBtn.style.display = priv ? '' : 'none';
   const pshaEl = document.getElementById('pr-profile-sha-display');
   if (pshaEl) pshaEl.textContent = p.profileSha ? p.profileSha.slice(0,32)+'…' : '—';
-  populateContractSelect();
+  renderContractsMiniTable();
 }
 
 function loadProfile() {
@@ -1766,11 +1763,6 @@ document.getElementById('btn-copy-priv').addEventListener('click', () => {
     if (key) clipCopy(key, document.getElementById('btn-copy-priv'), 'skopiowano 🔐');
     else { document.getElementById('btn-copy-priv').textContent = '✗ błąd'; setTimeout(() => { document.getElementById('btn-copy-priv').textContent = '🔐'; }, 2000); }
   }, 'Kopiuj Priv Key', 'potwierdź PIN aby odszyfrować i skopiować klucz prywatny');
-});
-
-document.getElementById('btn-copy-contract-profile').addEventListener('click', () => {
-  const sel = document.getElementById('pr-contract-select');
-  clipCopy(sel ? sel.value : '', document.getElementById('btn-copy-contract-profile'));
 });
 
 // ── GENERATE KEYS ─────────────────────────────────────────

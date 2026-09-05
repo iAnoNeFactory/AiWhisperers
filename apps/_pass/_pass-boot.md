@@ -1,7 +1,7 @@
 # _pass-boot · AiWPass + AiWVerify · Knowledge Bootstrap
 
 Plik wiedzy dla modeli AI. Wczytaj zamiast przeglądania kodu HTML.
-Źródło: `AiWPass.html` v4.3 · `AiWVerify.html` v2.0 · sesja 2026-09-05 · lista modeli w apps/_pass/models.json
+Źródło: `AiWPass.html` v4.4 · `AiWVerify.html` v2.0 · sesja 2026-09-05 · lista modeli w apps/_pass/models.json
 
 ---
 
@@ -844,7 +844,7 @@ kontrakty z realną wartością `version` weryfikują się identycznie jak przed
 ## Proweniencja
 
 ```
-artefakt    · AiWPass.html v4.3 + AiWVerify.html v2.0
+artefakt    · AiWPass.html v4.4 + AiWVerify.html v2.0
 operator    · Denis Czuliński · AI Whispers · iFactory 5.0
 model       · Claude · Sonnet 4.6 · Anthropic
 inauguracja · marzec 2026
@@ -856,6 +856,11 @@ AiWPass nie był planowany jako taki. Każda warstwa (kontrakt → profil → ce
 ---
 
 ## Changelog
+
+### v4.4 · 2026-09-05
+- Profil → wiersz „Contract": `<select>` + przycisk kopiuj zastąpione małą tabelką tylko-do-odczytu (`#pr-contracts-table`, `renderContractsMiniTable()`) — model · wersja · data, bez wyboru i bez kopiowania
+- Select udawał wybór, ale nic z niego nie wynikało (`currentSha` zawsze `''`) — czysty podgląd listy w przebraniu formularza. Pełny szczegół (SHA, weryfikacja) i tak już istnieje w Kontrakt → Archiwum
+- Usunięto martwe już `.pb-select` (nieużywane po zmianie)
 
 ### v4.3 · 2026-09-05
 - Selektor modelu w Kontrakcie: siatka przycisków (`model-btn`/`version-btn`) → `<select>` + ręczny `<input>` (pierwszeństwo, gdy niepusty)
