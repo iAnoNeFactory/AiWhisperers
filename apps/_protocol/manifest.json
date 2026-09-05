@@ -1,8 +1,8 @@
 {
   "id": "_protocol",
   "name": "Protocol · Manifest & Protokół Połączeń ⟁",
-  "version": "1.0",
-  "date": "2026-05-02",
+  "version": "1.2",
+  "date": "2026-09-05",
   "description": "Meta-moduł dokumentujący konwencję manifest.json wszystkich modułów AiWhisperers oraz protokół połączeń artefakt↔backend: REST polling, WebSocket (AiWConnector, ConnectionManager), typy komunikatów (BROADCAST_SIGNAL, STATE_UPDATE, TASK_READY, ACTION).",
   "type": "protocol-schema",
   "status": "active",
@@ -32,8 +32,8 @@
     "docs": "",
     "components": [],
     "bootstrap": "_protocol-boot.md",
-    "bootstrap_sha": "cd2cd84556bb8a3c9ef9f4eb233ca47b3f472059faa0e4b339dd51c0683a1e5f",
-    "entry_sha": "7c49094efe50859bae4cb19c7fbdf2df646362435b394c19ef41f717f86485aa",
+    "bootstrap_sha": "f09cdc7163aaceb470f6a1a4363f7546ad33b670c1603c63363d9acd2d3b147b",
+    "entry_sha": "20a4dd34234e8fafd333877b3194bcc5703b94c9cb5242e711e1552bdaa5fe67",
     "docs_sha": ""
   },
   "runtime": {

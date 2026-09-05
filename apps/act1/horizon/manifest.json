@@ -64,7 +64,7 @@
   "runtime": {
     "data_path": "",
     "io": [],
-    "port": 8004,
+    "port": 0,
     "consumers": [
       "human",
       "ai"

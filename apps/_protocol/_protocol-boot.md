@@ -1,15 +1,17 @@
 # _protocol-boot · AiWhisperers Protocol & Manifest
 
 Esencja wiedzy dla modelu AI. Wczytaj ten plik zamiast AiWProtocol.html.
-Źródło: AiWProtocol.html v1.0 · sesja: Wyrównanie Protokołu · 2026-05-02
+Źródło: AiWProtocol.html v1.2 · sesja: 2026-09-05 · oznaczenie sekcji Backend jako planowanej, niewdrożonej
 
 ---
 
 ## Czym jest ten moduł
 
 `_protocol` to meta-moduł dokumentujący dwie rzeczy:
-1. **Schemat manifest.json** — paszport każdego modułu w ekosystemie AiWhisperers
-2. **Protokół połączeń artefakt↔backend** — REST polling i WebSocket
+1. **Schemat manifest.json** — paszport każdego modułu w ekosystemie AiWhisperers. **Wdrożone, obowiązujące dziś.**
+2. **Protokół połączeń artefakt↔backend** — REST polling i WebSocket. **Planowane, niewdrożone** — patrz uwaga
+   w sekcji „Protokół połączeń — Backend" niżej. W repo nie ma katalogu `engines/`, `.data/` ani jednej linijki
+   FastAPI — wszystkie 24 manifesty mają `port: 0`. To specyfikacja architektury docelowej, nie opis działającego systemu.
 
 ---
 
@@ -49,7 +51,7 @@ Każdy moduł ma `apps/<id>/manifest.json`. Pola wymagane:
   },
 
   "runtime": {
-    "data_path":      ".data/<id>/",
+    "data_path":      "data/<id>/",
     "io":             ["read", "write"],
     "port":           8001,
     "consumers":      ["human", "ai"],
@@ -71,7 +73,8 @@ Każdy moduł ma `apps/<id>/manifest.json`. Pola wymagane:
 - **Puste wartości**: `""`, `[]`, `{"path": "", "port": 0}` — nigdy `null`
 - **`files.backend`** pusty: `{"path": "", "port": 0}`
 - **`files.bootstrap`** pusty: `""`
-- **`runtime.port`**: `0` = tryb demo (mocki), `>0` = produkcja (FastAPI)
+- **`runtime.port`**: `0` = tryb demo (mocki), `>0` = produkcja (FastAPI — dziś planowana, żaden manifest jeszcze nie ma `>0`)
+- **`runtime.data_path`**: dziś, w praktyce, realny katalog to `data/<id>/` (bez kropki — to jest to, co istnieje na dysku). `.data/<id>/` z przykładu wyżej to architektura docelowa opisana w sekcji „Protokół połączeń — Backend" (niewdrożona) — nie migruj istniejących manifestów na `.data/`, dopóki backend faktycznie nie powstanie
 - **Meta-moduły** (prefiks `_`): `_schema`, `_protocol`, `_pass`, `_boot`, `_quick`
 - **`files.bootstrap`**: plik `.md` z esencją wiedzy dla AI. Konwencja nazwy: `<id>-boot.md`
 - **`files.entry_sha`**: SHA-256 (hex64) pliku `entry` (HTML artefaktu). Pusty string `""` gdy plik nie istnieje na dysku.
@@ -230,6 +233,15 @@ Dla prostych operacji preferuj REST POST. ACTION dla poleceń wymagających szyb
 
 ## Protokół połączeń — Backend (FastAPI)
 
+> **Planowane, niewdrożone (stan 2026-09-05).** Cała ta sekcja — `engines/`, `.data/`,
+> ConnectionManager, endpointy REST/WS — opisuje architekturę docelową dla modułów, które kiedyś
+> dostaną `port > 0`. W repo nie istnieje katalog `engines/` ani jedna linijka FastAPI; realny
+> katalog danych to `data/` (bez kropki, patrz `_boot-boot.md`), nie `.data/`. `.logs/` jest
+> jedynym elementem, który faktycznie istnieje — jako puste, nieużywane katalogi (`caves`,
+> `growup`, `horizon`, `ihub`, `moprh`, `workspace`) sprzed obecnej listy modułów, nie aktywne
+> logi. Traktuj kod niżej jako specyfikację do zaimplementowania, nie dokumentację czegoś,
+> co już działa.
+
 ### Dwie topologie — identyczny kod
 
 **Topologia A — dedykowany port per moduł** (domyślna konwencja):
@@ -340,14 +352,24 @@ Silnik odczytuje dane ze ścieżki `../../.data/<id>/` — nigdy nie trzyma dany
 - Silent fail wszędzie — użytkownik nigdy nie widzi błędu połączenia
 - `getMock()` zawsze zdefiniowane — animacja działa bez backendu
 - CORS `allow_origins=["*"]` na dev, zaostrzyć w produkcji
-- Dane poza kodem — zasada lustrzana: `apps/` ↔ `engines/` ↔ `.data/` ↔ `.logs/`
+- Dane poza kodem — zasada lustrzana docelowa: `apps/` ↔ `engines/` ↔ `.data/` ↔ `.logs/` (planowane — dziś tylko `apps/` i `data/` istnieją, patrz banner w sekcji Backend)
 
 ---
 
 ## Changelog
 
-### v1.0 · 2026-05-02
-- Pierwsza wersja MD — wyekstrahowana z AiWProtocol.html v1.0
+### v1.2 · 2026-09-05
+- Oznaczono sekcję „Protokół połączeń — Backend (FastAPI)" jako planowaną, niewdrożoną — w repo
+  nie ma `engines/`, `.data/` ani kodu FastAPI; wszystkie 24 manifesty mają `port: 0`
+- `data_path` w przykładzie schematu i w konwencjach: `.data/<id>/` → `data/<id>/` (realny katalog
+  na dysku, bez kropki) — `.data/` zostaje jako opis architektury docelowej, nie obecny stan
+- Sprostowano „zasadę lustrzaną" w Zasadach skrótowych — dziś istnieją tylko `apps/` i `data/`
+- Doprecyzowano status `.logs/`: istnieje, ale jako puste katalogi sprzed obecnej listy modułów
+  (`growup`, `ihub`, `moprh`), nie aktywne logowanie
+- Powiązane z porządkowaniem `_boot-boot.md` (v2.2, ta sama sesja) — ten sam rozjazd data/.data
+  występował w obu plikach niezależnie
+- Changelog odwrócony na newest-first (był rosnąco: v1.0 na górze, v1.1 na dole) — zgodnie
+  z konwencją pozostałych bootów (`_pass-boot.md`, `_verify-boot.md`, `_boot-boot.md`)
 
 ### v1.1 · 2026-05-09
 - `data/` → `.data/` w schemacie manifest.json
@@ -355,3 +377,6 @@ Silnik odczytuje dane ze ścieżki `../../.data/<id>/` — nigdy nie trzyma dany
 - Tabela portów rozszerzona do kanonicznej tabeli modułów Aktu I (ID, status, port, opis)
 - `soul` → `morph`, `tchnienie` → `breath`, usunięto `growup`
 - Aktualizacja `MODULE_ID` w przykładach
+
+### v1.0 · 2026-05-02
+- Pierwsza wersja MD — wyekstrahowana z AiWProtocol.html v1.0
