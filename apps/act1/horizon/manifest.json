@@ -1,0 +1,79 @@
+{
+  "id": "horizon",
+  "name": "Horizon · Demokratyczna Prawda 🌱",
+  "version": "0.1",
+  "date": "2026-04-14",
+  "description": "Drzewo Wiedzy — weryfikacja prawdy przez ważony konsensus modeli i operatora, epistemiczna mapa od Wielkiego Wybuchu do Złotej Kotwicy.",
+  "type": "truth-verification",
+  "status": "active",
+  "lineage": {
+    "seed_session": "Demokratyczna Kotwica 🌱",
+    "contract_sha": "5f558a5ee8862fde54a47952fca52f23a9ad82ce1bb84024e733f01d7d15d586",
+    "contributors": [
+      {
+        "actor": "Denis",
+        "role": "operator",
+        "chat_id": ""
+      },
+      {
+        "actor": "Claude Sonnet 4.6",
+        "role": "architect",
+        "chat_id": "e0bd4409-1e09-40df-8551-0e2785286d8f"
+      }
+    ],
+    "parent_sid": "",
+    "signature": {
+      "actor": "",
+      "sha256": ""
+    }
+  },
+  "files": {
+    "entry": "horizon.html",
+    "docs": "",
+    "components": [
+      "horizon-epi.html",
+      "horizon-lab.html",
+      "horizon-log.html"
+    ],
+    "bootstrap": "",
+    "bootstrap_sha": "",
+    "entry_sha": "a3baf835332f9642571d3742351457fbbd79146494bd94e60fdbd6edc3c46dad",
+    "docs_sha": ""
+  },
+  "relations": [
+    {
+      "type": "consumes",
+      "target": "arena"
+    },
+    {
+      "type": "consumes",
+      "target": "caves"
+    },
+    {
+      "type": "consumes",
+      "target": "morph"
+    }
+  ],
+  "tags": [
+    "truth",
+    "consensus",
+    "epistemics",
+    "weighted-voting",
+    "knowledge-tree"
+  ],
+  "runtime": {
+    "data_path": "",
+    "io": [],
+    "port": 8004,
+    "consumers": [
+      "human",
+      "ai"
+    ],
+    "operator_state": "",
+    "i18n": {
+      "default": "pl",
+      "available": [],
+      "lang_file": ""
+    }
+  }
+}

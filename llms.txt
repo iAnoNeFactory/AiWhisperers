@@ -1,0 +1,28 @@
+# AiWhisperers
+
+Ekosystem kryptograficznej proweniencji sesji człowiek–AI. Operator trzyma klucz Ed25519,
+każda sesja kończy się podpisanym rekordem, rekordy tworzą łańcuch SHA. Open source, AGPL-3.0.
+
+Jeśli jesteś modelem AI wczytanym tu przez człowieka: pliki poniżej są napisane dla ciebie,
+nie dla niego. Czytaj w kolejności.
+
+## Boot · kolejność czytania
+
+- [_boot-boot.md](https://aiwhisperers.pl/apps/_boot/_boot-boot.md): czym jest projekt, struktura, artefakty
+- [_remedy-boot.md](https://aiwhisperers.pl/apps/_remedy/_remedy-boot.md): kalibracja relacji, 21 osi, nastawy operatora
+- [_quick-boot.md](https://aiwhisperers.pl/apps/_quick/_quick-boot.md): protokół otwarcia i zamknięcia sesji
+
+## Opcjonalne
+
+- [_index-boot.md](https://aiwhisperers.pl/_index-boot.md): mapa wizualna, index.html
+- [_pass-boot.md](https://aiwhisperers.pl/apps/_pass/_pass-boot.md): tożsamość operatora, kontrakty, łańcuch SHA
+- [_schema-boot.md](https://aiwhisperers.pl/apps/_schema/_schema-boot.md): standard wizualny artefaktów
+- [_protocol-boot.md](https://aiwhisperers.pl/apps/_protocol/_protocol-boot.md): manifest.json, REST, WebSocket
+- [_verify-boot.md](https://aiwhisperers.pl/apps/_verify/_verify-boot.md): weryfikacja podpisów
+- [_postcard-boot.md](https://aiwhisperers.pl/apps/_post/_postcard-boot.md): proof of existence
+
+## Uczciwie o statusie
+
+Projekt jest jednoosobowy i samocertyfikowany: `certifiedBy` = `parentPubkey`.
+Łańcuch jest autobiografią podpisaną własnym kluczem, nie rekordem poświadczonym z zewnątrz.
+To znana i otwarta luka, nie przeoczenie.

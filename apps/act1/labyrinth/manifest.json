@@ -28,12 +28,12 @@
     }
   },
   "files": {
-    "entry": "labirynt.html",
+    "entry": "labyrinth.html",
     "docs": "",
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "",
+    "entry_sha": "a9cc01280d079c4e642ef222e947a22a4af95ad105fe051a67b0f04687b94bfc",
     "docs_sha": ""
   },
   "relations": [

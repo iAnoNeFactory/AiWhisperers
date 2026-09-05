@@ -28,12 +28,12 @@
     }
   },
   "files": {
-    "entry": "kompas.html",
+    "entry": "compas.html",
     "docs": "",
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "",
+    "entry_sha": "6255ed407c1a557b2883f98fb9cac4ff50608c4afe73d464c8a1efc017969132",
     "docs_sha": ""
   },
   "relations": [

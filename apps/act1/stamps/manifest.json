@@ -23,12 +23,12 @@
     }
   },
   "files": {
-    "entry": "index.html",
+    "entry": "stamps.html",
     "docs": "",
     "components": [],
     "bootstrap": "",
     "bootstrap_sha": "",
-    "entry_sha": "",
+    "entry_sha": "340eeb1b4cc6af589c8870c55e28ce571a4075d3d9c730d47a3e4c4253780799",
     "docs_sha": ""
   },
   "relations": [
