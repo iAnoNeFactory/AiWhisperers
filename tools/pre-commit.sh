@@ -10,6 +10,10 @@ echo "→ Buduję indeks Wall (wstrzykuje resources/ do wall.html, offline-first
 python3 tools/build_wall_index.py
 git add resources/ apps/act1/wall/wall.html
 
+echo "→ Wstrzykuję listę modeli do AiWPass.html (offline-first)..."
+python3 tools/build_pass_models.py
+git add apps/_pass/AiWPass.html apps/_pass/models.json
+
 echo "→ Buduję sitemap.xml..."
 python3 tools/build_sitemap.py
 git add sitemap.xml

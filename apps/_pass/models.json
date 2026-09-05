@@ -1,0 +1,20 @@
+{
+  "_version": "aiw_pass_models_v1",
+  "updated": "2026-09-05",
+  "_readme": "Lista modeli do wyboru w AiWPass (selektor kontraktu). Edytuj bezpośrednio ten plik — tools/build_pass_models.py wstrzykuje go do AiWPass.html (script#models-data), tak jak build_wall_index.py robi to dla Wall. Świadomie bez pola 'version': nazwy generacji (np. Fable 5 → Fable 5.1 w ciągu tygodni) starzeją się szybciej niż ten plik jest edytowany — operator wpisuje wersję ręcznie w kontrakcie, jeśli chce ją zapisać.",
+  "models": [
+    { "name": "Claude",    "provider": "Anthropic",   "color": "rgba(255,165,80,.85)" },
+    { "name": "GPT",       "provider": "OpenAI",      "color": "rgba(140,160,255,.85)" },
+    { "name": "Gemini",    "provider": "Google",      "color": "rgba(80,210,200,.85)" },
+    { "name": "Grok",      "provider": "xAI",         "color": "rgba(0,220,255,.85)" },
+    { "name": "Copilot",   "provider": "Microsoft",   "color": "rgba(80,140,255,.85)" },
+    { "name": "Llama",     "provider": "Meta",        "color": "rgba(120,90,220,.85)" },
+    { "name": "Muse",      "provider": "Meta",        "color": "rgba(230,90,180,.85)" },
+    { "name": "Mistral",   "provider": "Mistral AI",  "color": "rgba(230,120,60,.85)" },
+    { "name": "DeepSeek",  "provider": "DeepSeek",    "color": "rgba(40,110,220,.85)" },
+    { "name": "Qwen",      "provider": "Alibaba",     "color": "rgba(220,80,60,.85)" },
+    { "name": "Nova",      "provider": "Amazon",      "color": "rgba(255,180,50,.85)" },
+    { "name": "Command",   "provider": "Cohere",      "color": "rgba(255,110,110,.85)" },
+    { "name": "Sonar",     "provider": "Perplexity",  "color": "rgba(90,150,220,.85)" }
+  ]
+}

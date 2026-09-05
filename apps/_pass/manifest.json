@@ -1,8 +1,8 @@
 {
   "id": "_pass",
   "name": "AiWPass · Paszport Operatora 🔑",
-  "version": "4.2",
-  "date": "2026-08-23",
+  "version": "4.3",
+  "date": "2026-09-05",
   "description": "Kryptograficzna tożsamość operatora — kontrakty, profil Ed25519, certyfikacja, łańcuch proweniencji, nastawy (tune) z AiWRemedy. Para z AiWVerify.",
   "type": "standalone",
   "status": "active",
@@ -37,8 +37,8 @@
     "docs": "",
     "components": [],
     "bootstrap": "_pass-boot.md",
-    "bootstrap_sha": "b2bdff7b598afd7b0b987f545828fa2b14a46ef0e43ec5f9254fdd25b8dcabca",
-    "entry_sha": "8ae1841756300a17c43c5302e9ec5867d74a6c0b5cfb41ee9a20b002600c6cdf",
+    "bootstrap_sha": "8f381eb4233d25465d190264a5eb79624bd4e35f0b061ea11de0078fb8370f14",
+    "entry_sha": "cdc2f89ba16de3e95ca2f9044c786e482eece0f0f304542957dc1f0ff0510171",
     "docs_sha": ""
   },
   "runtime": {

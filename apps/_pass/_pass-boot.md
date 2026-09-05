@@ -1,7 +1,7 @@
 # _pass-boot · AiWPass + AiWVerify · Knowledge Bootstrap
 
 Plik wiedzy dla modeli AI. Wczytaj zamiast przeglądania kodu HTML.
-Źródło: `AiWPass.html` v4.2 · `AiWVerify.html` v2.0 · sesja 2026-08-23 · most do AiWRemedy v2.2 (nastawy)
+Źródło: `AiWPass.html` v4.3 · `AiWVerify.html` v2.0 · sesja 2026-09-05 · lista modeli w apps/_pass/models.json
 
 ---
 
@@ -796,22 +796,55 @@ const CONTRACTS_KEY = 'aiw_contracts_v1';
 const TUNE_KEY       = 'aiw_tune_v1';       // nastawy z AiWRemedy v2.2
 const PIN_KEY       = 'aiw_pin_v1';
 
-// Models selector
+// Models selector — MODELS zbudowane w runtime z #models-data (patrz niżej),
+// nie z literału w kodzie
 const MODELS = {
-  Claude:  { provider: 'Anthropic', versions: ['claude-opus-4-7', 'claude-sonnet-4-6', ...] },
-  GPT:     { provider: 'OpenAI',    versions: ['gpt-4o', 'gpt-4o-mini', 'o1', ...] },
-  Gemini:  { provider: 'Google',    versions: ['gemini-2.0-flash', 'gemini-2.0-pro', ...] },
-  Grok:    { provider: 'xAI',       versions: ['grok-3', 'grok-3-mini', ...] },
-  Copilot: { provider: 'Microsoft', versions: ['copilot-gpt-4o', 'copilot-gpt-4', ...] }
+  Claude:  { provider: 'Anthropic', color: 'rgba(255,165,80,.85)' },
+  GPT:     { provider: 'OpenAI',    color: 'rgba(140,160,255,.85)' },
+  Gemini:  { provider: 'Google',    color: 'rgba(80,210,200,.85)' },
+  // ...reszta z apps/_pass/models.json
 };
 ```
+
+### Lista modeli · apps/_pass/models.json (v4.3)
+
+Od v4.3 selektor modelu w Kontrakcie to `<select>` (lista) + `<input>` (ręczny wpis, ma
+pierwszeństwo gdy niepusty) zamiast siatki przycisków. Lista modeli **nie jest** wpisana
+w kod AiWPass.html — mieszka w `apps/_pass/models.json` obok niego:
+
+```json
+{
+  "_version": "aiw_pass_models_v1",
+  "models": [
+    { "name": "Claude", "provider": "Anthropic", "color": "rgba(255,165,80,.85)" },
+    ...
+  ]
+}
+```
+
+`tools/build_pass_models.py` wstrzykuje treść tego pliku do `<script id="models-data"
+type="application/json">` w AiWPass.html — ten sam wzorzec offline-first co `#wall-data`
+w `wall.html` (build_wall_index.py): artefakt zostaje samodzielny (bez `fetch()`, działa
+przez `file://`), a operator edytuje tylko `models.json`, nigdy HTML. Uruchamiane
+automatycznie przez pre-commit hook.
+
+**Świadomie bez pola `version` w models.json.** Nazwy generacji modeli starzeją się szybciej
+niż ten plik jest edytowany (np. „Fable 5" → „Fable 5.1" w ciągu tygodni) — stąd lista
+zawiera tylko nazwę linii/rodziny (`Claude`, `GPT`, `Muse`, ...), nigdy numer wersji. Pole
+„wersja / detal" w formularzu kontraktu to zwykły tekst wpisywany ręcznie przez operatora,
+jeśli w ogóle chce go zapisać — nie ma osobnej utrzymywanej listy wersji per model
+(usunięte w v4.3, wcześniej `MODELS[name].versions`).
+
+Format kontraktu (`operator, model, version, date, pubkey, ...`) się nie zmienił — `version`
+zostaje po prostu pustym stringiem, gdy operator go nie wypełni. Stare zapieczętowane
+kontrakty z realną wartością `version` weryfikują się identycznie jak przed v4.3.
 
 ---
 
 ## Proweniencja
 
 ```
-artefakt    · AiWPass.html v4.2 + AiWVerify.html v2.0
+artefakt    · AiWPass.html v4.3 + AiWVerify.html v2.0
 operator    · Denis Czuliński · AI Whispers · iFactory 5.0
 model       · Claude · Sonnet 4.6 · Anthropic
 inauguracja · marzec 2026
@@ -823,6 +856,13 @@ AiWPass nie był planowany jako taki. Każda warstwa (kontrakt → profil → ce
 ---
 
 ## Changelog
+
+### v4.3 · 2026-09-05
+- Selektor modelu w Kontrakcie: siatka przycisków (`model-btn`/`version-btn`) → `<select>` + ręczny `<input>` (pierwszeństwo, gdy niepusty)
+- Lista modeli wyniesiona z kodu do `apps/_pass/models.json`, wstrzykiwana do `#models-data` przez nowy `tools/build_pass_models.py` (offline-first, jak `#wall-data`/`build_wall_index.py`) — operator edytuje tylko JSON
+- Usunięto utrzymywaną per-model listę wersji (`MODELS[name].versions`, konkretne slugi typu `claude-sonnet-4-6`) — starzały się szybciej niż plik był aktualizowany. Pole „wersja / detal" to teraz zwykły ręczny tekst
+- Lista modeli rozszerzona o Llama/Muse (Meta), Mistral, DeepSeek, Qwen (Alibaba), Nova (Amazon), Command (Cohere), Sonar (Perplexity) — obok Claude/GPT/Gemini/Grok/Copilot
+- Format kontraktu bez zmian — `version` bywa teraz pustym stringiem zamiast zawsze wypełnionym, stare podpisy weryfikują się jak dotychczas
 
 ### v4.2 · 2026-08-23
 - **Nastawy (tune)** — AiWPass przechowuje i eksportuje tune JSON z AiWRemedy v2.2 (`aiw_tune_v1`, klucz `aiw_tune_v1` w localStorage, osobny od profilu)

@@ -78,17 +78,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .anchor-val.pending{color:var(--ink-faint);font-style:italic;}
 .anchor-val.ready{color:var(--gold);animation:pulse-gold 2s ease infinite;}
 
-/* ── MODEL SELECTOR ── */
-.model-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
-.model-btn{background:rgba(4,5,12,.9);border:1px solid rgba(240,232,216,.07);color:rgba(240,232,216,.25);font-family:var(--mono);font-size:7.5px;letter-spacing:.25em;text-transform:uppercase;padding:9px 12px;cursor:pointer;transition:all .22s;flex:1;min-width:72px;text-align:center;line-height:1;}
-.model-btn:hover{border-color:rgba(232,200,120,.3);color:var(--gold-d);}
-.model-btn.active{color:var(--gold);background:rgba(232,200,120,.06);}
-
-/* ── VERSION BUTTONS ── */
-#version-selector{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;min-height:0;transition:opacity .2s;}
-.version-btn{background:rgba(4,5,12,.9);border:1px solid rgba(240,232,216,.06);color:rgba(240,232,216,.2);font-family:var(--mono);font-size:6.5px;letter-spacing:.1em;padding:6px 10px;cursor:pointer;transition:all .2s;line-height:1;white-space:nowrap;}
-.version-btn:hover{border-color:rgba(232,200,120,.22);color:var(--gold-d);}
-.version-btn.active{background:rgba(7,8,15,.8);}
+/* ── MODEL PICKER ── */
+.model-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.model-dot{width:7px;height:7px;border-radius:50%;background:var(--gold-d);flex:0 0 auto;transition:background .2s;}
+.model-select,.model-manual,.model-version-input{background:rgba(4,5,12,.9);border:1px solid rgba(240,232,216,.07);color:rgba(240,232,216,.6);font-family:var(--mono);font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;padding:9px 12px;cursor:text;transition:all .22s;flex:1;min-width:120px;line-height:1;outline:none;}
+.model-select{cursor:pointer;color:var(--gold);}
+.model-select option{background:var(--bg2);color:var(--ink);text-transform:none;letter-spacing:0;}
+.model-manual::placeholder,.model-version-input::placeholder{color:rgba(240,232,216,.2);font-style:normal;text-transform:none;letter-spacing:.05em;}
+.model-select:focus,.model-manual:focus,.model-version-input:focus{border-color:rgba(232,200,120,.3);}
+.model-version-input{width:100%;margin-top:0;}
 
 /* ── CONTRACT PAGE (unified) ── */
 .contract-page{border:1px solid rgba(232,200,120,.1);background:rgba(7,8,15,.5);margin-bottom:28px;position:relative;}
@@ -194,7 +192,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 @keyframes pulse-gold{0%,100%{opacity:1;}50%{opacity:.4;}}
 
-@media(max-width:580px){.stats-grid{grid-template-columns:1fr 1fr;}.models-grid{grid-template-columns:1fr 1fr;}.model-btn{font-size:6.5px;padding:8px 8px;}}
+@media(max-width:580px){.stats-grid{grid-template-columns:1fr 1fr;}.models-grid{grid-template-columns:1fr 1fr;}.model-select,.model-manual,.model-version-input{font-size:6.5px;padding:8px 8px;}}
 
 /* ── KEY BACKUP OVERLAY ── */
 #overlay-key-backup .panel{width:min(760px,96vw);overflow:hidden;}
@@ -276,8 +274,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- MODEL SELECTOR -->
   <div style="margin-bottom:28px;">
     <div class="section-label">· Strona kontraktu</div>
-    <div class="model-selector" id="model-selector"></div>
-    <div id="version-selector"></div>
+    <div class="model-picker">
+      <span class="model-dot" id="model-dot"></span>
+      <select class="model-select" id="model-select"></select>
+      <input class="model-manual" id="model-manual" type="text" placeholder="lub wpisz nazwę ręcznie…" autocomplete="off"/>
+    </div>
+    <input class="model-version-input" id="model-version" type="text" placeholder="wersja / detal (opcjonalnie) — np. Sonnet 4.6" autocomplete="off"/>
   </div>
 
   <!-- CONTRACT PAGE — unified document -->
@@ -774,68 +776,34 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <footer class="hud-bot">
-  <span class="hud-bot-meta">AiWPass · v4.2 · Claude Sonnet 4.6 · Claude Opus 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
+  <span class="hud-bot-meta">AiWPass · v4.3 · Claude Sonnet 4.6 · Claude Opus 5 · © Denis Czuliński · iFactory5.0 · 2026</span>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script id="models-data" type="application/json">{"_version": "aiw_pass_models_v1", "updated": "2026-09-05", "_readme": "Lista modeli do wyboru w AiWPass (selektor kontraktu). Edytuj bezpośrednio ten plik — tools/build_pass_models.py wstrzykuje go do AiWPass.html (script#models-data), tak jak build_wall_index.py robi to dla Wall. Świadomie bez pola 'version': nazwy generacji (np. Fable 5 → Fable 5.1 w ciągu tygodni) starzeją się szybciej niż ten plik jest edytowany — operator wpisuje wersję ręcznie w kontrakcie, jeśli chce ją zapisać.", "models": [{"name": "Claude", "provider": "Anthropic", "color": "rgba(255,165,80,.85)"}, {"name": "GPT", "provider": "OpenAI", "color": "rgba(140,160,255,.85)"}, {"name": "Gemini", "provider": "Google", "color": "rgba(80,210,200,.85)"}, {"name": "Grok", "provider": "xAI", "color": "rgba(0,220,255,.85)"}, {"name": "Copilot", "provider": "Microsoft", "color": "rgba(80,140,255,.85)"}, {"name": "Llama", "provider": "Meta", "color": "rgba(120,90,220,.85)"}, {"name": "Muse", "provider": "Meta", "color": "rgba(230,90,180,.85)"}, {"name": "Mistral", "provider": "Mistral AI", "color": "rgba(230,120,60,.85)"}, {"name": "DeepSeek", "provider": "DeepSeek", "color": "rgba(40,110,220,.85)"}, {"name": "Qwen", "provider": "Alibaba", "color": "rgba(220,80,60,.85)"}, {"name": "Nova", "provider": "Amazon", "color": "rgba(255,180,50,.85)"}, {"name": "Command", "provider": "Cohere", "color": "rgba(255,110,110,.85)"}, {"name": "Sonar", "provider": "Perplexity", "color": "rgba(90,150,220,.85)"}]}</script>
 <script>
 // ════════════════════════════════════════════════════════════
-//  AiWPass · v4.2 · AiWhisperers
+//  AiWPass · v4.3 · AiWhisperers
 // ════════════════════════════════════════════════════════════
 
 // ── MODELS DICT ──────────────────────────────────────────
-const MODELS = {
-  Claude: {
-    provider: 'Anthropic',
-    color: 'rgba(255,165,80,.85)',
-    versions: [
-      'claude-fable-5',
-      'claude-opus-4-7',
-      'claude-sonnet-4-6',
-      'claude-haiku-4-5-20251001'
-    ]
-  },
-  GPT: {
-    provider: 'OpenAI',
-    color: 'rgba(140,160,255,.85)',
-    versions: [
-      'gpt-4o',
-      'gpt-4o-mini',
-      'o1',
-      'o3',
-      'gpt-4-turbo'
-    ]
-  },
-  Gemini: {
-    provider: 'Google',
-    color: 'rgba(80,210,200,.85)',
-    versions: [
-      'gemini-2.0-flash',
-      'gemini-2.0-pro',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash'
-    ]
-  },
-  Grok: {
-    provider: 'xAI',
-    color: 'rgba(0,220,255,.85)',
-    versions: [
-      'grok-3',
-      'grok-3-mini',
-      'grok-2',
-      'grok-1'
-    ]
-  },
-  Copilot: {
-    provider: 'Microsoft',
-    color: 'rgba(80,140,255,.85)',
-    versions: [
-      'copilot-gpt-4o',
-      'copilot-gpt-4',
-      'github-copilot-4.1'
-    ]
+// Źródło: apps/_pass/models.json → wstrzykiwane przez tools/build_pass_models.py
+// do #models-data (offline-first, jak #wall-data w wall.html — działa przez
+// file:// bez fetch()). Świadomie bez pola "version": nazwy generacji (np.
+// Fable 5 → Fable 5.1) starzeją się szybciej niż ta lista jest edytowana —
+// operator wpisuje wersję ręcznie w polu "wersja / detal" w kontrakcie.
+const MODELS = (() => {
+  const fallback = { Claude: { provider: 'Anthropic', color: 'rgba(255,165,80,.85)' } };
+  try {
+    const raw = document.getElementById('models-data')?.textContent.trim();
+    const data = JSON.parse(raw);
+    const out = {};
+    (data.models || []).forEach(m => { out[m.name] = { provider: m.provider, color: m.color }; });
+    return Object.keys(out).length ? out : fallback;
+  } catch (e) {
+    return fallback;
   }
-};
+})();
 
 // ── STORAGE KEYS ─────────────────────────────────────────
 const PK            = 'aiw_profile_v1';
@@ -1086,61 +1054,46 @@ function renderWarunki() {
     .join('');
 }
 
-// ── MODEL SELECTOR ────────────────────────────────────────
-function initModelButtons() {
-  const container = document.getElementById('model-selector');
-  if (!container) return;
-  container.innerHTML = '';
-  Object.keys(MODELS).forEach(name => {
-    const btn = document.createElement('button');
-    btn.className = 'model-btn';
-    btn.dataset.model = name;
-    btn.textContent = name.toUpperCase();
-    btn.addEventListener('click', () => setActiveModel(name));
-    container.appendChild(btn);
-  });
+// ── MODEL PICKER ──────────────────────────────────────────
+// Wybór z listy (MODELS, wstrzyknięte z models.json) ALBO ręczny wpis —
+// ręczny wpis, gdy niepusty, ma pierwszeństwo nad selectem. "Wersja / detal"
+// to zwykłe pole tekstowe: brak utrzymywanej listy konkretnych wersji,
+// operator wpisuje ją sam, jeśli w ogóle chce ją zapisać (patrz komentarz
+// przy MODELS wyżej).
+function initModelPicker() {
+  const select = document.getElementById('model-select');
+  const manual = document.getElementById('model-manual');
+  const versionInput = document.getElementById('model-version');
+  if (!select) return;
+
+  select.innerHTML = Object.keys(MODELS).map(name =>
+    `<option value="${name}">${name.toUpperCase()} · ${MODELS[name].provider}</option>`
+  ).join('');
+
+  const applyModel = () => {
+    const manualVal = manual.value.trim();
+    setActiveModel(manualVal || select.value);
+  };
+
+  select.addEventListener('change', () => { manual.value = ''; applyModel(); });
+  manual.addEventListener('input', applyModel);
+  versionInput.addEventListener('input', () => setActiveVersion(versionInput.value.trim()));
+
+  applyModel();
 }
 
 function setActiveVersion(version) {
   activeVersion = version;
-  document.querySelectorAll('.version-btn').forEach(btn => {
-    const on = btn.dataset.version === version;
-    btn.classList.toggle('active', on);
-    const color = MODELS[activeModel]?.color || '';
-    btn.style.borderColor = on ? color : '';
-    btn.style.color = on ? color : '';
-  });
   updateAnchorModelFields();
   updateSealButtonState();
 }
 
-function populateVersionButtons(modelName) {
-  const container = document.getElementById('version-selector');
-  if (!container) return;
-  container.innerHTML = '';
-  const versions = MODELS[modelName]?.versions || [];
-  versions.forEach(v => {
-    const btn = document.createElement('button');
-    btn.className = 'version-btn';
-    btn.dataset.version = v;
-    btn.textContent = v;
-    btn.addEventListener('click', () => setActiveVersion(v));
-    container.appendChild(btn);
-  });
-  if (versions.length) setActiveVersion(versions[0]);
-}
-
 function setActiveModel(name) {
   activeModel = name;
-  document.querySelectorAll('.model-btn').forEach(btn => {
-    const on = btn.dataset.model === name;
-    btn.classList.toggle('active', on);
-    const color = MODELS[name]?.color || '';
-    btn.style.borderColor = on ? color : '';
-    btn.style.color = on ? color : '';
-    btn.style.background = on ? 'rgba(7,8,15,.8)' : '';
-  });
-  populateVersionButtons(name);
+  const dot = document.getElementById('model-dot');
+  if (dot) dot.style.background = MODELS[name]?.color || 'var(--gold-d)';
+  updateAnchorModelFields();
+  updateSealButtonState();
 }
 
 function updateSealButtonState() {
@@ -1568,7 +1521,7 @@ function populateContractSelect() {
   contracts.slice().reverse().forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.sha256 || '';
-    opt.textContent = `${c.model} · ${c.version} · ${c.date}`;
+    opt.textContent = `${c.model}${c.version ? ' · ' + c.version : ''} · ${c.date}`;
     sel.appendChild(opt);
   });
   sel.value = currentSha;
@@ -2440,7 +2393,7 @@ document.getElementById('btn-backup-png').addEventListener('click', async functi
 // ── INIT ──────────────────────────────────────────────────
 renderDeclaration();
 renderWarunki();
-initModelButtons();
+initModelPicker();
 loadProfile();
 setActiveModel('Claude');
 syncContractAnchor();
