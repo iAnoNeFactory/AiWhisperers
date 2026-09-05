@@ -1,46 +1,10 @@
+# AiWhisperers · https://aiwhisperers.pl
+# Projekt otwarty w całości. Wszystko, co jest w repo, jest publiczne z założenia —
+# proweniencja bez jawności nie jest proweniencją.
+
 User-agent: *
 Allow: /
-Allow: /apps/
-Allow: /apps/act1/
 
-# --- AI crawlers ---
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-User-agent: meta-externalagent
-Allow: /
-
-# --- Search engines ---
-
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Applebot
-Allow: /
-
-User-agent: CCBot
-Allow: /
+# Mapa dla modeli AI: /llms.txt
 
 Sitemap: https://aiwhisperers.pl/sitemap.xml
