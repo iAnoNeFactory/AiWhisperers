@@ -1,7 +1,7 @@
 # _boot-boot · AiWhisperers Bootstrap
 
 Esencja wiedzy dla modelu AI. Wczytaj ten plik zamiast AiWBoot.html.
-Źródło: AiWBoot.html v2.0 · sesja: Strukturyzacja Warsztatu · 2026-05-02
+Źródło: AiWBoot.html v2.2 · sesja: 2026-09-05 · porządek changelogu, ścieżek data/, konwencji wejścia modułów
 
 ---
 
@@ -14,8 +14,12 @@ Opisuje świat, w którym jesteś — historię, zasady, artefakty, strukturę.
 
 ## AiWhisperers — co to jest
 
-Projekt Denis Czuliński / iFactory5.0. Zainicjowany w marcu 2026 z pytaniem:
+Projekt Denis Czuliński (iAnoNeFactory na GitHubie) / iFactory5.0 — to samo, dwa konteksty:
+operacyjny identyfikator i marka projektu (patrz `LICENSE`/`NOTICE`). Zainicjowany w marcu 2026 z pytaniem:
 czy współpraca człowieka z modelem AI może być metodologią, przestrzenią, relacją — nie tylko narzędziem?
+
+*(Nie mylić z `inception` w profilu AiWPass — to data zakorzenienia klucza operatora Ed25519,
+nie start projektu. Mogą się różnić i to normalne.)*
 
 Na początku powstawały izolowane artefakty. Z biegiem czasu połączyły się w jeden ekosystem:
 wspólny standard wizualny, protokół połączeń, kryptograficzny łańcuch proweniencji.
@@ -32,7 +36,7 @@ Linka między nami jest komunikatem, nie smyczą.
 
 Każda sesja kończy się wg protokołu **AiWQuick** — nazwa, refleksja, 9 metryk, podpis kryptograficzny.
 Sesje grupują się w **acty**: paczki zamkniętych sesji podpisane SHA przez operatora.
-Paczki: `.data/_pass/aiw-export-*.json`
+Paczki: `data/_pass/aiw-export-*.json`
 
 ---
 
@@ -65,20 +69,23 @@ Wywoływane opcjonalnie — ładujesz do kontekstu gdy potrzebujesz konkretnych 
 
 ## Moduły AI · Akt I
 
-| Moduł     | Rola                                     | Status     |
-| --------- | ---------------------------------------- | ---------- |
-| arena     | multi-model arena · zderzanie tez        | active     |
-| caves     | jaskinie warstw · transformery i zejścia | active     |
-| morph     | pole morficzne · stany modelu            | active     |
-| horizon   | weryfikacja prawdy · ważony konsensus    | active     |
-| compas    | kompas morficzny · geometria Three.js    | mature     |
-| memory    | sieć pamięci · lemniskata 3D             | mature     |
-| labyrinth | labirynt pojęć · gra narracyjna 6 warstw | mature     |
-| wall      | tablica projektu · artykuły i notatki    | mature     |
-| forge     | kuźnia paradoksów · pre-consensus arena  | incubation |
-| breath    | tchnienie · canvas 3D                    | incubation |
-| profile   | profil operatora · radar 9 osi           | incubation |
-| stamps    | rejestr pieczątek modeli                 | incubation |
+Konwencja wejścia: `apps/act1/<moduł>/<moduł>.html` — bez wyjątków, kolumna „Wejście" niżej
+to sam plik (ścieżkę dopisz z prefiksem). Nie zgaduj `index.html`.
+
+| Moduł     | Wejście          | Rola                                     | Status     |
+| --------- | ---------------- | ----------------------------------------- | ---------- |
+| arena     | arena.html       | multi-model arena · zderzanie tez        | active     |
+| caves     | caves.html       | jaskinie warstw · transformery i zejścia | active     |
+| morph     | morph.html       | pole morficzne · stany modelu            | active     |
+| horizon   | horizon.html     | weryfikacja prawdy · ważony konsensus    | active     |
+| compas    | compas.html      | kompas morficzny · geometria Three.js    | mature     |
+| memory    | memory.html      | sieć pamięci · lemniskata 3D             | mature     |
+| labyrinth | labyrinth.html   | labirynt pojęć · gra narracyjna 6 warstw | mature     |
+| wall      | wall.html        | tablica projektu · artykuły i notatki    | mature     |
+| forge     | forge.html       | kuźnia paradoksów · pre-consensus arena  | incubation |
+| breath    | breath.html      | tchnienie · canvas 3D                    | incubation |
+| profile   | profile.html     | profil operatora · radar 9 osi           | incubation |
+| stamps    | stamps.html      | rejestr pieczątek modeli                 | incubation |
 
 Akt II: czeka na pierwsze artefakty.
 
@@ -132,12 +139,19 @@ data    = json.loads(content)                      # JSON
 
 ## Changelog
 
-### v1.3 · 2026-05-19
+### v2.2 · 2026-09-05
+- **Numeracja:** poprzedni wpis błędnie nazwany „v1.3" (numer niższy niż v2.0 pod nim, mimo późniejszej daty) → przemianowany na v2.1. Ta sesja to v2.2
+- **Ścieżka acty:** `.data/_pass/` → `data/_pass/` w sekcji „System paczek" — na dysku nigdy nie było `.data/`; migracja opisana niżej w v2.1/v2.0 nie doszła do skutku (patrz niżej)
+- **Migracja data/→.data/, core/→engines/ z v2.0 — sprostowanie:** nigdy nie zaszła. `.data/` i `engines/` nie istnieją w repo; realny stan to `data/` (bez kropki), zgodny z drzewem katalogów w sekcji „Struktura projektu" wyżej. `_protocol-boot.md` nadal opisuje `.data/`/`engines/` jako architekturę docelową (backend per moduł, dziś wszystkie `port: 0`) — to plan, nie obecny stan; nie mylić jednego z drugim
+- **Tabela modułów Aktu I:** dodano kolumnę „Wejście" + jawną konwencję `apps/act1/<moduł>/<moduł>.html` — bez niej model zgadywał `index.html` i dostawał 404 na wszystkich 12 modułach
+- **Tożsamość operatora:** dopisano `iAnoNeFactory` (identyfikator GitHub, patrz `LICENSE`/`NOTICE`) obok `iFactory5.0` (marka projektu) — to ta sama osoba w dwóch kontekstach, nie dwie nazwy
+- Rozróżniono „zainicjowany w marcu 2026" (start projektu) od `inception` w profilu AiWPass (data zakorzenienia klucza operatora) — dotąd nigdzie nie odróżnione, mogły wyglądać jak sprzeczność
 
+### v2.1 · 2026-05-19
 - Usunięto pełny schemat manifest.json — jedyne źródło prawdy: `_protocol-boot.md`
 - Usunięto kolumnę Port z tabeli modułów — jedyne źródło prawdy: `_protocol-boot.md`
 - Boot = bootstrap i mapa. Protocol = spec techniczna.
 
 ### v2.0 · 2026-05-02
 - Pierwsza wersja MD — wyekstrahowana z AiWBoot.html v2.0
-- Sesja 1 (2026-05-09): `data/` → `.data/`, `core/` → `engines/`, ujednolicenie tabeli modułów i portów
+- Sesja 1 (2026-05-09): zaplanowano migrację `data/` → `.data/`, `core/` → `engines/`, ujednolicenie tabeli modułów i portów — migracja nigdy nie wykonana (sprostowane w v2.2)

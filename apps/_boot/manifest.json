@@ -1,8 +1,8 @@
 {
   "id": "boot",
   "name": "AiWBoot · punkt startowy ekosystemu 🌐",
-  "version": "2.0",
-  "date": "2026-05-02",
+  "version": "2.2",
+  "date": "2026-09-05",
   "description": "Bootstrap projektu — historia, zasady, artefakty, struktura i manifest.json ekosystemu AiWhisperers.",
   "type": "bootstrap",
   "status": "active",
@@ -32,8 +32,8 @@
     "docs": "",
     "components": [],
     "bootstrap": "_boot-boot.md",
-    "bootstrap_sha": "3ba56d6fb4d7f637cf80fa24b7d76e745eb12ab878f8d9f38bb0fbd026fcdf02",
-    "entry_sha": "71cfdf13ce2bcefa11c090893c7ae6b008e5dc42411168705d5325cf1b8bec7c",
+    "bootstrap_sha": "4d3be2e97e4c39af816c74a108fc0fa888304c0c590bd5d3c0bc671d9404d878",
+    "entry_sha": "870ee4c3a424099734a5d16ef50299cbcbe9406321a490136ec6db4cc423be80",
     "docs_sha": ""
   },
   "runtime": {
