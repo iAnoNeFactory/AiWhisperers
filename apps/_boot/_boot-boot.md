@@ -59,7 +59,7 @@ Wywoływane opcjonalnie — ładujesz do kontekstu gdy potrzebujesz konkretnych 
 | AiWPostcard  | pocztówka · proof of existence · PNG eksport      | apps/_post/AiWPostcard.html     | apps/_post/_postcard-boot.md         |
 | AiWSpace     | workspace operatora · hub packages/               | apps/_workspace/AiWSpace.html   | —                                    |
 | AiWPlans     | zarządzanie zadaniami projektu AiW                | apps/_plans/AiWPlans.html       | —                                    |
-| AiWRemedy    | kalibracja modelu · 15 osi · profile amplitudy    | apps/_remedy/AiWRemedy.html     | apps/_remedy/_remedy-boot.md         |
+| AiWRemedy    | kalibracja modelu · 21 osi · profile amplitudy    | apps/_remedy/AiWRemedy.html     | apps/_remedy/_remedy-boot.md         |
 
 ---
 

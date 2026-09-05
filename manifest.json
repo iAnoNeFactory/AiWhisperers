@@ -32,7 +32,7 @@
     "docs": "readme.html",
     "components": [],
     "bootstrap": "_index-boot.md",
-    "bootstrap_sha": "0bc16de0ea1c3399b03f130ebedcf5a844d8070d684724c7ecf6dfe01970bf00",
+    "bootstrap_sha": "195aeef10f4174d6d433b933b60ab45f08fe465cb78b57e234b6967107863b19",
     "entry_sha": "890a81e0a9d887005a001d40b56113451b46f56348ab4fd15e00df0be460ed9a",
     "docs_sha": "67c705325566fcfac4650c559633cb5a5836ef9e506ca5e85ed5b7ce370ed532"
   },

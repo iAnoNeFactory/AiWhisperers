@@ -122,7 +122,7 @@ Wskaźnik: `#tchnienie-live` (data-state: active/idle) + `#tchnienie-action` (te
 - Glyph `sessions` — zaadaptowany dawny glyph `genesis` (manuskrypt + słoje + pieczęć), S-relatywny więc działa też w 56px
 - Węzeł Genesis w konstelacji Aktu I zastąpiony węzłem `wall` — tablica projektu na artykuły i notatki, `apps/act1/wall/wall.html` (status mature)
 - Dodano glyph `wall` — kartki przypięte do ściany, stonowana paleta
-- Wall czyta `data/act1/wall/<kategoria>/<wpis>/<lang>.md` przez wygenerowany `data/act1/wall/index.json` (`tools/build_wall_index.py`, wpięty w pre-commit hook obok `build_sitemap.py`) — statyczne, działa na GitHub Pages bez backendu. Auto-detekcja języka przeglądarki (PL/EN) z ręcznym przełącznikiem.
+- Wall czyta `resources/.raw/<kategoria>/<wpis>/<lang>.md` przez wygenerowany `resources/index.json` (`tools/build_wall_index.py`, wpięty w pre-commit hook obok `build_sitemap.py`) — statyczne, działa na GitHub Pages bez backendu. Auto-detekcja języka przeglądarki (PL/EN) z ręcznym przełącznikiem.
 - `window.GenesisAPI` → `window.SessionsAPI`, event `genesis:updated` → `sessions:updated`
 
 ### v2.1 · 2026-05-09
