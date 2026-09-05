@@ -7,6 +7,7 @@
 .secrets/
 .pocket/
 .arch/
+.private/
 resources/.raw/
 __pycache__/
 aiw-export*
