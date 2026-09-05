@@ -1,7 +1,7 @@
 # _verify-boot · AiWVerify · Knowledge Bootstrap
 
 Esencja wiedzy dla modelu AI. Wczytaj ten plik zamiast AiWVerify.html.
-Źródło: AiWVerify.html v2.1 · sesja: Wyrównanie Ekosystemu · 2026-05-09
+Źródło: AiWVerify.html v2.3 · sesja: 2026-09-05 · bugfix profileSha (tune_sha)
 
 ---
 
@@ -112,6 +112,10 @@ Symbole wyników:
 ---
 
 ## Changelog
+
+### v2.3 · 2026-09-05
+- **Bugfix profileSha:** `verifyProfile()` liczył hash zawsze z 6 pól bazowych, ignorując `tune_sha` — AiWPass.saveProfile() (v4.2+) dołącza `tune_sha` do payloadu, gdy profil ma osadzone nastawy (Remedy). Efekt: każdy profil z tune raportował "profile sha niezgodny", mimo że sam profileSha był poprawnie policzony przez AiWPass
+- Naprawa: `shaInput.tune_sha = data.tune.tune_sha` dopisywane warunkowo, dokładnie jak w AiWPass — profile bez tune weryfikują się jak dotychczas
 
 ### v2.1 · 2026-05-09
 - Przeniesiony z `apps/_pass/` do własnego modułu `apps/_verify/`

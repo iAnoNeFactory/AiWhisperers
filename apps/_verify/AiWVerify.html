@@ -592,12 +592,16 @@ async function verifyProfile(data) {
 
   const prof = data.profile || {};
 
-  // 1. Profile SHA
-  const shaPayload = JSON.stringify({
+  // 1. Profile SHA — musi lustrzać AiWPass.saveProfile(): profileSha dołącza
+  // tune_sha na końcu TYLKO gdy nastawy są osadzone (spec v2.2, AiWPass v4.2).
+  // Profile bez tune liczą hash identycznie jak przed v2.2.
+  const shaInput = {
     operator:  prof.operator  || '', domain:    prof.domain    || '',
     node:      prof.node      || '', inception: prof.inception || '',
     country:   prof.country   || '', pubkey:    prof.pubkey    || ''
-  });
+  };
+  if (data.tune && data.tune.tune_sha) shaInput.tune_sha = data.tune.tune_sha;
+  const shaPayload = JSON.stringify(shaInput);
   const computedProfileSha = await sha256hex(shaPayload);
   const profileShaMatch = !!prof.profileSha && computedProfileSha === prof.profileSha;
 
